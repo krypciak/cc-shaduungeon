@@ -68,6 +68,6 @@ export default class Rouge extends Plugin {
         if (! ig.blitzkrieg || ! ('loaded' in ig.blitzkrieg && ig.blitzkrieg.loaded)) { return }
         ig.rouge.updateLabels()
         ig.rouge.enemyDb.loadDatabase()
-
+        ig.MapStyle.registerStyle('default', 'puzzle2', { sheet: 'media/entity/style/default-puzzle-2-fix.png' })
     }
 }
