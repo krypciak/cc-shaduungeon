@@ -1,0 +1,429 @@
+{
+    "regularEnemies": {
+        "hedgehog": {
+            "difficulty": 1,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "hedgehog-alt": {
+            "difficulty": 2,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "meerkat": {
+            "difficulty": 1,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "meerkat-alt": {
+            "difficulty": 2,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "buffalo": {
+            "difficulty": 1,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 1
+        },
+        "buffalo-alt": {
+            "difficulty": 2,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 1
+        },
+        "frobbit": {
+            "difficulty": 2,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "penguin": {
+            "difficulty": 3,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "goat": {
+            "difficulty": 3,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 1
+        },
+        "snowman": {
+            "difficulty": 5,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 1.5
+        },
+        "mine-coldbug": {
+            "difficulty": 1,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "mine-runbot": {
+            "difficulty": 2,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "mine-diggingbot": {
+            "difficulty": 3,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "mine-kamikatze": {
+            "difficulty": 4,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "heat.scorpion": {
+            "difficulty": 3,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "heat.scorpion-alt": {
+            "difficulty": 5,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "heat.sandshark": {
+            "difficulty": 5,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "heat.sandworm": {
+            "difficulty": 4,
+            "elements": [1, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "heat.antlion": {
+            "difficulty": 3,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0
+        },
+        "heat.volturbine": {
+            "difficulty": 5,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0
+        },
+        "heat.moth": {
+            "difficulty": 2,
+            "elements": [-1, 0, 0, 0],
+            "mapElements": "pole",
+            "weight": 0
+        },
+        "heat.heat-golem": {
+            "difficulty": 5,
+            "elements": [0, 1, 0, 0],
+            "mapElements": "",
+            "weight": 1.5
+        },
+        "heat.jellyfish": {
+            "difficulty": 4,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "heat.darth-moth": {
+            "difficulty": 5,
+            "elements": [-1, 0, 0, 0],
+            "mapElements": "pole",
+            "weight": 0.5
+        },
+        "autumn-fall.buffalo-fall": {
+            "difficulty": 4,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 1
+        },
+        "autumn-fall.hedgehog-fall": {
+            "difficulty": 3,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0
+        },
+        "autumn-fall.meerkat-fall": {
+            "difficulty": 5,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "autumn-fall.seahorse-fall": {
+            "difficulty": 4,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "jungle.shockcat": {
+            "difficulty": 6,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "jungle.parrot": {
+            "difficulty": 5,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "jungle.sloth": {
+            "difficulty": 5,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 1.5
+        },
+        "jungle.fish": {
+            "difficulty": 5,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "jungle.plant": {
+            "difficulty": 6,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "jungle.blob": {
+            "difficulty": 2,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "jungle.blob-wave": {
+            "difficulty": 3,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "jungle.powerplant": {
+            "difficulty": 4,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "jungle.chicken": {
+            "difficulty": 5,
+            "elements": [0, 0, 0, 1],
+            "mapElements": "waveTeleport"
+        },
+        "jungle.octopus": {
+            "difficulty": 4,
+            "elements": [0, 0, 1, 0],
+            "mapElements": "magnet",
+            "weight": 1
+        },
+        "jungle.blueray": {
+            "difficulty": 4,
+            "elements": [0, 0, 1, 0],
+            "mapElements": "teslaCoil",
+            "weight": 1
+        },
+        "jungle.ghost": {
+            "difficulty": 7,
+            "elements": [0, 0, 0, 1],
+            "mapElements": "compressor",
+            "weight": 1
+        },
+        "forest.bug-samurai-heat": {
+            "difficulty": 8,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0
+        },
+        "forest.bug-samurai-shock": {
+            "difficulty": 8,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "forest.panda": {
+            "difficulty": 7,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 1.5 
+        },
+        "forest.spider": {
+            "difficulty": 2,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "arid.virus-cold": {
+            "difficulty": 5,
+            "elements": [1, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "arid.virus-heat": {
+            "difficulty": 5,
+            "elements": [0, 1, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "arid.virus-neutral": {
+            "difficulty": 3,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "arid.rhino": {
+            "difficulty": 8,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 1.5
+        },
+        "arid.shredder-cold": {
+            "difficulty": 6,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "arid.shredder-heat": {
+            "difficulty": 6,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "arid.shredder-shock": {
+            "difficulty": 6,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "arid.shredder-wave": {
+            "difficulty": 6,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "arid.dice-mage": {
+            "difficulty": 8,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 1.5
+        },
+        "beach.sea-star-cold": {
+            "difficulty": 3,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "beach.sea-star-heat": {
+            "difficulty": 3,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "beach.sea-star-shock": {
+            "difficulty": 3,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "beach.sea-star-wave": {
+            "difficulty": 3,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "beach.fish": {
+            "difficulty": 6,
+            "elements": [0, 1, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "beach.turtle-man": {
+            "difficulty": 7,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 1.5
+        },
+        "beach.worm": {
+            "difficulty": 5,
+            "elements": [1, 1, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "final.crystal-cold": {
+            "difficulty": 3,
+            "elements": [1, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "final.crystal-heat": {
+            "difficulty": 3,
+            "elements": [0, 1, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "final.crystal-shock": {
+            "difficulty": 3,
+            "elements": [0, 0, 0, 1],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "final.crystal-wave": {
+            "difficulty": 3,
+            "elements": [0, 0, 1, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "final.colibri": {
+            "difficulty": 7,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "final.ele-pillar-cold": {
+            "difficulty": 5,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "final.ele-pillar-heat": {
+            "difficulty": 5,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "final.ele-pillar-shock": {
+            "difficulty": 5,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "final.ele-pillar-wave": {
+            "difficulty": 5,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 0 
+        },
+        "guest.firespirit": {
+            "difficulty": 8,
+            "elements": [0, 1, 0, 0],
+            "mapElements": "",
+            "weight": 1.5
+        },
+        "guest.honeybear": {
+            "difficulty": 7,
+            "elements": [0, 0, 0, 0],
+            "mapElements": "",
+            "weight": 2
+        }
+    }
+}

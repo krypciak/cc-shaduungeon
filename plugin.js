@@ -1,4 +1,14 @@
-export default class Rouge {
+import { RoomGenerator } from './room-generate.js'
+import { RoomComponents } from './room-components.js'
+import { EntitySpawn } from './entity-spawn.js'
+import { BattleRoom } from './battle-room.js'
+import { EnemyDb } from './enemy-db.js'
+
+export default class Rouge extends Plugin {
+    constructor(mod) {
+        super()
+        this.mod = mod
+    }
 
     updateLabels() {
         ig.lang.labels.sc.gui.options.headers['rouge-keybindings'] = 'keybindings'
@@ -23,6 +33,7 @@ export default class Rouge {
                 this.parent(...args)
             }
         })
+
     }
 
     
@@ -32,9 +43,17 @@ export default class Rouge {
             return
         }
         ig.rouge = this
+
+        await ig.blitzkrieg.battleSelectionManager.findAllSpawners()
+        ig.rouge.roomComponents = new RoomComponents()
+        ig.rouge.entitySpawn = new EntitySpawn()
+        ig.rouge.roomGenerator = new RoomGenerator()
+        ig.rouge.battleRoom = new BattleRoom()
+        ig.rouge.enemyDb = new EnemyDb()
+
         ig.rouge.keys = {
-            'test':               { desc: 'rouge test',          func: ig.rouge.test,
-                key: ig.KEY_5,      header: 'rouge-keybindings', hasDivider: false, parent: ig.rouge },
+            'generate':           { desc: 'generate',            func: ig.rouge.roomGenerator.generate,
+                key: ig.KEY_5,      header: 'rouge-keybindings', hasDivider: false, parent: ig.rouge.roomGenerator },
         }
         // ig.rouge.setupTabs()
         ig.blitzkrieg.bindKeys(ig.rouge.keys, sc.OPTION_CATEGORY.BLITZKRIEG)
@@ -48,5 +67,7 @@ export default class Rouge {
     async main() {
         if (! ig.blitzkrieg || ! ('loaded' in ig.blitzkrieg && ig.blitzkrieg.loaded)) { return }
         ig.rouge.updateLabels()
+        ig.rouge.enemyDb.loadDatabase()
+
     }
 }
