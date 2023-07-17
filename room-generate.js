@@ -85,6 +85,10 @@ export class RoomGenerator {
             size: {x:0, y:0}
         }))
         this.mapIndex = 1
+
+
+        ig.blitzkrieg.puzzleSelections.save()
+        ig.blitzkrieg.battleSelections.save()
     }
 
     async generateRoom(puzzleSel, rc, mapIndex) {
@@ -109,8 +113,8 @@ export class RoomGenerator {
         ig.blitzkrieg.puzzleSelections.selHashMap[mapName] = {
             sels: [ puzzleUniqueSel ],
             tempSel: { bb: [], map: mapName, data: {} },
+            fileIndex: ig.rouge.puzzleFileIndex,
         }
-        ig.blitzkrieg.puzzleSelections.save()
 
         let puzzleStartPosInRect = ig.copy(puzzleUniqueSel.data.startPos)
         let puzzleStartPosSide = puzzleSel.data.type == 'whole room' ?

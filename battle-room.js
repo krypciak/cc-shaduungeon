@@ -23,9 +23,8 @@ export class BattleRoom {
         ig.blitzkrieg.battleSelections.selHashMap[map.name] = {
             sels: [ battleSel ],
             tempSel: { bb: [], map: map.name, data: {} },
+            fileIndex: ig.rouge.battleFileIndex,
         }
-        ig.blitzkrieg.battleSelections.save()
-
 
         let battleTunnelSides = [1,1,1,1]
         let battleTunnelSide = 3

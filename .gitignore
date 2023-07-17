@@ -1,2 +1,8 @@
 node_modules
 package-lock.json
+old.txt
+special-enemies.txt
+assets/data/maps/rouge/gen/*
+assets/data/maps/rouge/fun/*
+json/genBattle.json
+json/genPuzzle.json

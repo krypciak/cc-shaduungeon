@@ -50,6 +50,14 @@ export default class Rouge extends Plugin {
         ig.rouge.roomGenerator = new RoomGenerator()
         ig.rouge.battleRoom = new BattleRoom()
         ig.rouge.enemyDb = new EnemyDb()
+        
+        ig.rouge.puzzleFileIndex = ig.blitzkrieg.puzzleSelections.jsonfiles.length
+        ig.blitzkrieg.puzzleSelections.jsonfiles.push(ig.rouge.mod.baseDirectory + 'json/genPuzzle.json')
+        ig.blitzkrieg.puzzleSelections.load(ig.rouge.puzzleFileIndex)
+
+        ig.rouge.battleFileIndex = ig.blitzkrieg.battleSelections.jsonfiles.length
+        ig.blitzkrieg.battleSelections.jsonfiles.push(ig.rouge.mod.baseDirectory + 'json/genBattle.json')
+        ig.blitzkrieg.battleSelections.load(ig.rouge.battleFileIndex)
 
         ig.rouge.keys = {
             'generate':           { desc: 'generate',            func: ig.rouge.roomGenerator.generate,

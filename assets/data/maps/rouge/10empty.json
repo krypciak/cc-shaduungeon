@@ -1,5 +1,5 @@
 {
-    "name": "mymod.10empty",
+    "name": "rouge.10empty",
     "levels": [{ "height": 0 }],
     "mapWidth": 10,
     "mapHeight": 10,
@@ -50,7 +50,7 @@
             "width": 10,
             "height": 10,
             "visible": 1,
-            "tilesetName": "",
+            "tilesetName": "media/map/collisiontiles-16x16.png",
             "repeat": false,
             "distance": 1,
             "tilesize": 16,
