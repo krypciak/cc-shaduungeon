@@ -108,7 +108,7 @@
             "mapElements": "",
             "weight": 0 
         },
-        "heat.antlion": {
+        "heat.drillertoise": {
             "difficulty": 3,
             "elements": [0, 0, 0, 0],
             "mapElements": "",
@@ -129,7 +129,7 @@
         "heat.heat-golem": {
             "difficulty": 5,
             "elements": [0, 1, 0, 0],
-            "mapElements": "",
+            "mapElements": "waterBubblePanel",
             "weight": 1.5
         },
         "heat.jellyfish": {

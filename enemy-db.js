@@ -2,20 +2,6 @@ let mainseed
 
 export class EnemyDb {
     constructor() {
-        let es = ig.rouge.entitySpawn
-
-        this.pole = { e: es.elementPole(0, 64) }
-        this.waterBubblePanel = { e: es.waterBubblePanel(-64, 0) }
-        this.waveTeleport = { e: es.waveTeleport(-64, 0) }
-        this.compressor = { e: es.compressor(0, 64) }
-        this.magnet = { e: es.magnet(0, -128), dirAdj: true }
-        this.teslaCoil = { e: es.teslaCoil(0, 64, 'GROUND_DISCHARGE') }
-        // let ballChangerHeat = es.ballChangerElement(0, -64, 'HEAT', 0)
-        // let ballChangerCold = es.ballChangerElement(0, -64, 'COLD', 0)
-        // let ballChangerWave = es.ballChangerElement(0, -64, 'WAVE', 0)
-        // let ballChangerShock = es.ballChangerElement(0, -64, 'SHOCK', 0)
-        
-
         this.preset = {
             seed: 'obama',
             origLevelDistance: [15, 10],
@@ -106,16 +92,10 @@ export class EnemyDb {
                             break
                         }
                     }
-                    if (! elementsOk) { 
-                        // console.log('rejected element -1: ', name)
-                        continue
-                    }
+                    if (! elementsOk) { continue }
                 } else {
                     for (let i = 0; i < e.elements.length; i++) {
-                        if (e.elements[i] && !elements[i]) {
-                            // console.log('rejected no element: ', name)
-                            continue
-                        }
+                        if (e.elements[i] && !elements[i]) { continue }
                     }
                 }
             }
@@ -146,7 +126,7 @@ export class EnemyDb {
         
 
         // let enemyCount = ig.blitzkrieg.util.seedrandom(this.preset.enemyTypeCount[0], this.preset.enemyTypeCount[1], roomseed)
-        let enemyCount = 1
+        let enemyCount = 25
         let types = []
         for (let i = 0; i < enemyCount; i++) {
             let rand = ig.blitzkrieg.util.seedrandom(0, 100, roomseed)
@@ -167,8 +147,95 @@ export class EnemyDb {
         for (let enemyType of types) {
             enemies.push({ count: 1, type: enemyType })
         }
+        // enemies = [ 
+        //     { count: 1, type: 'heat.moth' },
+        //     { count: 1, type: 'jungle.chicken' },
+        //     { count: 1, type: 'jungle.ghost' },
+        //     { count: 1, type: 'jungle.blueray' },
+        //     { count: 1, type: 'jungle.octopus' },
+        //     { count: 1, type: 'heat.heat-golem' },
+        // ]
         // console.log(ig.copy(enemies))
 
-        return ig.rouge.entitySpawn.enemySpawner(rect, group, enemies)
+        return { spawner: ig.rouge.entitySpawn.enemySpawner(rect, group, enemies), enemies }
+    }
+
+    spawnEntityMapObjects(map, rect, entranceSide, exitSide, enemies, elements) {
+        exitSide = (exitSide+2)%4
+        let debugIgnoreElements = false
+
+        rect.x2 = rect.x + rect.width
+        rect.y2 = rect.y + rect.height
+        let objectsIncluded = new Set()
+        for (let obj of enemies) {
+            let type = obj.type
+            let mapObjects = this.db.regularEnemies[type].mapElements
+            if (mapObjects && ! objectsIncluded.has(mapObjects)) {
+                let mx = rect.x + rect.width/2
+                let my = rect.y + rect.height/2
+                objectsIncluded.add(mapObjects)
+
+                let es = ig.rouge.entitySpawn
+                switch (mapObjects) {
+                case 'pole': {
+                    let pole = es.elementPole(mx - 8, my + 64)
+                    map.entities.push(pole)
+                    break
+                }
+                case 'magnet': {
+                    let side = 0
+                    let x, y 
+                    while(entranceSide == side || exitSide == side) { side++ }
+                    switch (side) {
+                    case 0: x = mx - 8; y = rect.y + 24; break
+                    case 1: x = rect.x2 - 24; y = my - 8; break
+                    case 2: x = mx - 8; y = rect.y2 - 24; break
+                    case 3: x = rect.x + 24; y = my - 8; break
+                    }
+                    let magnet = es.magnet(x, y, side)
+                    map.entities.push(magnet)
+                    break
+                }
+                case 'teslaCoil': {
+                    let source = es.teslaCoil(rect.x + 4, rect.y + 4, 'SOURCE')
+                    let antiCompressor = es.antiCompressor(rect.x + 24, rect.y + 4)
+                    let ground = es.teslaCoil(rect.x + 32, rect.y + 96, 'GROUND_DISCHARGE')
+                    map.entities.push(source)
+                    map.entities.push(antiCompressor)
+                    map.entities.push(ground)
+
+                    if (objectsIncluded.has('compressor')) { break }
+                    mapObjects = 'compressor'
+                }
+                // eslint-disable-next-line no-fallthrough
+                case 'compressor': {
+                    let boldPntMarker1 = es.boldPntMarker(mx - 16, my - 16, 1)
+                    let compressor = es.compressor(rect.x + 80, rect.y2 - 80)
+                    map.entities.push(boldPntMarker1)
+                    map.entities.push(compressor)
+                    break
+                }
+                case 'waveTeleport': {
+                    let tp1 = es.waveTeleport(rect.x + 32, rect.y + 32)
+                    let tp2 = es.waveTeleport(rect.x2 - 32, rect.y2 - 32)
+                    map.entities.push(tp1)
+                    map.entities.push(tp2)
+                    // if player is missing wave
+                    if (! elements[3] || debugIgnoreElements) {
+                        let ballChangerWave1 = es.ballChangerElement(rect.x + 32, rect.y2 - 48, 'WAVE', 0)
+                        let ballChangerWave2 = es.ballChangerElement(rect.x2 - 48, rect.y + 32, 'WAVE', 0)
+                        map.entities.push(ballChangerWave1)
+                        map.entities.push(ballChangerWave2)
+                    }
+                    break
+                }
+                case 'waterBubblePanel': {
+                    let waterBubblePanel = es.waterBubblePanel(mx + 56, my + 56)
+                    map.entities.push(waterBubblePanel)
+                }
+                }
+            }
+        }
+
     }
 }

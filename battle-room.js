@@ -15,9 +15,10 @@ export class BattleRoom {
         spawnerSize.y += rc.battle.spacing
         spawnerSize.width -= rc.battle.spacing*2
         spawnerSize.height -= rc.battle.spacing*2
-        let spawner = ig.rouge.enemyDb.generateSpawner(spawnerSize, rc.enemyGroup, this.currentDifficulty, this.currentLevel, [1,1,1,1])
-        this.currentLevel += 4.5
-        this.currentDifficulty += 0.5
+        let elements = [1,1,1,1]
+        let { spawner, enemies } = ig.rouge.enemyDb.generateSpawner(spawnerSize, rc.enemyGroup, this.currentDifficulty, this.currentLevel, elements)
+        this.currentLevel += 7
+        this.currentDifficulty += 0.8
 
         ig.blitzkrieg.battleSelections.selHashMap[map.name] = {
             sels: [ battleSel ],
@@ -51,6 +52,7 @@ export class BattleRoom {
             entarenceCond: rc.battleStartCond + ' && !' + rc.battleDoneCond,
             queue: tunnelQueue,
         })
+
 
         let barrierMap = ig.rouge.roomComponents.executeTunnelQueue(map, tunnelQueue)
 
@@ -110,5 +112,8 @@ export class BattleRoom {
                 }
             }
         }})
+
+
+        ig.rouge.enemyDb.spawnEntityMapObjects(map, battleSel.size, battleTunnelSide, puzzleStartPosSide, enemies, elements)
     }
 }

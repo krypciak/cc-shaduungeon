@@ -61,7 +61,7 @@ export class RoomGenerator {
             battleStartCond: 'tmp.battle1',
             battleDoneCond: 'map.battle1done',
             enemyGroup: 'battle1',
-            battle: { width: 15*tilesize, height: 15*tilesize, spacing: 2*tilesize },
+            battle: { width: 21*tilesize, height: 21*tilesize, spacing: 2*tilesize },
             battleTunnel: { width: 5*tilesize, height: 5*tilesize },
         }
 
@@ -84,6 +84,7 @@ export class RoomGenerator {
             baseZPos: 0,
             size: {x:0, y:0}
         }))
+        this.mapIndex = 1
     }
 
     async generateRoom(puzzleSel, rc, mapIndex) {

@@ -4,6 +4,7 @@ export class RoomComponents {
         tilesize = ig.blitzkrieg.tilesize
         this.themes = {
             rhombusDng: {
+                bgm: 'puzzle',
                 tileset: 'media/map/rhombus-dungeon2.png',
                 mapStyle: 'rhombus-puzzle',
                 floor: 34,
@@ -109,7 +110,7 @@ export class RoomComponents {
             masterLevel: 0,
             attributes: { 
                 saveMode: 'ENABLED', 
-                bgm: '',
+                bgm: theme.bgm,
                 cameraInBounds: false,
                 'map-sounds': '',
                 mapStyle: theme.mapStyle,

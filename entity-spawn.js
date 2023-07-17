@@ -298,6 +298,31 @@ export class EntitySpawn {
         }
     }
 
+    antiCompressor(x, y) {
+        return {
+            type: 'AntiCompressor',
+            x, y,
+            level: 0,
+            settings: {
+                name: '', 
+                mapId: this.mapId++,
+            }
+        }
+    }
+
+    boldPntMarker(x, y, index) {
+        return {
+            type: 'Marker',
+            x, y,
+            level: 0,
+            settings: {
+                name: 'boldPnt' + index, 
+                dir: 'NORTH',
+                mapId: this.mapId++,
+            }
+        }
+    }
+
     magnet(x, y, side) {
         return {
             type: 'Magnet',
@@ -319,7 +344,7 @@ export class EntitySpawn {
             level: 0,
             settings: {
                 name: '', 
-                collType: type,
+                coilType: type,
                 mapId: this.mapId++,
             }
         }
