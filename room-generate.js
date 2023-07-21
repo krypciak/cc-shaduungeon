@@ -13,18 +13,6 @@ export class RoomGenerator {
         tilesize = ig.blitzkrieg.tilesize
     }
 
-    getRandomSpawners(count) {
-        let items = []
-        for (let i = 0; i < count; i++) {
-            let mapName = this.spawnerKeys[Math.floor(Math.random() * this.spawnerKeys.length)]
-            let arr = this.spawners[mapName]
-            let randomIndex = Math.floor(Math.random() * arr.length)
-            let item = arr[randomIndex]
-            items.push({ spawner: item, map: mapName })
-        }
-        return items
-    }
-
     getRandomPuzzles(count) {
         let items = []
         for (let i = 0; i < count; i++) {
@@ -49,13 +37,13 @@ export class RoomGenerator {
             }
         }
         if (! this.mapIndex) {
-            this.mapIndex = 1
+            this.mapIndex = 0
         }
         
         let roomConfig = {
             size: { width: 150, height: 150 },
             levels: 4,
-            theme: ig.rouge.roomComponents.themes.rhombusDng,
+            theme: 'adaptive',
             puzzle: { x: 40*tilesize, y: 40*tilesize, spacing: 3*tilesize },
             puzzleTunnel: { width: 8*tilesize, height: 5*tilesize },
             battleStartCond: 'tmp.battle1',
@@ -66,17 +54,19 @@ export class RoomGenerator {
         }
 
         // this.mapIndex == 1 ? this.puzzles['rhombus-dng/room-1-5'].sels[0] : this.puzzles['rhombus-dng/room-1-5'].sels[1],
-        // randPuzzles = [ this.puzzles['rhombus-dng/room-1-5'].sels[1], ]
-        // console.log(randPuzzles)
+        // randPuzzles = [ randPuzzles[13] ]
+        // randPuzzles = [ randPuzzles[1] ]
+        // randPuzzles = [ ig.blitzkrieg.puzzleSelections.selHashMap['rhombus-dng/entrance'].sels[0] ]
         let map
-        for (let i = 0; i < randPuzzles.length; i++) {
+        for (let i = 0; i < /*2;*/ randPuzzles.length; i++) {
             map = await this.generateRoom(
                 randPuzzles[i], roomConfig, this.mapIndex++)
             ig.vars.storage.maps[map.name] = {}
+            console.log('------------- ', i, randPuzzles[i])
         }
         ig.game.varsChangedDeferred()
         
-        ig.game.teleport('rouge.gen.1', ig.TeleportPosition.createFromJson({
+        ig.game.teleport('rouge.gen.0', ig.TeleportPosition.createFromJson({
             marker: 'start',
             pos: 0,
             face: null,
@@ -84,7 +74,7 @@ export class RoomGenerator {
             baseZPos: 0,
             size: {x:0, y:0}
         }))
-        this.mapIndex = 1
+        this.mapIndex = 0
 
 
         ig.blitzkrieg.puzzleSelections.save()
@@ -93,6 +83,10 @@ export class RoomGenerator {
 
     async generateRoom(puzzleSel, rc, mapIndex) {
         rc = ig.copy(rc)
+        if (rc.theme == 'adaptive') {
+            rc.theme = ig.rouge.roomComponents.getThemeFromSel(puzzleSel)
+        }
+
         //let baseMapName = 'rouge.300empty'
         let mapName = 'rouge/gen/' + mapIndex
         let nextMapName = 'rouge/gen/' + (mapIndex+1)
@@ -103,18 +97,13 @@ export class RoomGenerator {
         rc.battleDoneCond = rc.battleDoneCond + '_' + condId
 
         let tunnelQueue = []
-        let map = ig.rouge.roomComponents.getEmptyRoom(rc.size.width, rc.size.height, rc.levels, rc.theme)
+        let map = ig.rouge.roomComponents.getEmptyMap(rc.size.width, rc.size.height, rc.levels, rc.theme)
         map.name = mapName
 
         let puzzleUniqueId = ig.blitzkrieg.util.generateUniqueID()
         let puzzleUniqueSel = ig.blitzkrieg.selectionCopyManager
             .createUniquePuzzleSelection(puzzleSel, rc.puzzle.x, rc.puzzle.y, puzzleUniqueId)
-
-        ig.blitzkrieg.puzzleSelections.selHashMap[mapName] = {
-            sels: [ puzzleUniqueSel ],
-            tempSel: { bb: [], map: mapName, data: {} },
-            fileIndex: ig.rouge.puzzleFileIndex,
-        }
+        console.log(puzzleUniqueSel)
 
         let puzzleStartPosInRect = ig.copy(puzzleUniqueSel.data.startPos)
         let puzzleStartPosSide = puzzleSel.data.type == 'whole room' ?
@@ -127,25 +116,64 @@ export class RoomGenerator {
             ig.blitzkrieg.util.setToClosestRectSide(puzzleEndPosInRect, puzzleUniqueSel.size).side
 
         
-        let puzzleSolveCond
+        let puzzleSolveCond, puzzleSolveCondUnique
         if (puzzleSel.data.completionType == 'normal') {
-            puzzleSolveCond = ig.blitzkrieg.puzzleRecordManager.getPuzzleSolveCondition(puzzleSel)
+            puzzleSolveCond = ig.blitzkrieg.puzzleSelectionManager.getPuzzleSolveCondition(puzzleSel)
             console.log('puzzleSolution: ' + puzzleSolveCond)
-            if (! puzzleSolveCond) {
-                // console.err('puzzle type is ' + puzzleSel.data.type + ', solution not found')
-            }
         } else {
             puzzleSolveCond = 'map.puzzleSolution1'
         }
+        puzzleSolveCondUnique = puzzleSolveCond
+        if (! puzzleSolveCond.includes('_destroyed')) { puzzleSolveCondUnique += '_' + puzzleUniqueId }
 
+        let puzzleMap = ig.copy(ig.blitzkrieg.allMaps[puzzleSel.map])
+        let closestX, closestY, foundAnyDoor = false, closestDoor = 1000000
+        if (puzzleSel.data.type == 'whole room') {
+            for (let i = 0; i < puzzleMap.entities.length; i++) {
+                let e = puzzleMap.entities[i]
+                if (e.type == 'Door' || e.type == 'TeleportGround') {
+                    let dist = Math.sqrt(Math.pow(e.x - puzzleSel.data.endPos.x, 2) + Math.pow(e.y - puzzleSel.data.endPos.y, 2))
+                    if (dist < closestDoor) {
+                        closestDoor = dist
+                        closestX = e.x
+                        closestY = e.y
+                    }
+                }
+            }
+        }
+        console.log('closestDoor: ', closestDoor)
+        for (let i = 0; i < puzzleMap.entities.length; i++) {
+            let e = puzzleMap.entities[i]
+            if (e.type == 'Door' || e.type == 'TeleportGround') {
+                if (puzzleSel.data.type == 'whole room' && closestDoor < 20*tilesize && e.x == closestX && e.y == closestY) {
+                    foundAnyDoor = true
+                    e.settings.condition = (puzzleSel.data.completionType == 'getTo' ? '' : puzzleSolveCond)
+                    e.settings.name = 'end'
+                    e.settings.marker = 'start'
+                    e.settings.map = nextMapName
+                } else {
+                    puzzleMap.entities.splice(i, 1)
+                    i--
+                }
+            }
+        }
 
         let puzzleTunnelSides = puzzleStartPosSide % 2 == 0 ? [0,1,0,1] : [1,0,1,0]
         let puzzleExitCond = rc.battleStartCond + ' && !' + rc.battleDoneCond
 
         let puzzleRoomRect
         if (puzzleSel.data.type == 'whole room') {
+            let ds = foundAnyDoor ? null : {
+                side: puzzleEndPosSide,
+                prefX: puzzleEndPosInRect.x,
+                prefY: puzzleEndPosInRect.y,
+                marker: 'end',
+                destMarker: 'start',
+                destMap: nextMapName,
+                cond: (puzzleSel.data.completionType == 'getTo' ? '' : puzzleSolveCondUnique)
+            }
             puzzleRoomRect = ig.rouge.roomComponents
-                .rectRoom(map, puzzleUniqueSel.size, rc.theme, -1, [1,1,1,1], null, {
+                .rectRoom(map, puzzleUniqueSel.size, rc.theme, -1, [1,1,1,1], ds, {
                     name: 'puzzle',
                     side: puzzleStartPosSide,
                     pos: puzzleStartPosInRect,
@@ -160,12 +188,12 @@ export class RoomGenerator {
             puzzleRoomRect = ig.rouge.roomComponents
                 .rectRoom(map, puzzleUniqueSel.size, rc.theme, rc.puzzle.spacing, [1,1,1,1], {
                     side: puzzleEndPosSide,
-                    prefX: puzzleStartPosInRect.x,
-                    prefY: puzzleStartPosInRect.y,
+                    prefX: puzzleEndPosInRect.x,
+                    prefY: puzzleEndPosInRect.y,
                     marker: 'end',
                     destMarker: 'start',
                     destMap: nextMapName,
-                    cond: puzzleSolveCond + '_' + puzzleUniqueId,
+                    cond: puzzleSolveCondUnique,
                 }, {
                     name: 'puzzle',
                     side: puzzleStartPosSide,
@@ -181,8 +209,13 @@ export class RoomGenerator {
         }
 
 
-        ig.blitzkrieg.msg('rouge', 'difficulty: ' + this.currentDifficulty, 1)
-        ig.blitzkrieg.msg('rouge', 'level: ' + this.currentLevel, 1)
+        // ig.blitzkrieg.msg('rouge', 'difficulty: ' + this.currentDifficulty, 1)
+        // ig.blitzkrieg.msg('rouge', 'level: ' + this.currentLevel, 1)
+
+        if (puzzleSel.data.completionType == 'getTo' && puzzleSel.data.type == 'add walls') {
+            let endPos = puzzleSel.data.endPos
+            puzzleMap.entities.push(ig.rouge.entitySpawn.floorSwitch(endPos.x, endPos.y, endPos.level, puzzleSolveCond))
+        }
 
         let battleRoomX1, battleRoomY1
         if (puzzleStartPosSide % 2 == 0) {
@@ -190,63 +223,56 @@ export class RoomGenerator {
         } else {
             battleRoomY1 = puzzleStartPosInRect.y - rc.battle.height/2
         }
-        console.log(puzzleStartPosSide)
         if (puzzleSel.data.type == 'whole room') {
             switch (puzzleStartPosSide) {
             case 0: battleRoomY1 = puzzleStartPosInRect.y - rc.puzzleTunnel.width - rc.battle.height + 16; break
             case 1: battleRoomX1 = puzzleStartPosInRect.x + rc.puzzleTunnel.width - 16; break
             case 2: battleRoomY1 = puzzleStartPosInRect.y + rc.puzzleTunnel.width - 16; break
-            case 3: battleRoomX1 = puzzleStartPosInRect.x + rc.puzzleTunnel.width; break
+            case 3: battleRoomX1 = puzzleStartPosInRect.x - rc.puzzleTunnel.width - rc.battle.width + 16; break
             }
         } else {
             switch (puzzleStartPosSide) {
             case 0: battleRoomY1 = puzzleRoomRect.y - rc.puzzleTunnel.width - rc.battle.height; break
             case 1: battleRoomX1 = puzzleRoomRect.x2 + rc.puzzleTunnel.width; break
             case 2: battleRoomY1 = puzzleRoomRect.y2 + rc.puzzleTunnel.width; break
-            case 3: battleRoomX1 = puzzleRoomRect.x + rc.puzzleTunnel.width; break
+            case 3: battleRoomX1 = puzzleRoomRect.x - rc.battle.width - rc.puzzleTunnel.width; break
             }
         }
         
-        ig.rouge.battleRoom.generateRoom(
+        if (puzzleSel.data.type == 'whole room') {
+            ig.rouge.roomComponents.addWallsInEmptySpace(map, rc.theme, puzzleUniqueSel)
+        }
+
+        let battleSel = ig.rouge.battleRoom.generateRoom(
             map, rc.theme, battleRoomX1, battleRoomY1, prevMapName, puzzleStartPosSide, rc, tunnelQueue)
 
-        let puzzleMap = ig.copy(ig.blitzkrieg.allMaps[puzzleSel.map])
-        let closestX, closestY
-        if (puzzleSel.data.type == 'whole room') {
-            let closestDoor = 10000
-            for (let i = 0; i < puzzleMap.entities.length; i++) {
-                let e = puzzleMap.entities[i]
-                if (e.type == 'Door') {
-                    let dist = Math.sqrt(Math.pow(e.x - puzzleUniqueSel.data.endPos.x,2) + Math.pow(e.y - puzzleUniqueSel.data.endPos.y,2))
-                    if (dist < closestDoor) {
-                        dist = closestDoor
-                        closestX = e.x
-                        closestY = e.y
-                    }
-                }
-            }
-        }
-        for (let i = 0; i < puzzleMap.entities.length; i++) {
-            let e = puzzleMap.entities[i]
-            if (e.type == 'Door') {
-                if (puzzleSel.data.type == 'whole room' && e.x == closestX && e.y == closestY) {
-                    e.settings.condition = (puzzleSel.data.completionType == 'getTo' ? '' : puzzleSolveCond)
-                    e.settings.name = 'end'
-                    e.settings.marker = 'start'
-                    e.settings.map = nextMapName
-                } else {
-                    puzzleMap.entities.splice(i, 1)
-                    i--
-                }
-            }
-        }
-        if (puzzleSel.data.completionType == 'getTo' && puzzleSel.data.type == 'add walls') {
-            let endPos = puzzleSel.data.endPos
-            puzzleMap.entities.push(ig.rouge.entitySpawn.floorSwitch(endPos.x, endPos.y, endPos.level, puzzleSolveCond))
-        }
         map = await ig.blitzkrieg.selectionCopyManager
-            .copySelToMap(map, puzzleMap, puzzleSel, rc.puzzle.x, rc.puzzle.y, mapName, false, false, true, puzzleUniqueId)
-        
+            .copySelToMap(map, puzzleMap, puzzleSel, rc.puzzle.x, rc.puzzle.y, mapName, {
+                disableEntities: false,
+                mergeLayers: false,
+                removeCutscenes: true,
+                makePuzzlesUnique: true,
+                uniqueId: puzzleUniqueId,
+                uniqueSel: puzzleUniqueSel,
+            })
+
+        let obj = await ig.rouge.roomComponents.trimMap(map, rc.theme)
+        map = obj.map
+
+        ig.blitzkrieg.util.setSelPos(puzzleUniqueSel, puzzleUniqueSel.size.x - obj.xOffset, puzzleUniqueSel.size.y - obj.yOffset)
+        ig.blitzkrieg.util.setSelPos(battleSel, battleSel.size.x - obj.xOffset, battleSel.size.y - obj.yOffset)
+
+        ig.blitzkrieg.puzzleSelections.selHashMap[mapName] = {
+            sels: [ puzzleUniqueSel ],
+            tempSel: { bb: [], map: mapName, data: {} },
+            fileIndex: ig.rouge.puzzleFileIndex,
+        }
+
+        ig.blitzkrieg.battleSelections.selHashMap[map.name] = {
+            sels: [ battleSel ],
+            tempSel: { bb: [], map: map.name, data: {} },
+            fileIndex: ig.rouge.battleFileIndex,
+        }
 
         let newMapPath = './assets/mods/cc-rouge/assets/data/maps/' + mapName + '.json'
         let newMapJson = JSON.stringify(map)

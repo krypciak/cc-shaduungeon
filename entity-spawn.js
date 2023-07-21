@@ -12,11 +12,10 @@ export class EntitySpawn {
         }
     }
 
-    door(x, y, ds) {
+    door(x, y, level, ds) {
         return {
             type: 'Door',
-            x, y,
-            level: 0,
+            x, y, level,
             settings: {
                 name: ds.marker,
                 dir: this.doorDirName(ds.side),
@@ -32,7 +31,7 @@ export class EntitySpawn {
         }
     }
 
-    glowingLinePerpendicular(rect, side, size, cond) {
+    glowingLinePerpendicular(rect, level, side, size, cond) {
         rect = ig.copy(rect)
         size = Math.floor(size / 8)*8
         switch (side) {
@@ -50,15 +49,14 @@ export class EntitySpawn {
             rect.width = size
             rect.height = 8
         }
-        return this.glowingLine(rect, cond)
+        return this.glowingLine(rect, level, cond)
     }
 
-    glowingLine(rect, cond) {
+    glowingLine(rect, level, cond) {
         let { x, y, width, height } = rect
         return {
             type: 'GlowingLine',
-            x, y,
-            level: 0,
+            x, y, level,
             settings: {
                 name: '',
                 size: { x: width, y: height },
@@ -70,7 +68,7 @@ export class EntitySpawn {
         }
     }
 
-    barrier(rect, cond, side) {
+    barrier(rect, level, cond, side) {
         rect.width = Math.floor(rect.width/8)*8
         rect.height = Math.floor(rect.height/8)*8
         let barrierType = rect.width == 8 ? 'barrierV' : 'barrierH'
@@ -78,7 +76,7 @@ export class EntitySpawn {
             type: 'ScalableProp',
             x: rect.x,
             y: rect.y,
-            level: 0,
+            level,
             settings: {
                 name: '', 
                 patternOffset: {x: 0, y: 0}, 
@@ -94,7 +92,7 @@ export class EntitySpawn {
         }
     }
     
-    wall(rect, cond, side) {
+    wall(rect, level, cond, side) {
         rect.width = Math.floor(rect.width/8)*8
         rect.height = Math.floor(rect.height/8)*8
         let type = rect.width == 8 ? 'WallVertical' : 'WallHorizontal'
@@ -102,7 +100,7 @@ export class EntitySpawn {
             type, 
             x: rect.x, 
             y: rect.y,
-            level: 0,
+            level,
             settings: {
                 skipRender: false,
                 topEnd: 'STOP',
@@ -118,12 +116,11 @@ export class EntitySpawn {
         }
     }
 
-    blocker(rect, collType, cond) {
+    blocker(rect, level, collType, cond) {
         let { x, y, width, height } = rect
         return {
             type: 'HiddenBlock',
-            x, y,
-            level: 0, 
+            x, y, level,
             settings: {
                 collType,
                 size: {x: width, y: height},
@@ -138,11 +135,10 @@ export class EntitySpawn {
         }
     }
 
-    enemyCounter(x, y, enemyGroup, enemyCount, cond) {
+    enemyCounter(x, y, level, enemyGroup, enemyCount, cond) {
         return {
             type: 'EnemyCounter',
-            x, y,
-            level: 0,
+            x, y, level,
             settings: { 
                 name: '',
                 enemyGroup: enemyGroup,
@@ -155,7 +151,7 @@ export class EntitySpawn {
         }
     }
 
-    touchTriggerParallel(rect, side, offset, size, variable) {
+    touchTriggerParallel(rect, level, side, offset, size, variable) {
         rect = ig.copy(rect)
         switch (side) {
         case 0:
@@ -183,14 +179,14 @@ export class EntitySpawn {
             rect.height = rect.height + 2*size
         }
 
-        return this.touchTrigger(rect, variable)
+        return this.touchTrigger(rect, level, variable)
     }
 
-    touchTrigger(rect, variable) {
+    touchTrigger(rect, level, variable) {
         return {
             type: 'TouchTrigger',
             x: rect.x, y: rect.y,
-            level: 0,
+            level,
             settings: {
                 name: '',
                 size: { x: rect.width, y: rect.height },
@@ -227,11 +223,10 @@ export class EntitySpawn {
         }
     }
 
-    elementPole(x, y) {
+    elementPole(x, y, level) {
         return {
             type: 'ElementPole',
-            x, y,
-            level: 0,
+            x, y, level,
             settings: {
                 name: '',
                 poleType:
@@ -242,11 +237,10 @@ export class EntitySpawn {
         }
     }
 
-    waterBubblePanel(x, y) {
+    waterBubblePanel(x, y, level) {
         return {
             type: 'WaterBubblePanel',
-            x, y,
-            level: 0,
+            x, y, level,
             settings: {
                 name: '', 
                 mapId: this.mapId++,
@@ -254,11 +248,10 @@ export class EntitySpawn {
         }
     }
 
-    waveTeleport(x, y) {
+    waveTeleport(x, y, level) {
         return {
             type: 'WaveTeleport',
-            x, y,
-            level: 0,
+            x, y, level,
             settings: {
                 name: '', 
                 mapId: this.mapId++,
@@ -266,11 +259,10 @@ export class EntitySpawn {
         }
     }
 
-    ballChangerElement(x, y, element, side) {
+    ballChangerElement(x, y, level, element, side) {
         return {
             type: 'BallChanger',
-            x, y,
-            level: 0,
+            x, y, level,
             settings: {
                 name: '',
                 condition: '',
@@ -286,11 +278,10 @@ export class EntitySpawn {
         }
     }
 
-    compressor(x, y) {
+    compressor(x, y, level) {
         return {
             type: 'Compressor',
-            x, y,
-            level: 0,
+            x, y, level,
             settings: {
                 name: '', 
                 mapId: this.mapId++,
@@ -298,11 +289,10 @@ export class EntitySpawn {
         }
     }
 
-    antiCompressor(x, y) {
+    antiCompressor(x, y, level) {
         return {
             type: 'AntiCompressor',
-            x, y,
-            level: 0,
+            x, y, level,
             settings: {
                 name: '', 
                 mapId: this.mapId++,
@@ -310,11 +300,10 @@ export class EntitySpawn {
         }
     }
 
-    boldPntMarker(x, y, index) {
+    boldPntMarker(x, y, level, index) {
         return {
             type: 'Marker',
-            x, y,
-            level: 0,
+            x, y, level,
             settings: {
                 name: 'boldPnt' + index, 
                 dir: 'NORTH',
@@ -323,11 +312,10 @@ export class EntitySpawn {
         }
     }
 
-    magnet(x, y, side) {
+    magnet(x, y, level, side) {
         return {
             type: 'Magnet',
-            x, y,
-            level: 0,
+            x, y, level,
             settings: {
                 name: '', 
                 dir: this.doorDirName(side),
@@ -337,11 +325,10 @@ export class EntitySpawn {
     }
 
     // type: SOURCE, EXTENDER, GROUND_DISCHARGE
-    teslaCoil(x, y, type) {
+    teslaCoil(x, y, level, type) {
         return {
             type: 'TeslaCoil',
-            x, y,
-            level: 0,
+            x, y, level,
             settings: {
                 name: '', 
                 coilType: type,
@@ -350,7 +337,7 @@ export class EntitySpawn {
         }
     }
 
-    enemySpawner(rect, group, enemies) {
+    enemySpawner(rect, level, group, enemies) {
         let enemyTypes = []
         for (let enemyType of enemies) {
             let obj = {
@@ -371,7 +358,7 @@ export class EntitySpawn {
         return  {
             type: 'EnemySpawner',
             x: rect.x, y: rect.y,
-            level: 0,
+            level,
             settings: {
                 name: '',
                 size: { x: rect.width, y: rect.height },
@@ -380,6 +367,27 @@ export class EntitySpawn {
                 spawnCondition: '',
                 mapId: ig.rouge.entitySpawn.mapId++, 
             }
+        }
+    }
+
+    marker(x, y, level, name) {
+        return {
+            type: 'Marker',
+            x, y, level,
+            settings: { 
+                name,
+                dir: 'NORTH', 
+                mapId: this.mapId++,
+            }
+        }
+    }
+
+    eventTrigger(x, y, level, settings) {
+        settings.mapId = this.mapId++
+        return {
+            type: 'EventTrigger',
+            x, y, level,
+            settings,
         }
     }
 }

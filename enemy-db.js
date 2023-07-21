@@ -126,7 +126,7 @@ export class EnemyDb {
         
 
         // let enemyCount = ig.blitzkrieg.util.seedrandom(this.preset.enemyTypeCount[0], this.preset.enemyTypeCount[1], roomseed)
-        let enemyCount = 25
+        let enemyCount = 1
         let types = []
         for (let i = 0; i < enemyCount; i++) {
             let rand = ig.blitzkrieg.util.seedrandom(0, 100, roomseed)
@@ -157,7 +157,7 @@ export class EnemyDb {
         // ]
         // console.log(ig.copy(enemies))
 
-        return { spawner: ig.rouge.entitySpawn.enemySpawner(rect, group, enemies), enemies }
+        return { spawner: ig.rouge.entitySpawn.enemySpawner(rect, -1, group, enemies), enemies }
     }
 
     spawnEntityMapObjects(map, rect, entranceSide, exitSide, enemies, elements) {
@@ -236,6 +236,5 @@ export class EnemyDb {
                 }
             }
         }
-
     }
 }

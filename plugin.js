@@ -33,7 +33,6 @@ export default class Rouge extends Plugin {
                 this.parent(...args)
             }
         })
-
     }
 
     
@@ -91,5 +90,6 @@ export default class Rouge extends Plugin {
         ig.MapStyle.registerStyle('default', 'lorry', { sheet: 'media/map/shockwave-dng.png', railX: 176, railY: 304, lorryX: 128, lorryY: 304 })
         ig.MapStyle.registerStyle('default', 'rotateBlocker', { sheet: 'media/map/shockwave-dng.png', x: 256, y: 720 })
         ig.MapStyle.registerStyle('default', 'destruct', { sheet: 'media/entity/style/shockwave-dng-destruct.png' })
+        ig.MapStyle.registerStyle('default', 'effect', { sheet: 'area.cold-dng' })
     }
 }

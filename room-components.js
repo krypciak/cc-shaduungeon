@@ -6,8 +6,16 @@ export class RoomComponents {
             rhombusDng: {
                 bgm: 'puzzle',
                 tileset: 'media/map/rhombus-dungeon2.png',
+                shadowTileset: 'media/map/dungeon-shadow.png',
                 mapStyle: 'rhombus-puzzle',
+                mapSounds: '',
+                weather: 'RHOMBUS_DUNGEON',
                 floor: 34,
+                black: 6,
+                addShadows: true,
+                addLight: true,
+                floorLight: 18,
+                lightStep: 6,
                 wallUp: [0, 0, 169, 137, 105, 137, 105, 105, 38],
                 wallUpShadow: [168, 200, 168, 97, 81, 65, 49, 33, 17],
                 // wallRight: [0, 0, 79],
@@ -43,12 +51,45 @@ export class RoomComponents {
                 shadowEdge23: [
                     [184, 181],
                     [213, 169]],
+            },
+            coldDng: {
+                bgm: 'coldDungeon',
+                tileset: 'media/map/cold-dng.png',
+                mapStyle: 'cold-dng',
+                mapSounds: 'COLD_DUNGEON',
+                weather: 'COLD_DUNGEON',
+                floor: 156,
+                black: 135,
+                addShadows: false,
+                addLight: true,
+                floorLight: 3,
+                lightStep: 6,
+                wallUp: [0, 0, 366, 334, 302, 334, 302, 275, 243],
+                wallRight: [0, 0, 135],
+                wallDown: [0, 0, 147],
+                wallLeft: [135, 0, 0],
             }
         }
     }
+
+    getThemeFromSel(sel) {
+        let map = sel.map
+        if (map.startsWith('rhombus-dng')) {
+            return this.themes.rhombusDng
+        } else if (map.startsWith('cold-dng')) {
+            return this.themes.coldDng
+        } else {
+            return this.themes.rhombusDng
+        }
+    }
     
-    getEmptyRoom(width, height, levels, theme) {
+    getEmptyMap(width, height, levels, theme) {
         let emptyData = ig.blitzkrieg.util.emptyArray2d(width, height)
+        let blackData = ig.copy(emptyData)
+        ig.blitzkrieg.util.fillArray2d(blackData, theme.black, 0, 0, blackData[0].length, blackData.length)
+        let redCollData = ig.copy(emptyData)
+        ig.blitzkrieg.util.fillArray2d(redCollData, 2, 0, 0, blackData[0].length, blackData.length)
+
         let layerTemplate = {
             width,
             height,
@@ -58,7 +99,6 @@ export class RoomComponents {
             yDistance: 0,
             tilesize,
             moveSpeed: { x: 0, y: 0 },
-            data: ig.copy(emptyData),
         }
         let layers = []
         let levelsArr = []
@@ -70,14 +110,16 @@ export class RoomComponents {
             background.name = 'NEW_BACKGROUND'
             background.tilesetName = theme.tileset
             background.level = i
+            background.data = i == 0 ? ig.copy(blackData) : ig.copy(emptyData)
             layers.push(background)
 
-            if (i == 0) {
+            if (i == 0 && theme.addShadows) {
                 let shadow = ig.copy(layerTemplate)
                 shadow.type = 'Background'
                 shadow.name = 'NEW_SHADOW'
-                shadow.tilesetName = 'media/map/dungeon-shadow.png'
+                shadow.tilesetName = theme.shadowTileset
                 shadow.level = i
+                shadow.data = ig.copy(emptyData)
                 layers.push(shadow)
             }
 
@@ -86,6 +128,7 @@ export class RoomComponents {
             collision.name = 'NEW_COLLISION'
             collision.tilesetName = 'media/map/collisiontiles-16x16.png',
             collision.level = i
+            collision.data = ig.copy(redCollData)
             layers.push(collision)
 
             let navigation = ig.copy(layerTemplate)
@@ -93,6 +136,7 @@ export class RoomComponents {
             navigation.name = 'NEW_NAV'
             navigation.tilesetName = 'media/map/pathmap-tiles.png',
             navigation.level = i
+            navigation.data = ig.copy(emptyData)
             layers.push(navigation)
         }
         let light = ig.copy(layerTemplate)
@@ -100,6 +144,7 @@ export class RoomComponents {
         light.name = 'NEW_LIGHT'
         light.tilesetName = 'media/map/lightmap-tiles.png'
         light.level = 'last'
+        light.data = ig.copy(emptyData)
         layers.push(light)
 
         let map = {
@@ -112,9 +157,9 @@ export class RoomComponents {
                 saveMode: 'ENABLED', 
                 bgm: theme.bgm,
                 cameraInBounds: false,
-                'map-sounds': '',
+                'map-sounds': theme.mapSounds,
                 mapStyle: theme.mapStyle,
-                weather: '',
+                weather: theme.weather,
                 area: 'rhombus-dng' 
             },
             // screen is not used? setting just to be safe
@@ -147,6 +192,85 @@ export class RoomComponents {
         return { x, y }
     }
 
+    placeWall(layer, shadow, colls, theme, side, x1, y1) {
+        switch (side) {
+        case 0: {
+            for (let i = 0; i < theme.wallUp.length; i++) {
+                let y = y1 - i + 1
+                if (theme.wallUp[i]) {
+                    layer[y][x1] = theme.wallUp[i]
+                }
+                if (theme.addShadows && theme.wallUpShadow[i]) {
+                    shadow[y][x1] = theme.wallUpShadow[i]
+                }
+            }
+            for (let i = 0; i < colls.length; i++) {
+                let coll = colls[i]
+                if (i > 0) { coll[y1][x1] = 1 }
+                coll[y1 - 1][x1] = 2
+                coll[y1 - 2][x1] = 2
+            }
+            break
+        }
+        case 1: {
+            for (let i = 0; i < theme.wallRight.length; i++) {
+                let x = x1 - theme.wallRight.length + i + 1
+                if (theme.wallRight[i]) {
+                    if (! layer[y1][x]) { 
+                        layer[y1][x] = theme.wallRight[i]
+                    }
+
+                    for (let coll of colls) {
+                        coll[y1][x] = 2
+                        coll[y1][x + 1] = 2
+                    }
+                }
+                if (theme.addShadows && theme.wallRightShadow[i]) shadow[y1][x] = theme.wallRightShadow[i]
+            }
+            break
+        }
+        case 2: {
+            for (let i = 0; i < theme.wallDown.length; i++) {
+                let y = y1 - theme.wallDown.length + i + 1
+                if (theme.wallDown[i]) {
+                    layer[y][x1] = theme.wallDown[i]
+                    for (let h = 0; h < colls.length; h++) {
+                        let coll = colls[h]
+                        if (h > 0) { 
+                            coll[y - 1][x1] = 1
+                            coll[y - 2][x1] = 1
+                        }
+                        coll[y][x1] = 2
+                        coll[y + 1][x1] = 2
+                    }
+                }
+                if (theme.addShadows && theme.wallDownShadow[i]) {
+                    shadow[y][x1] = theme.wallDownShadow[i]
+                }
+            }
+            break
+        }
+        case 3: {
+            for (let i = 0; i < theme.wallLeft.length; i++) {
+                let x = x1 + i - 1
+                if (theme.wallLeft[i]) {
+                    if (! layer[y1][x]) { 
+                        layer[y1][x] = theme.wallLeft[i]
+                    }
+                    for (let coll of colls) {
+                        coll[y1][x] = 2
+                        coll[y1][x - 1] = 2
+                    }
+                }
+                if (theme.addShadows && theme.wallLeftShadow[i]) {
+                    shadow[y1][x] = theme.wallLeftShadow[i]
+                }
+            }
+            break
+        }
+        }
+    }
+
     rectRoom(map, rect, theme, addSpace, drawSides, ds, ts) {
         let rectX1 = Math.floor(rect.x / tilesize)
         let rectY1 = Math.floor(rect.y / tilesize)
@@ -167,18 +291,17 @@ export class RoomComponents {
             let layer, shadow, colls = [], light, navs = []
             // find layers
             for (let l of map.layer) {
-                if (! layer && l.type == 'Background' && l.name == 'NEW_BACKGROUND' && l.level == 0) { layer = l.data }
-                if (! shadow && l.type == 'Background' && l.name == 'NEW_SHADOW' && l.level == 0) { shadow = l.data }
+                if (! layer && l.type == 'Background' && l.name == 'NEW_BACKGROUND' && l.level == map.masterLevel) { layer = l.data }
+                if (theme.addShadows && ! shadow && l.type == 'Background' && l.name == 'NEW_SHADOW' && l.level == map.masterLevel) { shadow = l.data }
                 if (l.type == 'Collision' && l.name == 'NEW_COLLISION') { colls.push(l.data) }
                 if (l.type == 'Navigation' && l.name == 'NEW_NAV') { navs.push(l.data) }
                 if (! light && l.type == 'Light' && l.name == 'NEW_LIGHT') { light = l.data }
             }
-
             // draw floor
             for (let y = floorY1; y < floorY2; y++) {
                 for (let x = floorX1; x < floorX2; x++) {
                     layer[y][x] = theme.floor
-                    shadow[y][x] = 0
+                    if (theme.addShadows) { shadow[y][x] = 0 }
                     for (let coll of colls) { coll[y][x] = 0 }
                     light[y][x] = 0
                     if (! ds || ! ds.noNavMap) { 
@@ -191,21 +314,9 @@ export class RoomComponents {
 
             if (drawSides[0]) {
                 for (let x = floorX1; x < floorX2; x++) {
-                    for (let i = 0; i < theme.wallUp.length; i++) {
-                        let y = floorY1 - i + 1
-                        if (theme.wallUp[i]) {
-                            layer[y][x] = theme.wallUp[i]
-                        }
-                        if (theme.wallUpShadow[i]) {
-                            shadow[y][x] = theme.wallUpShadow[i]
-                        }
-                    }
-                    for (let coll of colls) { 
-                        coll[floorY1 - 1][x] = 2
-                        coll[floorY1 - 2][x] = 2
-                    }
+                    this.placeWall(layer, shadow, colls, theme, 0, x, floorY1)
                 }
-            } else {
+            } else if (theme.addShadows) {
                 ig.blitzkrieg.util.parseArrayAt2d(shadow, theme.shadowEdge23, floorX1, floorY1 - 2)
                 ig.blitzkrieg.util.parseArrayAt2d(shadow, theme.shadowEdge21, floorX2 - 2, floorY1 - 2)
                 for (let x = floorX1 + 2; x < floorX2 - 2; x++) {
@@ -217,21 +328,9 @@ export class RoomComponents {
 
             if (drawSides[1]) {
                 for (let y = floorY1; y < floorY2; y++) {
-                    for (let i = 0; i < theme.wallRight.length; i++) {
-                        let x = floorX2 - theme.wallRight.length + i + 1
-                        if (theme.wallRight[i]) {
-                            if (! layer[y][x]) { 
-                                layer[y][x] = theme.wallRight[i]
-                            }
-                            for (let coll of colls) {
-                                coll[y][x] = 2
-                                coll[y][x + 1] = 2
-                            }
-                        }
-                        if (theme.wallRightShadow[i]) shadow[y][x] = theme.wallRightShadow[i]
-                    }
+                    this.placeWall(layer, shadow, colls, theme, 1, floorX2, y)
                 }
-            } else {
+            } else if (theme.addShadows) {
                 ig.blitzkrieg.util.parseArrayAt2d(shadow, theme.shadowEdge03, floorX2, floorY1)
                 ig.blitzkrieg.util.parseArrayAt2d(shadow, theme.shadowEdge23, floorX2, floorY2 - 2)
                 for (let y = floorY1 + 2; y < floorY2 - 2; y++) {
@@ -244,21 +343,9 @@ export class RoomComponents {
 
             if (drawSides[2]) {
                 for (let x = floorX1; x < floorX2; x++) {
-                    for (let i = 0; i < theme.wallDown.length; i++) {
-                        let y = floorY2 - theme.wallDown.length + i + 1
-                        if (theme.wallDown[i]) {
-                            layer[y][x] = theme.wallDown[i]
-                            for (let coll of colls) {
-                                coll[y][x] = 2
-                                coll[y + 1][x] = 2
-                            }
-                        }
-                        if (theme.wallDownShadow[i]) {
-                            shadow[y][x] = theme.wallDownShadow[i]
-                        }
-                    }
+                    this.placeWall(layer, shadow, colls, theme, 2, x, floorY2)
                 }
-            } else {
+            } else if (theme.addShadows) {
                 ig.blitzkrieg.util.parseArrayAt2d(shadow, theme.shadowEdge03, floorX1, floorY2)
                 ig.blitzkrieg.util.parseArrayAt2d(shadow, theme.shadowEdge01, floorX2 - 2, floorY2)
                 for (let x = floorX1 + 2; x < floorX2 - 2; x++) {
@@ -271,21 +358,9 @@ export class RoomComponents {
             
             if (drawSides[3]) {
                 for (let y = floorY1; y < floorY2; y++) {
-                    for (let i = 0; i < theme.wallLeft.length; i++) {
-                        let x = floorX1 + i - 1
-                        if (theme.wallLeft[i]) {
-                            if (! layer[y][x]) { 
-                                layer[y][x] = theme.wallLeft[i]
-                            }
-                            for (let coll of colls) {
-                                coll[y][x] = 2
-                                coll[y][x - 1] = 2
-                            }
-                        }
-                        if (theme.wallLeftShadow[i]) shadow[y][x] = theme.wallLeftShadow[i]
-                    }
+                    this.placeWall(layer, shadow, colls, theme, 3, floorX1, y)
                 }
-            } else {
+            } else if (theme.addShadows) {
                 ig.blitzkrieg.util.parseArrayAt2d(shadow, theme.shadowEdge01, floorX1 - 2, floorY1)
                 ig.blitzkrieg.util.parseArrayAt2d(shadow, theme.shadowEdge21, floorX1 - 2, floorY2 - 2)
                 for (let y = floorY1 + 2; y < floorY2 - 2; y++) {
@@ -296,28 +371,56 @@ export class RoomComponents {
             }
 
 
-
-            // fix shadow corners
-            if (drawSides[0] && drawSides[3]) {
-                ig.blitzkrieg.util.parseArrayAt2d(shadow, theme.shadowCorner03, floorX1, floorY1)
-            }
-            if (drawSides[0] && drawSides[1]) {
-                ig.blitzkrieg.util.parseArrayAt2d(shadow, theme.shadowCorner01, floorX2 - 2, floorY1)
-            }
-            if (drawSides[2] && drawSides[3]) {
-                ig.blitzkrieg.util.parseArrayAt2d(shadow, theme.shadowCorner23, floorX1, floorY2 - 2)
-            }
-            if (drawSides[2] && drawSides[1]) {
-                ig.blitzkrieg.util.parseArrayAt2d(shadow, theme.shadowCorner21, floorX2 - 2, floorY2 - 2)
-            }
-
-            // add light wip
-            for (let y = rectY1 - 2; y < rectY2 + 2; y += 6) {
-                for (let x = rectX1 - 2; x < rectX2 + 2; x += 6) {
-                    light[y][x] = 18
-                    // layer[y][x] = 70
+            if (theme.addShadows) {
+                // fix shadow corners
+                if (drawSides[0] && drawSides[3]) {
+                    ig.blitzkrieg.util.parseArrayAt2d(shadow, theme.shadowCorner03, floorX1, floorY1)
+                }
+                if (drawSides[0] && drawSides[1]) {
+                    ig.blitzkrieg.util.parseArrayAt2d(shadow, theme.shadowCorner01, floorX2 - 2, floorY1)
+                }
+                if (drawSides[2] && drawSides[3]) {
+                    ig.blitzkrieg.util.parseArrayAt2d(shadow, theme.shadowCorner23, floorX1, floorY2 - 2)
+                }
+                if (drawSides[2] && drawSides[1]) {
+                    ig.blitzkrieg.util.parseArrayAt2d(shadow, theme.shadowCorner21, floorX2 - 2, floorY2 - 2)
                 }
             }
+    
+
+            if (theme.addLight) {
+                let distFromWall = 5
+                let lx1 = floorX1 + distFromWall - 1
+                let ly1 = floorY1 + distFromWall - 1
+                let lx2 = floorX2 - distFromWall
+                let ly2 = floorY2 - distFromWall
+
+                let mx = Math.floor(lx1 + (lx2 - lx1)/2)
+                let my = Math.floor(ly1 + (ly2 - ly1)/2)
+                light[my][mx] = theme.floorLight
+
+                for (let x = lx1; x <= mx; x += theme.lightStep) {
+                    for (let y = ly1; y <= my; y += theme.lightStep) { light[y][x] = theme.floorLight }
+                    for (let y = ly2; y >= my; y -= theme.lightStep) { light[y][x] = theme.floorLight }
+                    light[my][x] = theme.floorLight
+                }
+                for (let x = lx2; x >= mx; x -= theme.lightStep) {
+                    for (let y = ly1; y <= my; y += theme.lightStep) { light[y][x] = theme.floorLight }
+                    for (let y = ly2; y >= my; y -= theme.lightStep) { light[y][x] = theme.floorLight }
+                    light[my][x] = theme.floorLight
+                }
+
+                for (let y = ly1; y <= ly2; y += theme.lightStep) { light[y][mx] = theme.floorLight }
+                for (let y = ly2; y >= my; y -= theme.lightStep) { light[y][mx] = theme.floorLight }
+            }
+            // for (let x = floorX1; x < floorX2; x++) {
+            //     layer[floorY1 - 7][x] = 1
+            //     layer[floorY2][x] = 1
+            // }
+            // for (let y = floorX1; y < floorX2; y++) {
+            //     layer[y][floorX1 + 1] = 1
+            //     layer[y][floorX2] = 1
+            // }
         }
 
         if (ds) {
@@ -342,7 +445,7 @@ export class RoomComponents {
             if (ds.side == 1) {
                 doorX -= 16
             }
-            map.entities.push(ig.rouge.entitySpawn.door(doorX, doorY, ds))
+            map.entities.push(ig.rouge.entitySpawn.door(doorX, doorY, map.masterLevel, ds))
         }
         if (ts) {
             let tunnelX, tunnelY
@@ -378,7 +481,8 @@ export class RoomComponents {
                 addSpace: 0,
                 ts,
             })
-        } 
+        }
+
 
         return { 
             x: floorX1*tilesize,
@@ -387,6 +491,60 @@ export class RoomComponents {
             y2: floorY2*tilesize,
             width: (floorX2 - floorX1)*tilesize,
             height: (floorY2 - floorY1)*tilesize,
+        }
+    }
+
+    addWallsInEmptySpace(map, theme, sel) {
+        let mcoll, layer, shadow, colls = []
+        for (let l of map.layer) {
+            if (! layer && l.type == 'Background' && l.name == 'NEW_BACKGROUND' && l.level == map.masterLevel) { layer = l.data }
+            if (theme.addShadows && ! shadow && l.type == 'Background' && l.name == 'NEW_SHADOW' && l.level == map.masterLevel) { shadow = l.data }
+            if (l.type == 'Collision') { 
+                colls.push(l.data) 
+                if (! mcoll && l.level == map.masterLevel) {
+                    mcoll = l.data
+                }
+            }
+        }
+        let mcollCopy = ig.copy(mcoll)
+        let additional = 0
+        for (let bb of sel.bb) {
+            let x1 = Math.floor(bb.x / tilesize), y1 = Math.floor(bb.y / tilesize)
+            let x2 = x1 + Math.floor(bb.width / tilesize) - 1, y2 = y1 + Math.floor(bb.height / tilesize) - 1
+
+            for (let y = y1; y < y2 + 1; y++) {
+                if (mcollCopy[y][x1] == 0 || mcollCopy[y][x1] == 3) {
+                    for (let y3 = y - additional; y3 < y + additional + 1; y3++) {
+                        if (! ig.blitzkrieg.puzzleSelections.isSelInPos(sel, { x: x1*tilesize - 1, y: y3*tilesize })) {
+                            this.placeWall(layer, shadow, colls, theme, 3, x1, y3)
+                        }
+                    }
+                }
+                if (mcollCopy[y][x2] == 0 || mcollCopy[y][x2] == 3) {
+                    for (let y3 = y - additional; y3 < y + additional + 1; y3++) {
+                        if (! ig.blitzkrieg.puzzleSelections.isSelInPos(sel, { x: (x2 + 1)*tilesize + 1, y: y3*tilesize })) {
+                            this.placeWall(layer, shadow, colls, theme, 1, x2 + 1, y3)
+                        }
+                    }
+                }
+            }
+
+            for (let x = x1; x < x2 + 1; x++) {
+                if (mcollCopy[y1][x] == 0 || mcollCopy[y1][x] == 3) {
+                    for (let x3 = x - additional; x3 < x + additional + 1; x3++) {
+                        if (! ig.blitzkrieg.puzzleSelections.isSelInPos(sel, { x: x3*tilesize, y: y1*tilesize - 1 })) {
+                            this.placeWall(layer, shadow, colls, theme, 0, x3, y1)
+                        }
+                    }
+                }
+                if (mcollCopy[y2][x] == 0 || mcollCopy[y2][x] == 3) {
+                    for (let x3 = x - additional; x3 < x + additional + 1; x3++) {
+                        if (! ig.blitzkrieg.puzzleSelections.isSelInPos(sel, { x: x3*tilesize, y: (y2+1)*tilesize + 1 })) {
+                            this.placeWall(layer, shadow, colls, theme, 2, x3, y2 + 1)
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -423,12 +581,99 @@ export class RoomComponents {
             let exitRect = { x: exitX, y: exitY, width, height }
             barrierMap[ts.name] = {
                 rect,
-                entarenceBarrier: ig.rouge.entitySpawn.barrier(entryRect, ts.entarenceCond, ts.side),
-                entarenceWall:       ig.rouge.entitySpawn.wall(entryRect, ts.entarenceCond, ts.side),
-                exitBarrier:      ig.rouge.entitySpawn.barrier(exitRect, ts.exitCond, ts.side),
-                exitWall:            ig.rouge.entitySpawn.wall(exitRect, ts.exitCond, ts.side),
+                entarenceBarrier: ig.rouge.entitySpawn.barrier(entryRect, map.masterLevel, ts.entarenceCond, ts.side),
+                entarenceWall:       ig.rouge.entitySpawn.wall(entryRect, map.masterLevel, ts.entarenceCond, ts.side),
+                exitBarrier:      ig.rouge.entitySpawn.barrier(exitRect, map.masterLevel,ts.exitCond, ts.side),
+                exitWall:            ig.rouge.entitySpawn.wall(exitRect, map.masterLevel,ts.exitCond, ts.side),
             }
         }
         return barrierMap
+    }
+
+    async trimMap(map, theme) {
+        let origW = map.mapWidth
+        let origH = map.mapHeight
+        let nx
+        for (nx = 0; nx < origW; nx++) {
+            let foundTile = false
+            for (let layer of map.layer) {
+                if (layer.type != 'Background') { continue }
+                for (let y = 0; y < origH; y++) {
+                    let val = layer.data[y][nx]
+                    if (val != 0 && val != theme.black) {
+                        foundTile = true
+                        break
+                    }
+                }
+                if (foundTile) { break }
+            }
+            if (foundTile) { break }
+        }
+        nx--
+
+        let ny
+        for (ny = 0; ny < origH; ny++) {
+            let foundTile = false
+            for (let layer of map.layer) {
+                if (layer.type != 'Background') { continue }
+                for (let x = 0; x < origW; x++) {
+                    let val = layer.data[ny][x]
+                    if (val != 0 && val != theme.black) {
+                        foundTile = true
+                        break
+                    }
+                }
+                if (foundTile) { break }
+            }
+            if (foundTile) { break }
+        }
+        ny--
+        // let nx = 0, ny = 0
+
+        let nw
+        for (nw = origW - 1; nw >= 0; nw--) {
+            let foundTile = false
+            for (let layer of map.layer) {
+                if (layer.type != 'Background') { continue }
+                for (let y = 0; y < origH; y++) {
+                    let val = layer.data[y][nw]
+                    if (val != 0 && val != theme.black) {
+                        foundTile = true
+                        break
+                    }
+                }
+                if (foundTile) { break }
+            }
+            if (foundTile) { nw += 2; break }
+        }
+
+        let nh
+        for (nh = origH - 1; nh >= 0; nh--) {
+            let foundTile = false
+            for (let layer of map.layer) {
+                if (layer.type != 'Background') { continue }
+                for (let x = 0; x < origW; x++) {
+                    let val = layer.data[nh][x]
+                    if (val != 0 && val != theme.black) {
+                        foundTile = true
+                        break 
+                    }
+                }
+                if (foundTile) { break }
+            }
+            if (foundTile) { nh += 2; break }
+        }
+        let newW = nw - nx + 1
+        let newH = nh - ny + 1
+
+        let emptyMap = this.getEmptyMap(newW, newH, 0, theme)
+        let newSel = ig.blitzkrieg.util.getSelFromRect({ x: nx*tilesize, y: ny*tilesize, width: newW*tilesize, height: newH*tilesize }, map.name, 0)
+
+        map = await ig.blitzkrieg.selectionCopyManager
+            .copySelToMap(emptyMap, map, newSel, 0, 0, map.name, {
+                makePuzzlesUnique: false,
+            })
+
+        return { xOffset: nx*tilesize, yOffset: ny*tilesize, map }
     }
 }
