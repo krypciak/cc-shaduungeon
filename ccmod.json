@@ -1,0 +1,32 @@
+{
+	"id": "cc-rouge",
+	"version": "1.0.0",
+	"title": {
+		"en_US": "Dungeon Generator",
+		"de_DE": "Dungeon Generator",
+		"fr_FR": "Dungeon Generator",
+		"zh_CN": "Dungeon Generator",
+		"zh_TW": "Dungeon Generator",
+		"ja_JP": "Dungeon Generator",
+		"ko_KR": "Dungeon Generator"
+	},
+	"description": {
+		"en_US": "",
+		"de_DE": "",
+		"fr_FR": "",
+		"zh_CN": "",
+		"zh_TW": "",
+		"ja_JP": "",
+		"ko_KR": ""
+	},
+	"icons": {
+		"24": "icon.png"
+	},
+	"plugin": "plugin.js",
+	"dependencies": {
+		"input-api": ">=1.0.0",
+		"cc-blitzkrieg": ">=2.0.0",
+		"crosscode": ">=1.4.0",
+		"post-game": ">=1.4.0"
+	}
+}
