@@ -53,7 +53,7 @@ export class EntitySpawn {
     }
 
     glowingLine(rect, level, cond) {
-        let { x, y, width, height } = rect
+        const { x, y, width, height } = rect
         return {
             type: 'GlowingLine',
             x, y, level,
@@ -71,7 +71,7 @@ export class EntitySpawn {
     barrier(rect, level, cond, side) {
         rect.width = Math.floor(rect.width/8)*8
         rect.height = Math.floor(rect.height/8)*8
-        let barrierType = rect.width == 8 ? 'barrierV' : 'barrierH'
+        const barrierType = rect.width == 8 ? 'barrierV' : 'barrierH'
         return {
             type: 'ScalableProp',
             x: rect.x,
@@ -95,7 +95,7 @@ export class EntitySpawn {
     wall(rect, level, cond, side) {
         rect.width = Math.floor(rect.width/8)*8
         rect.height = Math.floor(rect.height/8)*8
-        let type = rect.width == 8 ? 'WallVertical' : 'WallHorizontal'
+        const type = rect.width == 8 ? 'WallVertical' : 'WallHorizontal'
         return {
             type, 
             x: rect.x, 
@@ -117,7 +117,7 @@ export class EntitySpawn {
     }
 
     blocker(rect, level, collType, cond) {
-        let { x, y, width, height } = rect
+        const { x, y, width, height } = rect
         return {
             type: 'HiddenBlock',
             x, y, level,
@@ -203,7 +203,7 @@ export class EntitySpawn {
 
     getSpawnerEnemyCountAndSetGroup(spawner, enemyGroup) {
         let enemyCount = 0
-        for (let enemyType of spawner.settings.enemyTypes) {
+        for (const enemyType of spawner.settings.enemyTypes) {
             enemyCount += enemyType.count
             enemyType.info.group = enemyGroup
         }
@@ -338,9 +338,9 @@ export class EntitySpawn {
     }
 
     enemySpawner(rect, level, group, enemies) {
-        let enemyTypes = []
-        for (let enemyType of enemies) {
-            let obj = {
+        const enemyTypes = []
+        for (const enemyType of enemies) {
+            const obj = {
                 info: {
                     group,
                     party: '',

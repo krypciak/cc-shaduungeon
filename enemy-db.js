@@ -17,15 +17,15 @@ export class EnemyDb {
     }
 
     loadDatabase() {
-        let dbPath = ig.rouge.mod.baseDirectory + 'enemydb.json'
-        let json = require('fs').readFileSync(dbPath, 'utf8')
+        const dbPath = ig.rouge.mod.baseDirectory + 'enemydb.json'
+        const json = require('fs').readFileSync(dbPath, 'utf8')
         this.db = JSON.parse(json)
 
-        for (let eName in this.db.regularEnemies) {
+        for (const eName in this.db.regularEnemies) {
             // game database entry
-            let gde = ig.database.data.enemies[eName]
+            const gde = ig.database.data.enemies[eName]
             // db entry
-            let dbE = this.db.regularEnemies[eName]
+            const dbE = this.db.regularEnemies[eName]
             dbE.params = gde.params
             dbE.level = gde.level
             // console.log(gde, dbE)
@@ -36,16 +36,16 @@ export class EnemyDb {
     }
     
     generateRoomSeed(avg) {
-        let minStatPrec = 80
-        let maxStatPrec = 120
-        let attack = Math.floor(avg * ig.blitzkrieg.util.seedrandom(minStatPrec, maxStatPrec, mainseed)/100)
-        let defense = Math.floor(avg * ig.blitzkrieg.util.seedrandom(minStatPrec, maxStatPrec, mainseed)/100)
-        let focus = Math.floor(avg * ig.blitzkrieg.util.seedrandom(minStatPrec, maxStatPrec, mainseed)/100)
+        const minStatPrec = 80
+        const maxStatPrec = 120
+        const attack = Math.floor(avg * ig.blitzkrieg.util.seedrandom(minStatPrec, maxStatPrec, mainseed)/100)
+        const defense = Math.floor(avg * ig.blitzkrieg.util.seedrandom(minStatPrec, maxStatPrec, mainseed)/100)
+        const focus = Math.floor(avg * ig.blitzkrieg.util.seedrandom(minStatPrec, maxStatPrec, mainseed)/100)
 
-        let statLen = 3
-        let randEndLen = 16 - statLen*3 - 2
-        let randEnd = ig.blitzkrieg.util.seedrandom(0, Math.pow(10, randEndLen+1)-1, mainseed)
-        let roomseed = '7' + '' +
+        const statLen = 3
+        const randEndLen = 16 - statLen*3 - 2
+        const randEnd = ig.blitzkrieg.util.seedrandom(0, Math.pow(10, randEndLen+1)-1, mainseed)
+        const roomseed = '7' + '' +
             attack.toString().padStart(statLen, '0') + '' +
             defense.toString().padStart(statLen, '0') + '' +
             focus.toString().padStart(statLen, '0') + '' +
@@ -61,25 +61,26 @@ export class EnemyDb {
     }
 
     generateSpawner(rect, group, difficulty, level, elements) {
-        let bp = ig.game.playerEntity.params.baseParams
-        let avg = Math.floor((bp.attack + bp.focus + bp.defense)/3)
-        let roomseed = this.generateRoomSeed(avg)
+        // const bp = ig.game.playerEntity.params.baseParams
+        // const avg = Math.floor((bp.attack + bp.focus + bp.defense)/3)
+        const avg = '200'
+        const roomseed = this.generateRoomSeed(avg)
         // console.log('roomseed: ', roomseed.seed)
 
         difficulty += this.preset.difficultyOffset
 
-        // let weightAv = level / this.preset.weightRatio
+        // const weightAv = level / this.preset.weightRatio
 
-        let minDiff = difficulty - this.preset.difficultyDistance[0]
-        let maxDiff = difficulty + this.preset.difficultyDistance[1]
+        const minDiff = difficulty - this.preset.difficultyDistance[0]
+        const maxDiff = difficulty + this.preset.difficultyDistance[1]
         
-        let minLevel = level - this.preset.origLevelDistance[0]
-        let maxLevel = level + this.preset.origLevelDistance[1]
+        const minLevel = level - this.preset.origLevelDistance[0]
+        const maxLevel = level + this.preset.origLevelDistance[1]
 
         let enemyChancePool = {}
         let sum = 0
-        for (let name of this.dbKeys.regularEnemies) {
-            let e = this.db.regularEnemies[name]
+        for (const name of this.dbKeys.regularEnemies) {
+            const e = this.db.regularEnemies[name]
 
             if (this.preset.elementCompatibility) {
                 // check for element compatibility
@@ -105,11 +106,11 @@ export class EnemyDb {
                 continue 
             }
             
-            // let levelDiff = Math.exp(this.preset.levelDiffRatio * Math.abs(e.level - level)/10)
-            let levelDiff = this.calculateNumberDistance(e.level, level, this.preset.levelDiffRatio)
-            let difficultyDiff = this.calculateNumberDistance(e.difficulty, difficulty, this.preset.difficultyDiffRatio)
+            // const levelDiff = Math.exp(this.preset.levelDiffRatio * Math.abs(e.level - level)/10)
+            const levelDiff = this.calculateNumberDistance(e.level, level, this.preset.levelDiffRatio)
+            const difficultyDiff = this.calculateNumberDistance(e.difficulty, difficulty, this.preset.difficultyDiffRatio)
 
-            let totalChance = this.calculateNumberDistance(levelDiff, difficultyDiff, 1)
+            const totalChance = this.calculateNumberDistance(levelDiff, difficultyDiff, 1)
             // console.log(name, levelDiff.toFixed(2), difficultyDiff.toFixed(2), totalChance)
 
             enemyChancePool[name] = totalChance
@@ -125,14 +126,14 @@ export class EnemyDb {
         // console.log(ig.copy(enemyChancePool))
         
 
-        // let enemyCount = ig.blitzkrieg.util.seedrandom(this.preset.enemyTypeCount[0], this.preset.enemyTypeCount[1], roomseed)
-        let enemyCount = 1
-        let types = []
+        // const enemyCount = ig.blitzkrieg.util.seedrandom(this.preset.enemyTypeCount[0], this.preset.enemyTypeCount[1], roomseed)
+        const enemyCount = 1
+        const types = []
         for (let i = 0; i < enemyCount; i++) {
-            let rand = ig.blitzkrieg.util.seedrandom(0, 100, roomseed)
+            const rand = ig.blitzkrieg.util.seedrandom(0, 100, roomseed)
             let acc = 0
-            for (let obj of enemyChancePool) {
-                let chance = obj[1]
+            for (const obj of enemyChancePool) {
+                const chance = obj[1]
                 if (rand - acc <= chance) {
                     types.push(obj[0])
                     break
@@ -143,8 +144,8 @@ export class EnemyDb {
         }
         // console.log(ig.copy(types))
 
-        let enemies = []
-        for (let enemyType of types) {
+        const enemies = []
+        for (const enemyType of types) {
             enemies.push({ count: 1, type: enemyType })
         }
         // enemies = [ 
@@ -162,23 +163,23 @@ export class EnemyDb {
 
     spawnEntityMapObjects(map, rect, entranceSide, exitSide, enemies, elements) {
         exitSide = (exitSide+2)%4
-        let debugIgnoreElements = false
+        const debugIgnoreElements = false
 
         rect.x2 = rect.x + rect.width
         rect.y2 = rect.y + rect.height
-        let objectsIncluded = new Set()
-        for (let obj of enemies) {
-            let type = obj.type
-            let mapObjects = this.db.regularEnemies[type].mapElements
+        const objectsIncluded = new Set()
+        for (const obj of enemies) {
+            const type = obj.type
+            const mapObjects = this.db.regularEnemies[type].mapElements
             if (mapObjects && ! objectsIncluded.has(mapObjects)) {
-                let mx = rect.x + rect.width/2
-                let my = rect.y + rect.height/2
+                const mx = rect.x + rect.width/2
+                const my = rect.y + rect.height/2
                 objectsIncluded.add(mapObjects)
 
-                let es = ig.rouge.entitySpawn
+                const es = ig.rouge.entitySpawn
                 switch (mapObjects) {
                 case 'pole': {
-                    let pole = es.elementPole(mx - 8, my + 64)
+                    const pole = es.elementPole(mx - 8, my + 64)
                     map.entities.push(pole)
                     break
                 }
@@ -192,14 +193,14 @@ export class EnemyDb {
                     case 2: x = mx - 8; y = rect.y2 - 24; break
                     case 3: x = rect.x + 24; y = my - 8; break
                     }
-                    let magnet = es.magnet(x, y, side)
+                    const magnet = es.magnet(x, y, side)
                     map.entities.push(magnet)
                     break
                 }
                 case 'teslaCoil': {
-                    let source = es.teslaCoil(rect.x + 4, rect.y + 4, 'SOURCE')
-                    let antiCompressor = es.antiCompressor(rect.x + 24, rect.y + 4)
-                    let ground = es.teslaCoil(rect.x + 32, rect.y + 96, 'GROUND_DISCHARGE')
+                    const source = es.teslaCoil(rect.x + 4, rect.y + 4, 'SOURCE')
+                    const antiCompressor = es.antiCompressor(rect.x + 24, rect.y + 4)
+                    const ground = es.teslaCoil(rect.x + 32, rect.y + 96, 'GROUND_DISCHARGE')
                     map.entities.push(source)
                     map.entities.push(antiCompressor)
                     map.entities.push(ground)
@@ -209,28 +210,28 @@ export class EnemyDb {
                 }
                 // eslint-disable-next-line no-fallthrough
                 case 'compressor': {
-                    let boldPntMarker1 = es.boldPntMarker(mx - 16, my - 16, 1)
-                    let compressor = es.compressor(rect.x + 80, rect.y2 - 80)
+                    const boldPntMarker1 = es.boldPntMarker(mx - 16, my - 16, 1)
+                    const compressor = es.compressor(rect.x + 80, rect.y2 - 80)
                     map.entities.push(boldPntMarker1)
                     map.entities.push(compressor)
                     break
                 }
                 case 'waveTeleport': {
-                    let tp1 = es.waveTeleport(rect.x + 32, rect.y + 32)
-                    let tp2 = es.waveTeleport(rect.x2 - 32, rect.y2 - 32)
+                    const tp1 = es.waveTeleport(rect.x + 32, rect.y + 32)
+                    const tp2 = es.waveTeleport(rect.x2 - 32, rect.y2 - 32)
                     map.entities.push(tp1)
                     map.entities.push(tp2)
                     // if player is missing wave
                     if (! elements[3] || debugIgnoreElements) {
-                        let ballChangerWave1 = es.ballChangerElement(rect.x + 32, rect.y2 - 48, 'WAVE', 0)
-                        let ballChangerWave2 = es.ballChangerElement(rect.x2 - 48, rect.y + 32, 'WAVE', 0)
+                        const ballChangerWave1 = es.ballChangerElement(rect.x + 32, rect.y2 - 48, 'WAVE', 0)
+                        const ballChangerWave2 = es.ballChangerElement(rect.x2 - 48, rect.y + 32, 'WAVE', 0)
                         map.entities.push(ballChangerWave1)
                         map.entities.push(ballChangerWave2)
                     }
                     break
                 }
                 case 'waterBubblePanel': {
-                    let waterBubblePanel = es.waterBubblePanel(mx + 56, my + 56)
+                    const waterBubblePanel = es.waterBubblePanel(mx + 56, my + 56)
                     map.entities.push(waterBubblePanel)
                 }
                 }

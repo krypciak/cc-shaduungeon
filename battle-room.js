@@ -5,30 +5,30 @@ export class BattleRoom {
     }
 
     generateRoom(map, theme, x1, y1, prevMapName, puzzleStartPosSide, rc, tunnelQueue) {
-        let battleSel = ig.blitzkrieg.util
+        const battleSel = ig.blitzkrieg.util
             .getSelFromRect({ x: x1, y: y1, width: rc.battle.width, height: rc.battle.height }, map.name, 0)
 
         ig.blitzkrieg.msg('rouge', 'difficulty: ' + this.currentDifficulty, 1)
         ig.blitzkrieg.msg('rouge', 'level: ' + this.currentLevel, 1)
-        let spawnerSize = ig.copy(battleSel.size)
+        const spawnerSize = ig.copy(battleSel.size)
         spawnerSize.x += rc.battle.spacing
         spawnerSize.y += rc.battle.spacing
         spawnerSize.width -= rc.battle.spacing*2
         spawnerSize.height -= rc.battle.spacing*2
-        let elements = [1,1,1,1]
-        let { spawner, enemies } = ig.rouge.enemyDb.generateSpawner(spawnerSize, rc.enemyGroup, this.currentDifficulty, this.currentLevel, elements)
+        const elements = [1,1,1,1]
+        const { spawner, enemies } = ig.rouge.enemyDb.generateSpawner(spawnerSize, rc.enemyGroup, this.currentDifficulty, this.currentLevel, elements)
         spawner.level = map.masterLevel
         spawner.settings.spawnCondition = '!' + rc.battleDoneCond
         // this.currentLevel += 7
         // this.currentDifficulty += 0.8
 
-        let tunnelSides = [1,1,1,1]
+        const tunnelSides = [1,1,1,1]
         let tunnelSide = 3
         if ((tunnelSide+2)%4 == puzzleStartPosSide) {
             tunnelSide = (puzzleStartPosSide + 1)%4
         }
         tunnelSides[(tunnelSide + 2)%4] = 0
-        let roomSize = ig.rouge.roomComponents.rectRoom(map, battleSel.size, theme, 0, [1,1,1,1], null, {
+        const roomSize = ig.rouge.roomComponents.rectRoom(map, battleSel.size, theme, 0, [1,1,1,1], null, {
             name: 'battle1',
             side: tunnelSide,
             drawSides: tunnelSides,
@@ -49,28 +49,28 @@ export class BattleRoom {
         })
 
 
-        let barrierMap = ig.rouge.roomComponents.executeTunnelQueue(map, tunnelQueue)
+        const barrierMap = ig.rouge.roomComponents.executeTunnelQueue(map, tunnelQueue)
 
-        let enemyCount = ig.rouge.entitySpawn.getSpawnerEnemyCountAndSetGroup(spawner, rc.enemyGroup)
+        const enemyCount = ig.rouge.entitySpawn.getSpawnerEnemyCountAndSetGroup(spawner, rc.enemyGroup)
         map.entities.push(spawner)
 
 
-        let puzzleExitWall = barrierMap['puzzle'].exitWall
+        const puzzleExitWall = barrierMap['puzzle'].exitWall
         map.entities.push(puzzleExitWall)
 
         map.entities.push(ig.rouge.entitySpawn
             .blocker(puzzleExitWall.rect, map.masterLevel, 'BLOCK', '!' + rc.battleDoneCond))
 
-        let enemyCounter = ig.rouge.entitySpawn.enemyCounter(
+        const enemyCounter = ig.rouge.entitySpawn.enemyCounter(
             roomSize.x + roomSize.width/2 - 16, roomSize.y + roomSize.height/2 - 16, map.masterLevel, rc.enemyGroup, enemyCount, rc.battleDoneCond)
 
         map.entities.push(enemyCounter)
-        let glowingLineSize = Math.abs(
+        const glowingLineSize = Math.abs(
             puzzleExitWall.side % 2 == 0 ? puzzleExitWall.rect.y - enemyCounter.y : puzzleExitWall.rect.x - enemyCounter.x)
         map.entities.push(ig.rouge.entitySpawn
             .glowingLinePerpendicular(puzzleExitWall.rect, map.masterLevel, puzzleExitWall.side, glowingLineSize, rc.battleDoneCond))
 
-        let entarenceBarrier = barrierMap[rc.enemyGroup].entarenceBarrier
+        const entarenceBarrier = barrierMap[rc.enemyGroup].entarenceBarrier
         map.entities.push(entarenceBarrier)
 
         map.entities.push(ig.rouge.entitySpawn
@@ -79,11 +79,11 @@ export class BattleRoom {
         map.entities.push(ig.rouge.entitySpawn
             .touchTriggerParallel(entarenceBarrier.rect, map.masterLevel, entarenceBarrier.side, 10, 32, rc.battleStartCond))
 
-        let puzzleEntarenceWall = barrierMap['puzzle'].entarenceWall
-        let markerPos = { 
+        const puzzleEntarenceWall = barrierMap['puzzle'].entarenceWall
+        const markerPos = { 
             x: puzzleEntarenceWall.x + puzzleEntarenceWall.rect.width/2,
             y: puzzleEntarenceWall.y + puzzleEntarenceWall.rect.height/2 }
-        let puzzleEntarenceCheckpoint = 'puzzleEntarenceCheckpoint'
+        const puzzleEntarenceCheckpoint = 'puzzleEntarenceCheckpoint'
         map.entities.push(ig.rouge.entitySpawn
             .marker(markerPos.x, markerPos.y, map.masterLevel, puzzleEntarenceCheckpoint))
 
@@ -104,18 +104,18 @@ export class BattleRoom {
                 ]
             }))
 
-        let tunnelRect = barrierMap['battle1'].rect
-        let eventTriggered = false
+        const tunnelRect = barrierMap['battle1'].rect
+        const eventTriggered = false
         // aggro all enemies on the map when entering the touch trigger
         ig.game.addons.varsChanged.push({ onVarsChanged: () => {  
             if (! eventTriggered && ig.vars.storage.tmp.battle1) {
                 eventTriggered = true
-                for (let enemy of ig.game.getEntitiesByType(ig.ENTITY.Enemy)) {
+                for (const enemy of ig.game.getEntitiesByType(ig.ENTITY.Enemy)) {
                     if (enemy.enemyGroup == rc.enemyGroup) {
                         enemy.setTarget(ig.game.playerEntity)
-                        let spacing = 10
-                        let x = enemy.coll.pos.x
-                        let y = enemy.coll.pos.y
+                        const spacing = 10
+                        const x = enemy.coll.pos.x
+                        const y = enemy.coll.pos.y
                         // if the enemy is behind a barrier teleport them inside the battle room
                         if ((x + spacing >= tunnelRect.x ||
                              x - spacing >= tunnelRect.x) && 
@@ -135,6 +135,6 @@ export class BattleRoom {
 
         ig.rouge.enemyDb.spawnEntityMapObjects(map, battleSel.size, tunnelSide, puzzleStartPosSide, enemies, elements)
 
-        return battleSel
+        return { battleSel, barrierMap }
     }
 }

@@ -1,7 +1,7 @@
-let tilesize
+const tilesize = 16
+
 export class RoomComponents {
     constructor() {
-        tilesize = ig.blitzkrieg.tilesize
         this.themes = {
             rhombusDng: {
                 bgm: 'puzzle',
@@ -73,7 +73,7 @@ export class RoomComponents {
     }
 
     getThemeFromSel(sel) {
-        let map = sel.map
+        const map = sel.map
         if (map.startsWith('rhombus-dng')) {
             return this.themes.rhombusDng
         } else if (map.startsWith('cold-dng')) {
@@ -83,14 +83,14 @@ export class RoomComponents {
         }
     }
     
-    getEmptyMap(width, height, levels, theme) {
-        let emptyData = ig.blitzkrieg.util.emptyArray2d(width, height)
-        let blackData = ig.copy(emptyData)
+    getEmptyMap(width, height, levels, theme, areaName) {
+        const emptyData = ig.blitzkrieg.util.emptyArray2d(width, height)
+        const blackData = ig.copy(emptyData)
         ig.blitzkrieg.util.fillArray2d(blackData, theme.black, 0, 0, blackData[0].length, blackData.length)
-        let redCollData = ig.copy(emptyData)
+        const redCollData = ig.copy(emptyData)
         ig.blitzkrieg.util.fillArray2d(redCollData, 2, 0, 0, blackData[0].length, blackData.length)
 
-        let layerTemplate = {
+        const layerTemplate = {
             width,
             height,
             visible: 1,
@@ -100,12 +100,12 @@ export class RoomComponents {
             tilesize,
             moveSpeed: { x: 0, y: 0 },
         }
-        let layers = []
-        let levelsArr = []
+        const layers = []
+        const levelsArr = []
 
         for (let i = 0; i < levels; i++) {
             levelsArr[i] = { height: i*32 }
-            let background = ig.copy(layerTemplate)
+            const background = ig.copy(layerTemplate)
             background.type = 'Background'
             background.name = 'NEW_BACKGROUND'
             background.tilesetName = theme.tileset
@@ -114,7 +114,7 @@ export class RoomComponents {
             layers.push(background)
 
             if (i == 0 && theme.addShadows) {
-                let shadow = ig.copy(layerTemplate)
+                const shadow = ig.copy(layerTemplate)
                 shadow.type = 'Background'
                 shadow.name = 'NEW_SHADOW'
                 shadow.tilesetName = theme.shadowTileset
@@ -123,7 +123,7 @@ export class RoomComponents {
                 layers.push(shadow)
             }
 
-            let collision = ig.copy(layerTemplate)
+            const collision = ig.copy(layerTemplate)
             collision.type = 'Collision'
             collision.name = 'NEW_COLLISION'
             collision.tilesetName = 'media/map/collisiontiles-16x16.png',
@@ -131,7 +131,7 @@ export class RoomComponents {
             collision.data = ig.copy(redCollData)
             layers.push(collision)
 
-            let navigation = ig.copy(layerTemplate)
+            const navigation = ig.copy(layerTemplate)
             navigation.type = 'Navigation'
             navigation.name = 'NEW_NAV'
             navigation.tilesetName = 'media/map/pathmap-tiles.png',
@@ -139,7 +139,7 @@ export class RoomComponents {
             navigation.data = ig.copy(emptyData)
             layers.push(navigation)
         }
-        let light = ig.copy(layerTemplate)
+        const light = ig.copy(layerTemplate)
         light.type = 'Light'
         light.name = 'NEW_LIGHT'
         light.tilesetName = 'media/map/lightmap-tiles.png'
@@ -147,7 +147,7 @@ export class RoomComponents {
         light.data = ig.copy(emptyData)
         layers.push(light)
 
-        let map = {
+        const map = {
             name: 'empty',
             levels: levelsArr,
             mapWidth: width,
@@ -160,7 +160,7 @@ export class RoomComponents {
                 'map-sounds': theme.mapSounds,
                 mapStyle: theme.mapStyle,
                 weather: theme.weather,
-                area: 'rhombus-dng' 
+                area: areaName
             },
             // screen is not used? setting just to be safe
             screen: { x: 0, y: 0 },
@@ -196,7 +196,7 @@ export class RoomComponents {
         switch (side) {
         case 0: {
             for (let i = 0; i < theme.wallUp.length; i++) {
-                let y = y1 - i + 1
+                const y = y1 - i + 1
                 if (theme.wallUp[i]) {
                     layer[y][x1] = theme.wallUp[i]
                 }
@@ -205,7 +205,7 @@ export class RoomComponents {
                 }
             }
             for (let i = 0; i < colls.length; i++) {
-                let coll = colls[i]
+                const coll = colls[i]
                 if (i > 0) { coll[y1][x1] = 1 }
                 coll[y1 - 1][x1] = 2
                 coll[y1 - 2][x1] = 2
@@ -214,13 +214,13 @@ export class RoomComponents {
         }
         case 1: {
             for (let i = 0; i < theme.wallRight.length; i++) {
-                let x = x1 - theme.wallRight.length + i + 1
+                const x = x1 - theme.wallRight.length + i + 1
                 if (theme.wallRight[i]) {
                     if (! layer[y1][x]) { 
                         layer[y1][x] = theme.wallRight[i]
                     }
 
-                    for (let coll of colls) {
+                    for (const coll of colls) {
                         coll[y1][x] = 2
                         coll[y1][x + 1] = 2
                     }
@@ -231,11 +231,11 @@ export class RoomComponents {
         }
         case 2: {
             for (let i = 0; i < theme.wallDown.length; i++) {
-                let y = y1 - theme.wallDown.length + i + 1
+                const y = y1 - theme.wallDown.length + i + 1
                 if (theme.wallDown[i]) {
                     layer[y][x1] = theme.wallDown[i]
                     for (let h = 0; h < colls.length; h++) {
-                        let coll = colls[h]
+                        const coll = colls[h]
                         if (h > 0) { 
                             coll[y - 1][x1] = 1
                             coll[y - 2][x1] = 1
@@ -252,12 +252,12 @@ export class RoomComponents {
         }
         case 3: {
             for (let i = 0; i < theme.wallLeft.length; i++) {
-                let x = x1 + i - 1
+                const x = x1 + i - 1
                 if (theme.wallLeft[i]) {
                     if (! layer[y1][x]) { 
                         layer[y1][x] = theme.wallLeft[i]
                     }
-                    for (let coll of colls) {
+                    for (const coll of colls) {
                         coll[y1][x] = 2
                         coll[y1][x - 1] = 2
                     }
@@ -272,25 +272,25 @@ export class RoomComponents {
     }
 
     rectRoom(map, rect, theme, addSpace, drawSides, ds, ts) {
-        let rectX1 = Math.floor(rect.x / tilesize)
-        let rectY1 = Math.floor(rect.y / tilesize)
-        let rectX2 = rectX1 + Math.floor(rect.width / tilesize)
-        let rectY2 = rectY1 + Math.floor(rect.height / tilesize)
+        const rectX1 = Math.floor(rect.x / tilesize)
+        const rectY1 = Math.floor(rect.y / tilesize)
+        const rectX2 = rectX1 + Math.floor(rect.width / tilesize)
+        const rectY2 = rectY1 + Math.floor(rect.height / tilesize)
 
         let addWalls = true
         if (addSpace == -1) {
             addWalls = false
             addSpace = 0
         }
-        let floorX1 = rectX1 - Math.floor(addSpace / tilesize)
-        let floorY1 = rectY1 - Math.floor(addSpace / tilesize)
-        let floorX2 = rectX2 + Math.floor(addSpace / tilesize) 
-        let floorY2 = rectY2 + Math.floor(addSpace / tilesize)
+        const floorX1 = rectX1 - Math.floor(addSpace / tilesize)
+        const floorY1 = rectY1 - Math.floor(addSpace / tilesize)
+        const floorX2 = rectX2 + Math.floor(addSpace / tilesize) 
+        const floorY2 = rectY2 + Math.floor(addSpace / tilesize)
 
         if (addWalls) {
             let layer, shadow, colls = [], light, navs = []
             // find layers
-            for (let l of map.layer) {
+            for (const l of map.layer) {
                 if (! layer && l.type == 'Background' && l.name == 'NEW_BACKGROUND' && l.level == map.masterLevel) { layer = l.data }
                 if (theme.addShadows && ! shadow && l.type == 'Background' && l.name == 'NEW_SHADOW' && l.level == map.masterLevel) { shadow = l.data }
                 if (l.type == 'Collision' && l.name == 'NEW_COLLISION') { colls.push(l.data) }
@@ -302,10 +302,10 @@ export class RoomComponents {
                 for (let x = floorX1; x < floorX2; x++) {
                     layer[y][x] = theme.floor
                     if (theme.addShadows) { shadow[y][x] = 0 }
-                    for (let coll of colls) { coll[y][x] = 0 }
+                    for (const coll of colls) { coll[y][x] = 0 }
                     light[y][x] = 0
                     if (! ds || ! ds.noNavMap) { 
-                        for (let nav of navs) { 
+                        for (const nav of navs) { 
                             nav[y][x] = 1 
                         }
                     }
@@ -389,14 +389,14 @@ export class RoomComponents {
     
 
             if (theme.addLight) {
-                let distFromWall = 5
-                let lx1 = floorX1 + distFromWall - 1
-                let ly1 = floorY1 + distFromWall - 1
-                let lx2 = floorX2 - distFromWall
-                let ly2 = floorY2 - distFromWall
+                const distFromWall = 5
+                const lx1 = floorX1 + distFromWall - 1
+                const ly1 = floorY1 + distFromWall - 1
+                const lx2 = floorX2 - distFromWall
+                const ly2 = floorY2 - distFromWall
 
-                let mx = Math.floor(lx1 + (lx2 - lx1)/2)
-                let my = Math.floor(ly1 + (ly2 - ly1)/2)
+                const mx = Math.floor(lx1 + (lx2 - lx1)/2)
+                const my = Math.floor(ly1 + (ly2 - ly1)/2)
                 light[my][mx] = theme.floorLight
 
                 for (let x = lx1; x <= mx; x += theme.lightStep) {
@@ -413,14 +413,6 @@ export class RoomComponents {
                 for (let y = ly1; y <= ly2; y += theme.lightStep) { light[y][mx] = theme.floorLight }
                 for (let y = ly2; y >= my; y -= theme.lightStep) { light[y][mx] = theme.floorLight }
             }
-            // for (let x = floorX1; x < floorX2; x++) {
-            //     layer[floorY1 - 7][x] = 1
-            //     layer[floorY2][x] = 1
-            // }
-            // for (let y = floorX1; y < floorX2; y++) {
-            //     layer[y][floorX1 + 1] = 1
-            //     layer[y][floorX2] = 1
-            // }
         }
 
         if (ds) {
@@ -448,35 +440,33 @@ export class RoomComponents {
             map.entities.push(ig.rouge.entitySpawn.door(doorX, doorY, map.masterLevel, ds))
         }
         if (ts) {
-            let tunnelX, tunnelY
+            const rect = { x: 0, y: 0, width: ts.width, height: ts.height }
             if (ts.pos) {
-                ({ x: tunnelX, y: tunnelY } = ts.pos)
+                ({ x: rect.x, y: rect.y } = ts.pos)
             } else {
-                ({ x: tunnelX, y: tunnelY } = this.getRoomSidePos(ts.side, floorX1, floorY1, floorX2, floorY2, ts.prefX, ts.prefY))
+                ({ x: rect.x, y: rect.y } = this.getRoomSidePos(ts.side, floorX1, floorY1, floorX2, floorY2, ts.prefX, ts.prefY))
             }
             if (ts.side % 2 == 0) {
-                [ts.width, ts.height] = [ts.height, ts.width]
-                tunnelX -= ts.width/2
-                tunnelY -= 16
-            } else {
-                tunnelY -= ts.height/2
-                tunnelX -= 16
+                [rect.width, rect.height] = [rect.height, rect.width]
             }
-            if (ts.side == 3) {
-                tunnelX -= ts.width
-                tunnelX += 32
+            switch (ts.side) {
+            case 0: 
+                rect.x += -rect.width/2 + 32
+                rect.y += -rect.height - 16; break
+            case 1:
+                rect.x += -16
+                rect.y += -rect.height/2; break
+            case 2:
+                rect.x += -rect.width/2
+                rect.y += -16; break
+            case 3:
+                rect.x += -rect.width + 16
+                rect.y += -rect.height/2; break
             }
-            if (ts.side == 0) {
-                tunnelY -= ts.height
-                tunnelY += 32
-            }
+            const realRect = ig.copy(rect)
             ts.queue.push({
-                rect: {
-                    x: tunnelX,
-                    y: tunnelY,
-                    width: ts.width,
-                    height: ts.height,
-                }, 
+                rect,
+                realRect,
                 theme,
                 addSpace: 0,
                 ts,
@@ -496,7 +486,7 @@ export class RoomComponents {
 
     addWallsInEmptySpace(map, theme, sel) {
         let mcoll, layer, shadow, colls = []
-        for (let l of map.layer) {
+        for (const l of map.layer) {
             if (! layer && l.type == 'Background' && l.name == 'NEW_BACKGROUND' && l.level == map.masterLevel) { layer = l.data }
             if (theme.addShadows && ! shadow && l.type == 'Background' && l.name == 'NEW_SHADOW' && l.level == map.masterLevel) { shadow = l.data }
             if (l.type == 'Collision') { 
@@ -506,11 +496,11 @@ export class RoomComponents {
                 }
             }
         }
-        let mcollCopy = ig.copy(mcoll)
-        let additional = 0
-        for (let bb of sel.bb) {
-            let x1 = Math.floor(bb.x / tilesize), y1 = Math.floor(bb.y / tilesize)
-            let x2 = x1 + Math.floor(bb.width / tilesize) - 1, y2 = y1 + Math.floor(bb.height / tilesize) - 1
+        const mcollCopy = ig.copy(mcoll)
+        const additional = 0
+        for (const bb of sel.bb) {
+            const x1 = Math.floor(bb.x / tilesize), y1 = Math.floor(bb.y / tilesize)
+            const x2 = x1 + Math.floor(bb.width / tilesize) - 1, y2 = y1 + Math.floor(bb.height / tilesize) - 1
 
             for (let y = y1; y < y2 + 1; y++) {
                 if (mcollCopy[y][x1] == 0 || mcollCopy[y][x1] == 3) {
@@ -549,9 +539,9 @@ export class RoomComponents {
     }
 
     executeTunnelQueue(map, queue) {
-        let barrierMap = {}
-        for (let tunnel of queue) {
-            let ts = tunnel.ts
+        const barrierMap = {}
+        for (const tunnel of queue) {
+            const ts = tunnel.ts
             let rect = tunnel.rect
             rect = this.rectRoom(map, rect, tunnel.theme, tunnel.addSpace, ts.drawSides, ts.door, null)
             
@@ -577,10 +567,11 @@ export class RoomComponents {
             case 2: entryY = rect.y; exitY = rect.y2; break
             case 3: entryX = rect.x2; exitX = rect.x; break
             }
-            let entryRect = { x: entryX, y: entryY, width, height }
-            let exitRect = { x: exitX, y: exitY, width, height }
+            const entryRect = { x: entryX, y: entryY, width, height }
+            const exitRect = { x: exitX, y: exitY, width, height }
             barrierMap[ts.name] = {
                 rect,
+                realRect: tunnel.realRect,
                 entarenceBarrier: ig.rouge.entitySpawn.barrier(entryRect, map.masterLevel, ts.entarenceCond, ts.side),
                 entarenceWall:       ig.rouge.entitySpawn.wall(entryRect, map.masterLevel, ts.entarenceCond, ts.side),
                 exitBarrier:      ig.rouge.entitySpawn.barrier(exitRect, map.masterLevel,ts.exitCond, ts.side),
@@ -591,15 +582,15 @@ export class RoomComponents {
     }
 
     async trimMap(map, theme) {
-        let origW = map.mapWidth
-        let origH = map.mapHeight
+        const origW = map.mapWidth
+        const origH = map.mapHeight
         let nx
         for (nx = 0; nx < origW; nx++) {
             let foundTile = false
-            for (let layer of map.layer) {
+            for (const layer of map.layer) {
                 if (layer.type != 'Background') { continue }
                 for (let y = 0; y < origH; y++) {
-                    let val = layer.data[y][nx]
+                    const val = layer.data[y][nx]
                     if (val != 0 && val != theme.black) {
                         foundTile = true
                         break
@@ -614,10 +605,10 @@ export class RoomComponents {
         let ny
         for (ny = 0; ny < origH; ny++) {
             let foundTile = false
-            for (let layer of map.layer) {
+            for (const layer of map.layer) {
                 if (layer.type != 'Background') { continue }
                 for (let x = 0; x < origW; x++) {
-                    let val = layer.data[ny][x]
+                    const val = layer.data[ny][x]
                     if (val != 0 && val != theme.black) {
                         foundTile = true
                         break
@@ -628,15 +619,15 @@ export class RoomComponents {
             if (foundTile) { break }
         }
         ny--
-        // let nx = 0, ny = 0
+        // const nx = 0, ny = 0
 
         let nw
         for (nw = origW - 1; nw >= 0; nw--) {
             let foundTile = false
-            for (let layer of map.layer) {
+            for (const layer of map.layer) {
                 if (layer.type != 'Background') { continue }
                 for (let y = 0; y < origH; y++) {
-                    let val = layer.data[y][nw]
+                    const val = layer.data[y][nw]
                     if (val != 0 && val != theme.black) {
                         foundTile = true
                         break
@@ -650,10 +641,10 @@ export class RoomComponents {
         let nh
         for (nh = origH - 1; nh >= 0; nh--) {
             let foundTile = false
-            for (let layer of map.layer) {
+            for (const layer of map.layer) {
                 if (layer.type != 'Background') { continue }
                 for (let x = 0; x < origW; x++) {
-                    let val = layer.data[nh][x]
+                    const val = layer.data[nh][x]
                     if (val != 0 && val != theme.black) {
                         foundTile = true
                         break 
@@ -663,11 +654,11 @@ export class RoomComponents {
             }
             if (foundTile) { nh += 2; break }
         }
-        let newW = nw - nx + 1
-        let newH = nh - ny + 1
+        const newW = nw - nx + 1
+        const newH = nh - ny + 1
 
-        let emptyMap = this.getEmptyMap(newW, newH, 0, theme)
-        let newSel = ig.blitzkrieg.util.getSelFromRect({ x: nx*tilesize, y: ny*tilesize, width: newW*tilesize, height: newH*tilesize }, map.name, 0)
+        const emptyMap = this.getEmptyMap(newW, newH, 0, theme, map.attributes.area)
+        const newSel = ig.blitzkrieg.util.getSelFromRect({ x: nx*tilesize, y: ny*tilesize, width: newW*tilesize, height: newH*tilesize }, map.name, 0)
 
         map = await ig.blitzkrieg.selectionCopyManager
             .copySelToMap(emptyMap, map, newSel, 0, 0, map.name, {

@@ -1,12 +1,11 @@
-import { RoomGenerator } from './room-generate.js'
 import { RoomComponents } from './room-components.js'
 import { EntitySpawn } from './entity-spawn.js'
 import { BattleRoom } from './battle-room.js'
 import { EnemyDb } from './enemy-db.js'
+import { DungeonGenerator } from './dungeon-generate.js'
 
-export default class Rouge extends Plugin {
+export default class Rouge {
     constructor(mod) {
-        super()
         this.mod = mod
     }
 
@@ -15,8 +14,8 @@ export default class Rouge extends Plugin {
         ig.lang.labels.sc.gui.menu['new-game'].options.names.rouge = 'Rouge'
         ig.lang.labels.sc.gui.menu['new-game'].options.descriptions.rouge = 'Start game in rougelike mode'
         
-        for (let keyName in this.keys) {
-            let key = this.keys[keyName]
+        for (const keyName in this.keys) {
+            const key = this.keys[keyName]
             ig.lang.labels.sc.gui.options.controls.keys[keyName] = key.desc
         }
     }
@@ -28,11 +27,31 @@ export default class Rouge extends Plugin {
             transitionEnded(...args) {
                 if (sc.model.currentSubState == sc.GAME_MODEL_SUBSTATE.NEWGAME && sc.newgame.get('rouge')) {
                     ig.game.teleport(ig.rouge.initMapName, new ig.TeleportPosition('start'), 'NEW')
+                    // ig.game.teleport('rouge.gen.0', new ig.TeleportPosition('start'), 'NEW')
                     return
                 }
                 this.parent(...args)
             }
         })
+    }
+
+    async startGame(titleGuiInstance) {
+        ig.bgm.clear('MEDIUM_OUT');
+        ig.interact.removeEntry(titleGuiInstance.buttonInteract)
+        ig.game.start(sc.START_MODE.NEW_GAME_PLUS, 1)
+        ig.game.setPaused(false);
+        sc.newgame.options.rouge = true
+        sc.newgame.setActive('rouge')
+        ig.rouge.dungeonGenerator.generate()
+        
+        // cheat in some stats
+        sc.model.player.setSpLevel(4)
+        sc.model.player.setLevel(99)
+        sc.model.player.equip = {head:657,leftArm:577,rightArm:607,torso:583,feet:596}
+        for (let i = 0; i < sc.model.player.skillPoints.length; i++) { sc.model.player.skillPoints[i] = 200 }
+        for (let i = 0; i < 400; i++) { sc.model.player.learnSkill(i) }
+        for (let i = 0; i < sc.model.player.skillPoints.length; i++) { sc.model.player.skillPoints[i] = 0 }
+        sc.model.player.updateStats()
     }
 
     
@@ -43,10 +62,10 @@ export default class Rouge extends Plugin {
         }
         ig.rouge = this
 
-        await ig.blitzkrieg.battleSelectionManager.findAllSpawners()
+        // await ig.blitzkrieg.battleSelectionManager.findAllSpawners()
+        ig.rouge.dungeonGenerator = new DungeonGenerator()
         ig.rouge.roomComponents = new RoomComponents()
         ig.rouge.entitySpawn = new EntitySpawn()
-        ig.rouge.roomGenerator = new RoomGenerator()
         ig.rouge.battleRoom = new BattleRoom()
         ig.rouge.enemyDb = new EnemyDb()
         
@@ -59,8 +78,8 @@ export default class Rouge extends Plugin {
         ig.blitzkrieg.battleSelections.load(ig.rouge.battleFileIndex)
 
         ig.rouge.keys = {
-            'generate':           { desc: 'generate',            func: ig.rouge.roomGenerator.generate,
-                key: ig.KEY_5,      header: 'rouge-keybindings', hasDivider: false, parent: ig.rouge.roomGenerator },
+            'generate':           { desc: 'generate',            func: ig.rouge.dungeonGenerator.generate,
+                key: ig.KEY_5,      header: 'rouge-keybindings', hasDivider: false, parent: ig.rouge.dungeonGenerator },
         }
         // ig.rouge.setupTabs()
         ig.blitzkrieg.bindKeys(ig.rouge.keys, sc.OPTION_CATEGORY.BLITZKRIEG)
@@ -68,6 +87,21 @@ export default class Rouge extends Plugin {
         ig.rouge.initMapName = 'rouge.start'
         ig.rouge.registerEvents()
 
+        const self = this
+        sc.TitleScreenButtonGui.inject({
+            init() {
+                this.parent();
+                ig.lang.labels.sc.gui['title-screen'].generateDungeon = 'Generate dungeon'
+                const self1 = this
+                this._createButton(
+                    'generateDungeon',
+                    this.buttons.last().hook.pos.y + 39,
+                    this.buttons.length,
+                    () => { self.startGame(self1) },
+                    'generateDungeon',
+                );
+            },
+        });
         ig.rouge.loaded = true
     }
 
