@@ -135,6 +135,6 @@ export class BattleRoom {
 
         ig.rouge.enemyDb.spawnEntityMapObjects(map, battleSel.size, tunnelSide, puzzleStartPosSide, enemies, elements)
 
-        return { battleSel, barrierMap }
+        return { battleSel, barrierMap, tunnelSide, roomSize }
     }
 }

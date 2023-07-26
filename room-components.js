@@ -415,8 +415,8 @@ export class RoomComponents {
             }
         }
 
+        let doorX, doorY
         if (ds) {
-            let doorX, doorY
             if (ds.pos) {
                 ({ x: doorX, y: doorY } = ds.pos)
                 ts.width += 16
@@ -463,10 +463,8 @@ export class RoomComponents {
                 rect.x += -rect.width + 16
                 rect.y += -rect.height/2; break
             }
-            const realRect = ig.copy(rect)
             ts.queue.push({
                 rect,
-                realRect,
                 theme,
                 addSpace: 0,
                 ts,
@@ -481,6 +479,8 @@ export class RoomComponents {
             y2: floorY2*tilesize,
             width: (floorX2 - floorX1)*tilesize,
             height: (floorY2 - floorY1)*tilesize,
+            doorX,
+            doorY,
         }
     }
 
@@ -571,7 +571,6 @@ export class RoomComponents {
             const exitRect = { x: exitX, y: exitY, width, height }
             barrierMap[ts.name] = {
                 rect,
-                realRect: tunnel.realRect,
                 entarenceBarrier: ig.rouge.entitySpawn.barrier(entryRect, map.masterLevel, ts.entarenceCond, ts.side),
                 entarenceWall:       ig.rouge.entitySpawn.wall(entryRect, map.masterLevel, ts.entarenceCond, ts.side),
                 exitBarrier:      ig.rouge.entitySpawn.barrier(exitRect, map.masterLevel,ts.exitCond, ts.side),

@@ -1,3 +1,5 @@
+import { getMapStamp } from './area-generate.js'
+
 const tilesize = 16
 
 export async function generateRoom(puzzleSel, area, index) {
@@ -26,7 +28,6 @@ async function buildRoom(puzzleSel, rc, mapIndex) {
         rc.theme = ig.rouge.roomComponents.getThemeFromSel(puzzleSel)
     }
 
-    //const baseMapName = 'rouge.300empty'
     const mapName = 'rouge/gen/' + mapIndex
     const nextMapName = 'rouge/gen/' + (mapIndex+1)
     const prevMapName = 'rouge/gen/' + (mapIndex-1)
@@ -42,7 +43,6 @@ async function buildRoom(puzzleSel, rc, mapIndex) {
     const puzzleUniqueId = ig.blitzkrieg.util.generateUniqueID()
     const puzzleUniqueSel = ig.blitzkrieg.selectionCopyManager
         .createUniquePuzzleSelection(puzzleSel, rc.puzzle.x, rc.puzzle.y, puzzleUniqueId)
-    console.log(puzzleUniqueSel)
 
     const puzzleStartPosInRect = ig.copy(puzzleUniqueSel.data.startPos)
     const puzzleStartPosSide = puzzleSel.data.type == 'whole room' ?
@@ -182,7 +182,7 @@ async function buildRoom(puzzleSel, rc, mapIndex) {
         ig.rouge.roomComponents.addWallsInEmptySpace(map, rc.theme, puzzleUniqueSel)
     }
 
-    const { battleSel, barrierMap } = ig.rouge.battleRoom.generateRoom(
+    const { battleSel, barrierMap, tunnelSide: battleTunnelSide, roomSize: battleRoomRect } = ig.rouge.battleRoom.generateRoom(
         map, rc.theme, battleRoomX1, battleRoomY1, prevMapName, puzzleStartPosSide, rc, tunnelQueue)
 
     map = await ig.blitzkrieg.selectionCopyManager
@@ -213,15 +213,47 @@ async function buildRoom(puzzleSel, rc, mapIndex) {
         fileIndex: ig.rouge.battleFileIndex,
     }
 
-    const rects = [ battleSel.size ]
-    rects.push({ x: puzzleRoomRect.x - obj.xOffset, y: puzzleRoomRect.y - obj.yOffset,
-        width: puzzleRoomRect.width, height: puzzleRoomRect.height })
+    puzzleRoomRect.x -= obj.xOffset
+    puzzleRoomRect.y -= obj.yOffset
+    battleRoomRect.x -= obj.xOffset
+    battleRoomRect.y -= obj.yOffset
+
+    const rects = []
+    rects.push(puzzleRoomRect)
+    rects.push(battleRoomRect)
     for (const tunnelName in barrierMap) {
-        const rect = barrierMap[tunnelName].realRect
-        rects.push({ x: rect.x - obj.xOffset, y: rect.y - obj.yOffset, width: rect.width, height: rect.height })
+        const rect = barrierMap[tunnelName].rect
+        rect.x -= obj.xOffset
+        rect.y -= obj.yOffset
+        rects.push(rect)
     }
 
     map.displayName = rc.displayName
+    map.type = 'DUNGEON'
+
+    map.stamps = []
+    const stampDist = 64
+
+    puzzleEndPosInRect.x -= obj.xOffset
+    puzzleEndPosInRect.y -= obj.yOffset
+    map.stamps.push(getMapStamp(rc.area, puzzleEndPosInRect, puzzleEndPosSide))
+    setPosToBehindStamp(puzzleEndPosInRect, puzzleEndPosSide, stampDist)
+    map.stamps.push(getMapStamp(rc.area, puzzleEndPosInRect, 'ENEMY'))
+
+    let entarenceDoorPos = barrierMap['battle1'].rect
+    entarenceDoorPos = { x: entarenceDoorPos.doorX - obj.xOffset, y: entarenceDoorPos.doorY - obj.yOffset }
+    map.stamps.push(getMapStamp(rc.area, entarenceDoorPos, battleTunnelSide))
+    setPosToBehindStamp(entarenceDoorPos, battleTunnelSide, stampDist)
+    map.stamps.push(getMapStamp(rc.area, entarenceDoorPos, 'GREEN'))
 
     return { map, rects }
+}
+
+function setPosToBehindStamp(pos, side, dist) {
+    switch (side) {
+    case 0: pos.y += dist; break
+    case 1: pos.x -= dist; break
+    case 2: pos.y -= dist; break
+    case 3: pos.x += dist; break
+    }
 }

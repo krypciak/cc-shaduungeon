@@ -1,4 +1,5 @@
 const fs = require('fs')
+const tilesize = 16
 
 export class Area {
     constructor(name, displayName, displayDesc, areaType, x, y) {
@@ -36,10 +37,10 @@ export class Area {
         ig.database.data.areas[this.name] = dbEntry
     }
 
-    generateTiles(s) {
+    generateTilesAndStamps(s) {
         let xOffset = 5
         let yOffset = 5
-        const tilesize = 32
+        const tilesize = 64
         const tiles = ig.blitzkrieg.util.emptyArray2d(s.width, s.height)
         for (let i = 0; i < s.maps.length; i++) {
             const obj = s.maps[i]
@@ -55,21 +56,30 @@ export class Area {
                     }
                 }
             }
+            for (const stamp of obj.map.stamps) {
+                console.log(stamp)
+                const x = stamp.x + xOffset*8
+                const y = stamp.y + yOffset*8
+                const z = 0
+                console.log(x, y, z)
+                sc.menu.addMapStamp(stamp.area, stamp.type, x, y, z)
+            }
             xOffset += Math.floor(obj.map.mapWidth/(tilesize/16)) + 2
         }
         return tiles
     }
 
     generateArea(s) {
-        const tiles = this.generateTiles(s)
+        const tiles = this.generateTilesAndStamps(s)
 
         const maps = []
         let i = 0
         for (const obj of s.maps) {
+            const map = obj.map
             maps.push({
-                path: obj.map.name.split('/').join('.'),
-                name: this.allLanguages('index ' + i),
-                dungeon: 'DUNGEON',
+                path: map.name.split('/').join('.'),
+                name: this.allLanguages(map.displayName),
+                dungeon: map.type,
                 offset: { x: 0, y: 0 }
             })
             i++
@@ -98,4 +108,19 @@ export class Area {
     saveToFile(areaObj) {
         fs.writeFileSync(ig.rouge.mod.baseDirectory + 'assets/data/areas/' + this.name + '.json', JSON.stringify(areaObj))
     }
+}
+
+export function getMapStamp(area, pos, dir) {
+    let type
+    if (typeof dir == 'number') {
+        switch (dir) {
+        case 0: type = 'ARROW_UP'; break
+        case 1: type = 'ARROW_RIGHT'; break
+        case 2: type = 'ARROW_DOWN'; break
+        case 3: type = 'ARROW_LEFT'; break
+        }
+    } else {
+        type = dir
+    }
+    return { area, type, x: Math.floor(pos.x/8), y: Math.floor(pos.y/8), z: 0 }
 }
