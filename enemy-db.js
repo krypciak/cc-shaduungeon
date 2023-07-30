@@ -17,7 +17,7 @@ export class EnemyDb {
     }
 
     loadDatabase() {
-        const dbPath = ig.rouge.mod.baseDirectory + 'enemydb.json'
+        const dbPath = rouge.mod.baseDirectory + 'enemydb.json'
         const json = require('fs').readFileSync(dbPath, 'utf8')
         this.db = JSON.parse(json)
 
@@ -31,20 +31,20 @@ export class EnemyDb {
             // console.log(gde, dbE)
         }
         this.dbKeys = {
-            regularEnemies: Object.keys(ig.rouge.enemyDb.db.regularEnemies)
+            regularEnemies: Object.keys(rouge.enemyDb.db.regularEnemies)
         }
     }
     
     generateRoomSeed(avg) {
         const minStatPrec = 80
         const maxStatPrec = 120
-        const attack = Math.floor(avg * ig.blitzkrieg.util.seedrandom(minStatPrec, maxStatPrec, mainseed)/100)
-        const defense = Math.floor(avg * ig.blitzkrieg.util.seedrandom(minStatPrec, maxStatPrec, mainseed)/100)
-        const focus = Math.floor(avg * ig.blitzkrieg.util.seedrandom(minStatPrec, maxStatPrec, mainseed)/100)
+        const attack = Math.floor(avg * blitzkrieg.util.seedrandom(minStatPrec, maxStatPrec, mainseed)/100)
+        const defense = Math.floor(avg * blitzkrieg.util.seedrandom(minStatPrec, maxStatPrec, mainseed)/100)
+        const focus = Math.floor(avg * blitzkrieg.util.seedrandom(minStatPrec, maxStatPrec, mainseed)/100)
 
         const statLen = 3
         const randEndLen = 16 - statLen*3 - 2
-        const randEnd = ig.blitzkrieg.util.seedrandom(0, Math.pow(10, randEndLen+1)-1, mainseed)
+        const randEnd = blitzkrieg.util.seedrandom(0, Math.pow(10, randEndLen+1)-1, mainseed)
         const roomseed = '7' + '' +
             attack.toString().padStart(statLen, '0') + '' +
             defense.toString().padStart(statLen, '0') + '' +
@@ -126,11 +126,11 @@ export class EnemyDb {
         // console.log(ig.copy(enemyChancePool))
         
 
-        // const enemyCount = ig.blitzkrieg.util.seedrandom(this.preset.enemyTypeCount[0], this.preset.enemyTypeCount[1], roomseed)
+        // const enemyCount = blitzkrieg.util.seedrandom(this.preset.enemyTypeCount[0], this.preset.enemyTypeCount[1], roomseed)
         const enemyCount = 1
         const types = []
         for (let i = 0; i < enemyCount; i++) {
-            const rand = ig.blitzkrieg.util.seedrandom(0, 100, roomseed)
+            const rand = blitzkrieg.util.seedrandom(0, 100, roomseed)
             let acc = 0
             for (const obj of enemyChancePool) {
                 const chance = obj[1]
@@ -158,7 +158,7 @@ export class EnemyDb {
         // ]
         // console.log(ig.copy(enemies))
 
-        return { spawner: ig.rouge.entitySpawn.enemySpawner(rect, -1, group, enemies), enemies }
+        return { spawner: rouge.entitySpawn.enemySpawner(rect, -1, group, enemies), enemies }
     }
 
     spawnEntityMapObjects(map, rect, entranceSide, exitSide, enemies, elements) {
@@ -176,7 +176,7 @@ export class EnemyDb {
                 const my = rect.y + rect.height/2
                 objectsIncluded.add(mapObjects)
 
-                const es = ig.rouge.entitySpawn
+                const es = rouge.entitySpawn
                 switch (mapObjects) {
                 case 'pole': {
                     const pole = es.elementPole(mx - 8, my + 64)

@@ -26,8 +26,9 @@ export class EntitySpawn {
                 blockEventCondition: '',
                 variation: '',
                 doorType: 'DEFAULT',
-                mapId: ig.rouge.entitySpawn.mapId++, 
-            }
+                mapId: rouge.entitySpawn.mapId++, 
+            },
+            dir: ds.side
         }
     }
 
@@ -61,7 +62,7 @@ export class EntitySpawn {
                 name: '',
                 size: { x: width, y: height },
                 condition: cond,
-                mapId: ig.rouge.entitySpawn.mapId++, 
+                mapId: rouge.entitySpawn.mapId++, 
             },
             // this used by me, not by the game
             rect,
@@ -85,7 +86,7 @@ export class EntitySpawn {
                 size: {x: rect.width, y: rect.height},
                 wallZHeight: 32,
                 spawnCondition: (cond ? cond : ''),
-                mapId: ig.rouge.entitySpawn.mapId++, 
+                mapId: rouge.entitySpawn.mapId++, 
             },
             // this used by me, not by the game
             rect, side,
@@ -109,7 +110,7 @@ export class EntitySpawn {
                 condition: (cond ? cond : ''),
                 size: {x: rect.width, y: rect.height},
                 wallZHeight: 32,
-                mapId: ig.rouge.entitySpawn.mapId++, 
+                mapId: rouge.entitySpawn.mapId++, 
             },
             // this used by me, not by the game
             rect, side,
@@ -129,7 +130,7 @@ export class EntitySpawn {
                 shape: 'RECTANGLE',
                 terrain: 'NORMAL',
                 spawnCondition: cond,
-                mapId: ig.rouge.entitySpawn.mapId++, 
+                mapId: rouge.entitySpawn.mapId++, 
             },
             rect,
         }
@@ -146,7 +147,7 @@ export class EntitySpawn {
                 preVariable: '', 
                 postVariable: cond,
                 countVariable: '',
-                mapId: ig.rouge.entitySpawn.mapId++, 
+                mapId: rouge.entitySpawn.mapId++, 
             }
         }
     }
@@ -156,7 +157,7 @@ export class EntitySpawn {
         switch (side) {
         case 0:
             rect.x = rect.x - size
-            rect.y = rect.y + 8 + offset
+            rect.y = rect.y + 12 + offset
             break
         case 1:
             rect.x = rect.x - size - offset
@@ -365,7 +366,7 @@ export class EntitySpawn {
                 onActivateClear: true,
                 enemyTypes,
                 spawnCondition: '',
-                mapId: ig.rouge.entitySpawn.mapId++, 
+                mapId: rouge.entitySpawn.mapId++, 
             }
         }
     }

@@ -1,8 +1,9 @@
 import { getMapStamp } from './area-generate.js'
+import { generateBattleRoom } from './battle-room.js'
 
 const tilesize = 16
 
-export async function generateRoom(puzzleSel, area, index) {
+export async function generateRoom(puzzleSel, area, index, battleTunnelSide) {
     const roomConfig = {
         size: { width: 150, height: 150 },
         displayName: 'Generated room ' + index,
@@ -15,7 +16,7 @@ export async function generateRoom(puzzleSel, area, index) {
         battleDoneCond: 'map.battle1done',
         enemyGroup: 'battle1',
         battle: { width: 21*tilesize, height: 21*tilesize, spacing: 2*tilesize },
-        battleTunnel: { width: 5*tilesize, height: 5*tilesize },
+        battleTunnel: { width: 5*tilesize, height: 5*tilesize, side: battleTunnelSide },
     }
 
     return await buildRoom(puzzleSel, roomConfig, index)
@@ -25,47 +26,47 @@ export async function generateRoom(puzzleSel, area, index) {
 async function buildRoom(puzzleSel, rc, mapIndex) {
     rc = ig.copy(rc)
     if (rc.theme == 'adaptive') {
-        rc.theme = ig.rouge.roomComponents.getThemeFromSel(puzzleSel)
+        rc.theme = rouge.roomComponents.getThemeFromSel(puzzleSel)
     }
 
     const mapName = 'rouge/gen/' + mapIndex
     const nextMapName = 'rouge/gen/' + (mapIndex+1)
     const prevMapName = 'rouge/gen/' + (mapIndex-1)
 
-    const condId = ig.blitzkrieg.util.generateUniqueID()
+    const condId = blitzkrieg.util.generateUniqueID()
     rc.battleStartCond = rc.battleStartCond + '_' + condId
     rc.battleDoneCond = rc.battleDoneCond + '_' + condId
 
     const tunnelQueue = []
-    let map = ig.rouge.roomComponents.getEmptyMap(rc.size.width, rc.size.height, rc.levels, rc.theme, rc.area)
+    let map = rouge.roomComponents.getEmptyMap(rc.size.width, rc.size.height, rc.levels, rc.theme, rc.area)
     map.name = mapName
 
-    const puzzleUniqueId = ig.blitzkrieg.util.generateUniqueID()
-    const puzzleUniqueSel = ig.blitzkrieg.selectionCopyManager
+    const puzzleUniqueId = blitzkrieg.util.generateUniqueID()
+    const puzzleUniqueSel = blitzkrieg.selectionCopyManager
         .createUniquePuzzleSelection(puzzleSel, rc.puzzle.x, rc.puzzle.y, puzzleUniqueId)
 
     const puzzleStartPosInRect = ig.copy(puzzleUniqueSel.data.startPos)
     const puzzleStartPosSide = puzzleSel.data.type == 'whole room' ?
-        ig.blitzkrieg.util.setToClosestSelSide(puzzleStartPosInRect, puzzleUniqueSel) :
-        ig.blitzkrieg.util.setToClosestRectSide(puzzleStartPosInRect, puzzleUniqueSel.size).side
+        blitzkrieg.util.setToClosestSelSide(puzzleStartPosInRect, puzzleUniqueSel) :
+        blitzkrieg.util.setToClosestRectSide(puzzleStartPosInRect, puzzleUniqueSel.size).side
 
     const puzzleEndPosInRect = ig.copy(puzzleUniqueSel.data.endPos)
     const puzzleEndPosSide = puzzleSel.data.type == 'whole room' ?
-        ig.blitzkrieg.util.setToClosestSelSide(puzzleEndPosInRect, puzzleUniqueSel) :
-        ig.blitzkrieg.util.setToClosestRectSide(puzzleEndPosInRect, puzzleUniqueSel.size).side
+        blitzkrieg.util.setToClosestSelSide(puzzleEndPosInRect, puzzleUniqueSel) :
+        blitzkrieg.util.setToClosestRectSide(puzzleEndPosInRect, puzzleUniqueSel.size).side
 
     
     let puzzleSolveCond, puzzleSolveCondUnique
     if (puzzleSel.data.completionType == 'normal') {
-        puzzleSolveCond = ig.blitzkrieg.puzzleSelectionManager.getPuzzleSolveCondition(puzzleSel)
-        console.log('puzzleSolution: ' + puzzleSolveCond)
+        puzzleSolveCond = blitzkrieg.puzzleSelectionManager.getPuzzleSolveCondition(puzzleSel)
+        // console.log('puzzleSolution: ' + puzzleSolveCond)
     } else {
         puzzleSolveCond = 'map.puzzleSolution1'
     }
     puzzleSolveCondUnique = puzzleSolveCond
     if (! puzzleSolveCond.includes('_destroyed')) { puzzleSolveCondUnique += '_' + puzzleUniqueId }
 
-    const puzzleMap = ig.copy(await ig.blitzkrieg.util.getMapObject(puzzleSel.map))
+    const puzzleMap = ig.copy(await blitzkrieg.util.getMapObject(puzzleSel.map))
     let closestX, closestY, foundAnyDoor = false, closestDoor = 1000000
     if (puzzleSel.data.type == 'whole room') {
         for (let i = 0; i < puzzleMap.entities.length; i++) {
@@ -80,7 +81,7 @@ async function buildRoom(puzzleSel, rc, mapIndex) {
             }
         }
     }
-    console.log('closestDoor: ', closestDoor)
+    // console.log('closestDoor: ', closestDoor)
     for (let i = 0; i < puzzleMap.entities.length; i++) {
         const e = puzzleMap.entities[i]
         if (e.type == 'Door' || e.type == 'TeleportGround') {
@@ -90,6 +91,12 @@ async function buildRoom(puzzleSel, rc, mapIndex) {
                 e.settings.name = 'end'
                 e.settings.marker = 'start'
                 e.settings.map = nextMapName
+                switch (e.settings.dir) {
+                    case 'SOUTH': e.dir = 0; break
+                    case 'WEST': e.dir = 1; break
+                    case 'NORTH': e.dir = 2; break
+                    case 'EAST': e.dir = 3; break
+                }
             } else {
                 puzzleMap.entities.splice(i, 1)
                 i--
@@ -111,7 +118,7 @@ async function buildRoom(puzzleSel, rc, mapIndex) {
             destMap: nextMapName,
             cond: (puzzleSel.data.completionType == 'getTo' ? '' : puzzleSolveCondUnique)
         }
-        puzzleRoomRect = ig.rouge.roomComponents
+        puzzleRoomRect = rouge.roomComponents
             .rectRoom(map, puzzleUniqueSel.size, rc.theme, -1, [1,1,1,1], ds, {
                 name: 'puzzle',
                 side: puzzleStartPosSide,
@@ -124,7 +131,7 @@ async function buildRoom(puzzleSel, rc, mapIndex) {
                 noNavMap: true,
             })
     } else if (puzzleSel.data.type == 'add walls') {
-        puzzleRoomRect = ig.rouge.roomComponents
+        puzzleRoomRect = rouge.roomComponents
             .rectRoom(map, puzzleUniqueSel.size, rc.theme, rc.puzzle.spacing, [1,1,1,1], {
                 side: puzzleEndPosSide,
                 prefX: puzzleEndPosInRect.x,
@@ -148,12 +155,12 @@ async function buildRoom(puzzleSel, rc, mapIndex) {
     }
 
 
-    // ig.blitzkrieg.msg('rouge', 'difficulty: ' + this.currentDifficulty, 1)
-    // ig.blitzkrieg.msg('rouge', 'level: ' + this.currentLevel, 1)
+    // blitzkrieg.msg('rouge', 'difficulty: ' + this.currentDifficulty, 1)
+    // blitzkrieg.msg('rouge', 'level: ' + this.currentLevel, 1)
 
     if (puzzleSel.data.completionType == 'getTo' && puzzleSel.data.type == 'add walls') {
         const endPos = puzzleSel.data.endPos
-        puzzleMap.entities.push(ig.rouge.entitySpawn.floorSwitch(endPos.x, endPos.y, endPos.level, puzzleSolveCond))
+        puzzleMap.entities.push(rouge.entitySpawn.floorSwitch(endPos.x, endPos.y, endPos.level, puzzleSolveCond))
     }
 
     let battleRoomX1, battleRoomY1
@@ -179,13 +186,13 @@ async function buildRoom(puzzleSel, rc, mapIndex) {
     }
     
     if (puzzleSel.data.type == 'whole room') {
-        ig.rouge.roomComponents.addWallsInEmptySpace(map, rc.theme, puzzleUniqueSel)
+        rouge.roomComponents.addWallsInEmptySpace(map, rc.theme, puzzleUniqueSel)
     }
 
-    const { battleSel, barrierMap, tunnelSide: battleTunnelSide, roomSize: battleRoomRect } = ig.rouge.battleRoom.generateRoom(
+    const { battleSel, barrierMap, tunnelSide: battleTunnelSide, roomSize: battleRoomRect } = generateBattleRoom(
         map, rc.theme, battleRoomX1, battleRoomY1, prevMapName, puzzleStartPosSide, rc, tunnelQueue)
 
-    map = await ig.blitzkrieg.selectionCopyManager
+    map = await blitzkrieg.selectionCopyManager
         .copySelToMap(map, puzzleMap, puzzleSel, rc.puzzle.x, rc.puzzle.y, mapName, {
             disableEntities: false,
             mergeLayers: false,
@@ -195,36 +202,36 @@ async function buildRoom(puzzleSel, rc, mapIndex) {
             uniqueSel: puzzleUniqueSel,
         })
 
-    const obj = await ig.rouge.roomComponents.trimMap(map, rc.theme)
+    const obj = await rouge.roomComponents.trimMap(map, rc.theme)
     map = obj.map
 
-    ig.blitzkrieg.util.setSelPos(puzzleUniqueSel, puzzleUniqueSel.size.x - obj.xOffset, puzzleUniqueSel.size.y - obj.yOffset)
-    ig.blitzkrieg.util.setSelPos(battleSel, battleSel.size.x - obj.xOffset, battleSel.size.y - obj.yOffset)
+    blitzkrieg.util.setSelPos(puzzleUniqueSel, puzzleUniqueSel.size.x - obj.offset.x, puzzleUniqueSel.size.y - obj.offset.y)
+    blitzkrieg.util.setSelPos(battleSel, battleSel.size.x - obj.offset.x, battleSel.size.y - obj.offset.y)
 
-    ig.blitzkrieg.puzzleSelections.selHashMap[mapName] = {
+    blitzkrieg.puzzleSelections.selHashMap[mapName] = {
         sels: [ puzzleUniqueSel ],
         tempSel: { bb: [], map: mapName, data: {} },
-        fileIndex: ig.rouge.puzzleFileIndex,
+        fileIndex: rouge.puzzleFileIndex,
     }
 
-    ig.blitzkrieg.battleSelections.selHashMap[map.name] = {
+    blitzkrieg.battleSelections.selHashMap[map.name] = {
         sels: [ battleSel ],
         tempSel: { bb: [], map: map.name, data: {} },
-        fileIndex: ig.rouge.battleFileIndex,
+        fileIndex: rouge.battleFileIndex,
     }
 
-    puzzleRoomRect.x -= obj.xOffset
-    puzzleRoomRect.y -= obj.yOffset
-    battleRoomRect.x -= obj.xOffset
-    battleRoomRect.y -= obj.yOffset
+    puzzleRoomRect.x -= obj.offset.x
+    puzzleRoomRect.y -= obj.offset.y
+    battleRoomRect.x -= obj.offset.x
+    battleRoomRect.y -= obj.offset.y
 
     const rects = []
     rects.push(puzzleRoomRect)
     rects.push(battleRoomRect)
     for (const tunnelName in barrierMap) {
         const rect = barrierMap[tunnelName].rect
-        rect.x -= obj.xOffset
-        rect.y -= obj.yOffset
+        rect.x -= obj.offset.x
+        rect.y -= obj.offset.y
         rects.push(rect)
     }
 
@@ -234,19 +241,19 @@ async function buildRoom(puzzleSel, rc, mapIndex) {
     map.stamps = []
     const stampDist = 64
 
-    puzzleEndPosInRect.x -= obj.xOffset
-    puzzleEndPosInRect.y -= obj.yOffset
-    map.stamps.push(getMapStamp(rc.area, puzzleEndPosInRect, puzzleEndPosSide))
+    puzzleEndPosInRect.x -= obj.offset.x
+    puzzleEndPosInRect.y -= obj.offset.y
+    map.stamps.push(getMapStamp(rc.area, puzzleEndPosInRect, puzzleEndPosSide, puzzleEndPosSide))
     setPosToBehindStamp(puzzleEndPosInRect, puzzleEndPosSide, stampDist)
-    map.stamps.push(getMapStamp(rc.area, puzzleEndPosInRect, 'ENEMY'))
+    map.stamps.push(getMapStamp(rc.area, puzzleEndPosInRect, 'ENEMY', puzzleEndPosSide))
 
     let entarenceDoorPos = barrierMap['battle1'].rect
-    entarenceDoorPos = { x: entarenceDoorPos.doorX - obj.xOffset, y: entarenceDoorPos.doorY - obj.yOffset }
-    map.stamps.push(getMapStamp(rc.area, entarenceDoorPos, battleTunnelSide))
+    entarenceDoorPos = { x: entarenceDoorPos.doorX - obj.offset.x, y: entarenceDoorPos.doorY - obj.offset.y }
+    map.stamps.push(getMapStamp(rc.area, entarenceDoorPos, battleTunnelSide, battleTunnelSide))
     setPosToBehindStamp(entarenceDoorPos, battleTunnelSide, stampDist)
-    map.stamps.push(getMapStamp(rc.area, entarenceDoorPos, 'GREEN'))
+    map.stamps.push(getMapStamp(rc.area, entarenceDoorPos, 'GREEN', battleTunnelSide))
 
-    return { map, rects }
+    return { map, rects, puzzleEndPosSide }
 }
 
 function setPosToBehindStamp(pos, side, dist) {

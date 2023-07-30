@@ -1,6 +1,5 @@
 import { RoomComponents } from './room-components.js'
 import { EntitySpawn } from './entity-spawn.js'
-import { BattleRoom } from './battle-room.js'
 import { EnemyDb } from './enemy-db.js'
 import { DungeonGenerator } from './dungeon-generate.js'
 
@@ -26,7 +25,7 @@ export default class Rouge {
         sc.CrossCode.inject({
             transitionEnded(...args) {
                 if (sc.model.currentSubState == sc.GAME_MODEL_SUBSTATE.NEWGAME && sc.newgame.get('rouge')) {
-                    ig.game.teleport(ig.rouge.initMapName, new ig.TeleportPosition('start'), 'NEW')
+                    ig.game.teleport(rouge.initMapName, new ig.TeleportPosition('start'), 'NEW')
                     // ig.game.teleport('rouge.gen.0', new ig.TeleportPosition('start'), 'NEW')
                     return
                 }
@@ -42,7 +41,7 @@ export default class Rouge {
         ig.game.setPaused(false);
         sc.newgame.options.rouge = true
         sc.newgame.setActive('rouge')
-        ig.rouge.dungeonGenerator.generate()
+        rouge.dungeonGenerator.generate()
         
         // cheat in some stats
         sc.model.player.setSpLevel(4)
@@ -56,36 +55,35 @@ export default class Rouge {
 
     
     async prestart() {
-        if (! ig.blitzkrieg || ! ('loaded' in ig.blitzkrieg && ig.blitzkrieg.loaded)) {
+        if (! blitzkrieg || ! ('loaded' in blitzkrieg && blitzkrieg.loaded)) {
             console.error('cc-blitzkrieg not loaded! rouge cannot load')
             return
         }
-        ig.rouge = this
+        window.rouge = this
 
-        // await ig.blitzkrieg.battleSelectionManager.findAllSpawners()
-        ig.rouge.dungeonGenerator = new DungeonGenerator()
-        ig.rouge.roomComponents = new RoomComponents()
-        ig.rouge.entitySpawn = new EntitySpawn()
-        ig.rouge.battleRoom = new BattleRoom()
-        ig.rouge.enemyDb = new EnemyDb()
+        // await blitzkrieg.battleSelectionManager.findAllSpawners()
+        rouge.dungeonGenerator = new DungeonGenerator()
+        rouge.roomComponents = new RoomComponents()
+        rouge.entitySpawn = new EntitySpawn()
+        rouge.enemyDb = new EnemyDb()
         
-        ig.rouge.puzzleFileIndex = ig.blitzkrieg.puzzleSelections.jsonfiles.length
-        ig.blitzkrieg.puzzleSelections.jsonfiles.push(ig.rouge.mod.baseDirectory + 'json/genPuzzle.json')
-        ig.blitzkrieg.puzzleSelections.load(ig.rouge.puzzleFileIndex)
+        rouge.puzzleFileIndex = blitzkrieg.puzzleSelections.jsonfiles.length
+        blitzkrieg.puzzleSelections.jsonfiles.push(rouge.mod.baseDirectory + 'json/genPuzzle.json')
+        blitzkrieg.puzzleSelections.load(rouge.puzzleFileIndex)
 
-        ig.rouge.battleFileIndex = ig.blitzkrieg.battleSelections.jsonfiles.length
-        ig.blitzkrieg.battleSelections.jsonfiles.push(ig.rouge.mod.baseDirectory + 'json/genBattle.json')
-        ig.blitzkrieg.battleSelections.load(ig.rouge.battleFileIndex)
+        rouge.battleFileIndex = blitzkrieg.battleSelections.jsonfiles.length
+        blitzkrieg.battleSelections.jsonfiles.push(rouge.mod.baseDirectory + 'json/genBattle.json')
+        blitzkrieg.battleSelections.load(rouge.battleFileIndex)
 
-        ig.rouge.keys = {
-            'generate':           { desc: 'generate',            func: ig.rouge.dungeonGenerator.generate,
-                key: ig.KEY_5,      header: 'rouge-keybindings', hasDivider: false, parent: ig.rouge.dungeonGenerator },
+        rouge.keys = {
+            //'generate':           { desc: 'generate',            func: rouge.dungeonGenerator.generate,
+            //    key: ig.KEY_5,      header: 'rouge-keybindings', hasDivider: false, parent: rouge.dungeonGenerator },
         }
-        // ig.rouge.setupTabs()
-        ig.blitzkrieg.bindKeys(ig.rouge.keys, sc.OPTION_CATEGORY.BLITZKRIEG)
+        // rouge.setupTabs()
+        blitzkrieg.bindKeys(rouge.keys, sc.OPTION_CATEGORY.BLITZKRIEG)
 
-        ig.rouge.initMapName = 'rouge.start'
-        ig.rouge.registerEvents()
+        rouge.initMapName = 'rouge.start'
+        rouge.registerEvents()
 
         const self = this
         sc.TitleScreenButtonGui.inject({
@@ -102,13 +100,13 @@ export default class Rouge {
                 );
             },
         });
-        ig.rouge.loaded = true
+        rouge.loaded = true
     }
 
     async main() {
-        if (! ig.blitzkrieg || ! ('loaded' in ig.blitzkrieg && ig.blitzkrieg.loaded)) { return }
-        ig.rouge.updateLabels()
-        ig.rouge.enemyDb.loadDatabase()
+        if (! blitzkrieg || ! ('loaded' in blitzkrieg && blitzkrieg.loaded)) { return }
+        rouge.updateLabels()
+        rouge.enemyDb.loadDatabase()
 
         // register non existing puzzle elements
         ig.MapStyle.registerStyle('default', 'puzzle2', { sheet: 'media/entity/style/default-puzzle-2-fix.png' })
