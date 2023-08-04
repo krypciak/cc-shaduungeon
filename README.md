@@ -14,4 +14,6 @@ git clone https://github.com/krypciak/cc-rouge
 cd cc-rouge
 npm install
 npm run start
+// this should return no errors or very little
+npx tsc
 ```
