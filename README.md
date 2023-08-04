@@ -1,7 +1,7 @@
 # WIP CrossCode Dungeon Generator
 
 ![Realeses](https://github.com/CCDirectLink/organization/blob/master/assets/badges/releases%402x.png)  
-Don't get to excited lol
+Don't get too excited lol
 
 ## Dependencies
 1. [cc-blitzkrieg](https://github.com/krypciak/cc-blitzkrieg)
