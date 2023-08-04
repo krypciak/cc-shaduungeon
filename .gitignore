@@ -2,9 +2,12 @@ package-lock.json
 old
 old.txt
 plugin.js
-special-enemies.txt
 assets/data/maps/rouge/gen/*
 assets/data/maps/rouge/fun/*
+assets/data/maps/rouge/10emptytmp.json
+assets/data/maps/rouge/300emptytmp.json
+assets/data/areas/rougeDng.json
+json/special-enemies.txt
 json/genBattle.json
 json/genPuzzle.json
 dist
