@@ -1,21 +1,32 @@
-// import { getMapStamp } from './area-generate.js'
-// import { generateBattleRoom } from './battle-room.js'
-import { CCMap, Dir, DirUtil, Selection, Rect, Blitzkrieg } from './util.js'
-import { MapBuilder, RoomTheme, Room, getPosOnRectSide } from './room-builder.js'
+import { CCMap, Dir, DirUtil, Selection, EntityRect, Blitzkrieg, Rect, MapPoint, EntityPoint } from './util.js'
+import { MapBuilder, Room, getPosOnRectSide } from './room-builder.js'
 import { AreaInfo } from './area-builder.js'
 import { MapEntity } from './entity-spawn.js'
 
 declare const blitzkrieg: Blitzkrieg
-// const tilesize: number = 16
+const tilesize: number = 16
 
 export class DungeonMapBuilder extends MapBuilder {
-    private puzzle: {
+    static basePath: string = 'rouge/gen'
+    pathParent?: string
+    name?: string
+    path?: string
+    displayName?: string
+
+    puzzle: {
         type: 'whole room' | 'add walls' | 'dis'
         completion: 'normal' | 'getTo' | 'item'
         origMapName: string
         map?: CCMap
-        room?: Room
-        tunnel?: Room
+        room: {
+            initialPos: MapPoint
+            spacing: number
+            room?: Room
+        }
+        tunnel: {
+            size: MapPoint
+            room?: Room
+        }
         unique?: {
             id: number
             sel: Selection
@@ -28,40 +39,70 @@ export class DungeonMapBuilder extends MapBuilder {
             pos: Vec3,
             dir: Dir,
         }
-        theme?: RoomTheme
+    }
+    battle: {
+        room: {
+            size: MapPoint
+            spacing: number
+            room?: Room
+        }
+        tunnel: {
+            size: MapPoint
+            room?: Room
+        }
+        sel?: Selection
     }
 
     constructor(
-        public theme: RoomTheme,
         public areaInfo: AreaInfo, 
         public puzzleSel: Selection) {
 
         super(200, 200, 4, areaInfo)
+        
         this.puzzle = {
             type: puzzleSel.data.type!,
             completion: puzzleSel.data.completionType!,
-            origMapName: puzzleSel.map
+            origMapName: puzzleSel.map,
+            room: {
+                initialPos: new MapPoint(this.width/2, this.height/2),
+                spacing: 3
+            },
+            tunnel: {
+                size: new MapPoint(5, 5),
+            }
+        }
+
+        this.battle = {
+            room: {
+                size: new MapPoint(21, 21),
+                spacing: 2,
+            },
+            tunnel: {
+                size: new MapPoint(5, 5),
+            }
         }
     }
 
-    private createTunnelRoom(baseRoom: Room, name: string, dir: Dir, size: Vec2, addNavMap: boolean, exitDir: Dir | null, setPos: Vec2, preffedPos: boolean): Room {
-        const pos = preffedPos ? getPosOnRectSide(dir, baseRoom.floorRect, setPos) : setPos
-        const rect = new Rect(pos.x, pos.y, size.x, size.y)
+    private createTunnelRoom(baseRoom: Room, name: string, dir: Dir, size: MapPoint,
+        addNavMap: boolean, exitDir: Dir | null, setPos: EntityPoint, preffedPos: boolean): Room {
+
+        const pos: EntityPoint = preffedPos ? getPosOnRectSide(EntityPoint, dir, baseRoom.floorRect.to(EntityRect), setPos) : setPos
+        const rect: EntityRect = EntityRect.fromTwoPoints(pos, size.to(EntityPoint))
         if (! DirUtil.isVertical(dir)) {
             [rect.width, rect.height] = [rect.height, rect.width]
         }
         switch (dir) {
             case Dir.NORTH:
-                rect.x += -rect.width/2
-                rect.y += -rect.height + 16; break
+                rect.x += rect.width/2
+                rect.y += -rect.height + tilesize; break
             case Dir.EAST:
-                rect.x += -16
+                rect.x += -tilesize
                 rect.y += -rect.height/2; break
             case Dir.SOUTH:
-                rect.x += -rect.width/2
-                rect.y += -16; break
+                rect.x += rect.width/2
+                rect.y += -tilesize; break
             case Dir.WEST:
-                rect.x += -rect.width + 16
+                rect.x += -rect.width + tilesize
                 rect.y += -rect.height/2; break
         }
         const wallSides: boolean[] = [true, true, true, true]
@@ -72,27 +113,29 @@ export class DungeonMapBuilder extends MapBuilder {
 
     async calculatePositions() {
         const puzzle = this.puzzle
+        const battle = this.battle
 
-        {
-            const initPos: Vec2 = { x: this.width/2, y: this.height/2 }
-
-            const id = blitzkrieg.util.generateUniqueId()
-            const sel = blitzkrieg.selectionCopyManager.createUniquePuzzleSelection(this.puzzleSel, initPos.x, initPos.y, id)
+        if (true) {
+            const id = blitzkrieg.util.generateUniqueID()
+            const sel = blitzkrieg.selectionCopyManager
+                .createUniquePuzzleSelection(this.puzzleSel, puzzle.room.initialPos.x, puzzle.room.initialPos.y, id)
             puzzle.unique = { id, sel }
-
+            
+            puzzle.unique.sel.size = Rect.new(EntityRect, puzzle.unique.sel.size)
         }
-        {
-            const spacing = puzzle.type == 'add walls' ? 3 : 0
-            puzzle.room = new Room('puzzle', puzzle.unique.sel.size, [true, true, true, true], spacing, true)
+        if (true) {
+            const spacing = puzzle.type == 'add walls' ? puzzle.room.spacing : 0
+            puzzle.room.room = new Room('puzzle', puzzle.unique.sel.size, [true, true, true, true], spacing, true)
+            this.addRoom(puzzle.room.room)
         }
-        {
+        if (true) {
             const pos: Vec3 = ig.copy(puzzle.unique.sel.data.startPos)
             const dir: Dir = puzzle.type == 'whole room' ?
                 blitzkrieg.util.setToClosestSelSide(pos, puzzle.unique.sel) :
                 blitzkrieg.util.setToClosestRectSide(pos, puzzle.unique.sel.size).side
             puzzle.start = { pos, dir }
         }
-        {
+        if (true) {
             const pos: Vec3 = ig.copy(puzzle.unique.sel.data.endPos)
             const dir: Dir = puzzle.type == 'whole room' ?
                 blitzkrieg.util.setToClosestSelSide(pos, puzzle.unique.sel) :
@@ -121,22 +164,112 @@ export class DungeonMapBuilder extends MapBuilder {
                     }
                 }
                 if (! closestEntity) { throw new Error('no doors found?') }
-                puzzle.room.door = { name, pos: { x: closestEntity.x, y: closestEntity.y },
+                puzzle.room.room.door = { name, pos: EntityPoint.fromVec(closestEntity),
                     dir: DirUtil.convertToDir(
                         // @ts-ignore settings.dir is always there
                         closestEntity.settings.dir
                 )}
-            } else if (puzzle.completion == 'getTo') {
-                puzzle.room.setDoor(name, puzzle.end.dir, puzzle.end.pos)
+            } else if (puzzle.type == 'add walls') {
+                puzzle.room.room.setDoor(name, puzzle.end.dir, EntityPoint.fromVec(puzzle.end.pos))
             }
+            if (! puzzle.room.room.door) { throw new Error('puzzle exit door is not set') }
         }
-        {
-            const size = { x: 5, y: 5 }
-            puzzle.tunnel = this.createTunnelRoom(puzzle.room, 'puzzleTunnel', puzzle.start.dir, size, false, DirUtil.flip(puzzle.start.dir), puzzle.end.pos, puzzle.type == 'add walls')
-        }
+        puzzle.tunnel.room = this.createTunnelRoom(puzzle.room.room, 'puzzleTunnel', puzzle.start.dir,
+            puzzle.tunnel.size, false, DirUtil.flip(puzzle.start.dir), EntityPoint.fromVec(puzzle.end.pos), puzzle.type == 'add walls')
+        this.addRoom(puzzle.tunnel.room)
 
+        if (true) {
+            const size: EntityPoint = battle.room.size.to(EntityPoint)
+            const tunnelSize: EntityPoint = battle.tunnel.size.to(EntityPoint)
+
+            const puzzleRoomFloorRect: EntityRect = puzzle.room.room.floorRect.to(EntityRect)
+
+            const pos: EntityPoint = new EntityPoint(0, 0)
+            if (DirUtil.isVertical(puzzle.start.dir)) {
+                pos.x = puzzle.start.pos.x - size.x/2
+            } else {
+                pos.y = puzzle.start.pos.y - size.y/2
+            }
+            if (puzzle.type == 'whole room') {
+                switch (puzzle.start.dir) {
+                    case Dir.NORTH: pos.y = puzzle.start.pos.y - tunnelSize.x - size.y + tilesize; break
+                    case Dir.EAST:  pos.x = puzzle.start.pos.x + tunnelSize.x - tilesize; break
+                    case Dir.SOUTH: pos.y = puzzle.start.pos.y + tunnelSize.x - tilesize; break
+                    case Dir.WEST:  pos.x = puzzle.start.pos.x - tunnelSize.x - size.x + tilesize; break
+                }
+            } else {
+                switch (puzzle.start.dir) {
+                    case Dir.NORTH: pos.y = puzzleRoomFloorRect.y - tunnelSize.x - size.y; break
+                    case Dir.EAST:  pos.x = puzzleRoomFloorRect.x2 + tunnelSize.x; break
+                    case Dir.SOUTH: pos.y = puzzleRoomFloorRect.y2 + tunnelSize.x; break
+                    case Dir.WEST:  pos.x = puzzleRoomFloorRect.x - tunnelSize.x - size.x; break
+                }
+            }
+            battle.room.room = new Room('battle', EntityRect.fromTwoPoints(pos, size), [true, true, true, true], battle.room.spacing, true)
+            this.addRoom(battle.room.room)
+        }
+    }
+
+    calculateBattleTunnel(dir: Dir) {
+        const puzzle = this.puzzle
+        const battle = this.battle
+
+        if (! battle.room.room) { throw new Error('cannot calculate battle tunnel position') }
+        if (dir == DirUtil.flip(puzzle.start!.dir)) { throw new Error('invalid battle tunnel dir input, conflicts with puzzle tunnel') }
+
+        const prefPos: EntityPoint = new MapPoint(
+            battle.room.room.floorRect.x + battle.room.room.floorRect.width/2,
+            battle.room.room.floorRect.y + battle.room.room.floorRect.height/2
+        ).to(EntityPoint)
+
+        battle.tunnel.room = this.createTunnelRoom(battle.room.room, 'battleTunnel', dir, battle.tunnel.size, false, null, prefPos, true)
+        this.addRoom(battle.tunnel.room)
+
+        battle.tunnel.room.setDoor('entarence', dir)
+    }
+
+    async decideMapName(index: number) {
+        this.pathParent = DungeonMapBuilder.basePath
+        this.name = index.toString()
+        this.path = this.pathParent + '/' + this.name
+        const mapDisplayName: string = await getMapDisplayName(this.puzzle.map!)
+        this.displayName = `${index.toString()} => ${mapDisplayName}`
     }
 }
+
+
+const mapNameToMapDisplayName: Map<string, string> = new Map<string, string>()
+
+export async function getMapDisplayName(map: CCMap): Promise<string> {
+    return new Promise<string>(async (resolve) => {
+        const mapName = map.name.split('.').join('/')
+        if (mapNameToMapDisplayName.has(mapName)) {
+            resolve(mapNameToMapDisplayName.get(mapName) ?? 'maploadingerror')
+            return
+        }
+        const areaName: string = map.attributes.area
+        const area: sc.AreaLoadable = await loadArea(areaName)
+
+        for (const floor of area.data.floors) {
+            for (const map of floor.maps) {
+                const displayName = map.name.en_US!
+                mapNameToMapDisplayName.set(map.path.split('.').join('/'), displayName)
+            }
+        }
+        resolve(getMapDisplayName(map))
+    })
+}
+
+async function loadArea(areaName: string): Promise<sc.AreaLoadable> {
+    return new Promise((resolve) => {
+        const area: sc.AreaLoadable = new sc.AreaLoadable(areaName)
+        area.load(() => {
+            resolve(area)
+        })
+    })
+}
+
+
 /*
 export async function generateRoom(puzzleSel, area, displayName, index, battleTunnelSide) {
     const roomConfig = {

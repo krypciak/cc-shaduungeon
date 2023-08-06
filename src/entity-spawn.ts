@@ -1,4 +1,4 @@
-import { Dir, DirUtil, Rect } from './util.js'
+import { Dir, DirUtil, EntityPoint, EntityRect } from './util.js'
 
 let mapId: number = 1000
 
@@ -13,7 +13,7 @@ export class MapDoor implements MapEntity {
         public settings: ig.ENTITY.Door.Settings) {}
 
     
-    static new(pos: Vec2, level: number, dir: Dir,
+    static new(pos: EntityPoint, level: number, dir: Dir,
         marker: string, destMap: string, destMarker: string, condition?: string): MapDoor {
 
         return new MapDoor(pos.x, pos.y, level, {
@@ -40,7 +40,7 @@ export class MapElementPole implements MapEntity {
         public level: number, 
         public settings: ig.ENTITY.ElementPole.Settings) { }
 
-    static new(pos: Vec2, level: number, name: string, poleType: keyof typeof sc.TERMO_POLE_TYPE): MapElementPole {
+    static new(pos: EntityPoint, level: number, name: string, poleType: keyof typeof sc.TERMO_POLE_TYPE): MapElementPole {
         return new MapElementPole(pos.x, pos.y, level, {
             name, mapId: mapId++,
             poleType,
@@ -62,14 +62,14 @@ export class MapGlowingLine implements MapEntity {
         }
     }
 
-    static new(pos: Vec2, level: number, name: string, size: Vec2, condition?: string): MapGlowingLine {
+    static new(pos: EntityPoint, level: number, name: string, size: EntityPoint, condition?: string): MapGlowingLine {
         return new MapGlowingLine(pos.x, pos.y, level, {
             name, size, condition: condition ?? '', mapId: mapId++, 
         })
     }
 
-    static newPerpendicular(rect: Rect, level: number, name: string, dir: Dir, size: number, condition: string): MapGlowingLine {
-        const pos = { x: rect.x, y: rect.y }
+    static newPerpendicular(rect: EntityRect, level: number, name: string, dir: Dir, size: number, condition: string): MapGlowingLine {
+        const pos: EntityPoint = new EntityPoint(rect.x, rect.y)
         size = Math.floor(size / 8)*8
         switch (dir) {
             case Dir.NORTH: size -= 32 + 4; pos.y = pos.y - size; break
@@ -77,15 +77,15 @@ export class MapGlowingLine implements MapEntity {
             case Dir.SOUTH: pos.y = pos.y + 0; break
             case Dir.WEST:  size -= 32; pos.x = pos.x - size; break
         }
-        const sizeVec = { x: size, y: size }
+        const size1: EntityPoint = new EntityPoint(size, size)
         if (DirUtil.isVertical(dir)) {
             pos.x += rect.width/2 - 4
-            sizeVec.x = 8
+            size1.x = 8
         } else {
             pos.y += rect.height/2 - 4
-            sizeVec.y = 8
+            size1.y = 8
         }
-        return MapGlowingLine.new(pos, level, name, sizeVec, condition)
+        return MapGlowingLine.new(pos, level, name, size1, condition)
     }
 }
 
@@ -104,7 +104,7 @@ class MapScalableProp implements MapEntity {
 }
 
 export class MapBarrier extends MapScalableProp {
-    static new(rect: Rect, level: number, name: string, condition?: string): MapBarrier {
+    static new(rect: EntityRect, level: number, name: string, condition?: string): MapBarrier {
         const barrierType: string = rect.width == 8 ? 'barrierV' : 'barrierH'
         return new MapScalableProp(rect.x, rect.y, level, {
             name,
@@ -139,7 +139,7 @@ export class MapWall implements MapEntity {
         return this.type == 'WallVertical'
     }
         
-    static new(rect: Rect, level: number, name: string, condition?: string): MapWall {
+    static new(rect: EntityRect, level: number, name: string, condition?: string): MapWall {
         let settings: ig.ENTITY.WallBase.Settings = {
             name, mapId: mapId++,
             skipRender: false,
@@ -180,7 +180,7 @@ export class MapHiddenBlock implements MapEntity {
         if (settings.collType && ! Object.keys(ig.COLLTYPE).includes(settings.collType)) { throw new Error('Invalid HiddenBlock collType') }
     }
         
-    static new(pos: Vec2, level: number, name: string, size: Vec2,
+    static new(pos: EntityPoint, level: number, name: string, size: EntityPoint,
         collType: keyof typeof ig.COLLTYPE,
         shape: keyof typeof ig.COLLSHAPE,
         terrain: keyof typeof ig.TERRAIN,
@@ -195,11 +195,11 @@ export class MapHiddenBlock implements MapEntity {
         })
     }
 
-    newInvisibleBlocker(pos: Vec2, level: number, size: Vec2, condition: string = ''): MapHiddenBlock {
+    newInvisibleBlocker(pos: EntityPoint, level: number, size: EntityPoint, condition: string = ''): MapHiddenBlock {
         return MapHiddenBlock.new(pos, level, 'invisibleBlocker' + mapId, size, 'BLOCK', 'RECTANGLE', 'NORMAL', 'NONE', 256, condition)
     }
 
-    newInvisibleProjectileBlocker(pos: Vec2, level: number, size: Vec2, condition: string = ''): MapHiddenBlock {
+    newInvisibleProjectileBlocker(pos: EntityPoint, level: number, size: EntityPoint, condition: string = ''): MapHiddenBlock {
         return MapHiddenBlock.new(pos, level, 'invisibleBlocker' + mapId, size, 'PBLOCK', 'RECTANGLE', 'NORMAL', 'NONE', 256, condition)
     }
 }
@@ -213,7 +213,7 @@ export class MapEnemyCounter implements MapEntity {
         public level: number, 
         public settings: ig.ENTITY.EnemyCounter.Settings) { }
 
-    static new(pos: Vec2, level: number, name: string, enemyGroup: string, enemyCount: number,
+    static new(pos: EntityPoint, level: number, name: string, enemyGroup: string, enemyCount: number,
         preVariable: string = '', postVariable: string = '' , countVariable: string = ''): MapEnemyCounter {
         return new MapEnemyCounter(pos.x, pos.y, level, {
             name,
@@ -232,7 +232,7 @@ export class MapTouchTrigger implements MapEntity {
         public level: number, 
         public settings: ig.ENTITY.TouchTrigger.Settings) { }
 
-    static new(rect: Rect, level: number, name: string, variable: string) : MapTouchTrigger {
+    static new(rect: EntityRect, level: number, name: string, variable: string) : MapTouchTrigger {
         return new MapTouchTrigger(rect.x, rect.y, level, {
             name,
             mapId: mapId++,
@@ -246,7 +246,7 @@ export class MapTouchTrigger implements MapEntity {
         })
     }
 
-    static newParallel(rect: Rect, level: number, name: string, dir: Dir, offset: number, size: number, variable: string): MapTouchTrigger {
+    static newParallel(rect: EntityRect, level: number, name: string, dir: Dir, offset: number, size: number, variable: string): MapTouchTrigger {
         rect = ig.copy(rect)
         switch (dir) {
             case Dir.NORTH:
@@ -287,7 +287,7 @@ export class MapFloorSwitch implements MapEntity {
         public level: number, 
         public settings: ig.ENTITY.FloorSwitch.Settings) { }
 
-    static new(pos: Vec2, level: number, name: string, variable: string): MapFloorSwitch {
+    static new(pos: EntityPoint, level: number, name: string, variable: string): MapFloorSwitch {
         return new MapFloorSwitch(pos.x, pos.y, level, {
             name,
             mapId: mapId++,
@@ -307,7 +307,7 @@ export class MapWaterBubblePanel implements MapEntity {
         public level: number, 
         public settings: ig.ENTITY.WaterBubblePanel.Settings) { }
 
-    static new(pos: Vec2, level: number, name: string, coalCoolTime?: number): MapWaterBubblePanel {
+    static new(pos: EntityPoint, level: number, name: string, coalCoolTime?: number): MapWaterBubblePanel {
         return new MapWaterBubblePanel(pos.x, pos.y, level, {
             name,
             mapId: mapId++,
@@ -325,7 +325,7 @@ export class MapWaveTeleport implements MapEntity {
         public level: number, 
         public settings: ig.ENTITY.WaveTeleport.Settings) { }
 
-    static new(pos: Vec2, level: number, name: string): MapWaveTeleport {
+    static new(pos: EntityPoint, level: number, name: string): MapWaveTeleport {
         return new MapWaveTeleport(pos.x, pos.y, level, {
             name,
             mapId: mapId++,
@@ -342,7 +342,7 @@ export class MapBallChanger implements MapEntity {
         public level: number, 
         public settings: ig.ENTITY.BallChanger.Settings) { }
 
-    static newChangeDir(pos: Vec2, level: number, name: string, dir: ig.ActorEntity.FACE8): MapBallChanger {
+    static newChangeDir(pos: EntityPoint, level: number, name: string, dir: ig.ActorEntity.FACE8): MapBallChanger {
         return new MapBallChanger(pos.x, pos.y, level, {
             name, mapId: mapId++,
             changerType: {
@@ -352,7 +352,7 @@ export class MapBallChanger implements MapEntity {
         })
     }
 
-    static newChangeSpeed(pos: Vec2, level: number, name: string, factor: number): MapBallChanger {
+    static newChangeSpeed(pos: EntityPoint, level: number, name: string, factor: number): MapBallChanger {
         return new MapBallChanger(pos.x, pos.y, level, {
             name, mapId: mapId++,
             changerType: {
@@ -362,7 +362,7 @@ export class MapBallChanger implements MapEntity {
         })
     }
 
-    static newResetSpeed(pos: Vec2, level: number, name: string): MapBallChanger {
+    static newResetSpeed(pos: EntityPoint, level: number, name: string): MapBallChanger {
         return new MapBallChanger(pos.x, pos.y, level, {
             name, mapId: mapId++,
             changerType: {
@@ -372,7 +372,7 @@ export class MapBallChanger implements MapEntity {
         })
     }
 
-    static newChangeElement(pos: Vec2, level: number, name: string, element: sc.ELEMENT): MapBallChanger {
+    static newChangeElement(pos: EntityPoint, level: number, name: string, element: sc.ELEMENT): MapBallChanger {
         return new MapBallChanger(pos.x, pos.y, level, {
             name, mapId: mapId++,
             changerType: {
@@ -392,7 +392,7 @@ export class MapCompressor implements MapEntity {
         public level: number, 
         public settings: ig.ENTITY.WaveTeleport.Settings) { }
 
-    static new(pos: Vec2, level: number, name: string): MapCompressor {
+    static new(pos: EntityPoint, level: number, name: string): MapCompressor {
         return new MapCompressor(pos.x, pos.y, level, {
             name, mapId: mapId++,
         })
@@ -408,7 +408,7 @@ export class MapAntiCompressor implements MapEntity {
         public level: number, 
         public settings: ig.ENTITY.AntiCompressor.Settings) { }
 
-    static new(pos: Vec2, level: number, name: string): MapAntiCompressor {
+    static new(pos: EntityPoint, level: number, name: string): MapAntiCompressor {
         return new MapAntiCompressor(pos.x, pos.y, level, {
             name,
             mapId: mapId++,
@@ -425,7 +425,7 @@ export class MapMagnet implements MapEntity {
         public level: number, 
         public settings: ig.ENTITY.Magnet.Settings) { }
 
-    static new(pos: Vec2, level: number, name: string, dir: Dir, altDirs?: string[]): MapMagnet {
+    static new(pos: EntityPoint, level: number, name: string, dir: Dir, altDirs?: string[]): MapMagnet {
         return new MapMagnet(pos.x, pos.y, level, {
             name, mapId: mapId++,
             dir: DirUtil.convertToString(dir), altDirs
@@ -442,7 +442,7 @@ export class MapTeslaCoil implements MapEntity {
         public level: number, 
         public settings: ig.ENTITY.TeslaCoil.Settings) { }
 
-    static new(pos: Vec2, level: number, name: string, coilType: keyof typeof sc.TESLA_COIL_TYPE): MapTeslaCoil {
+    static new(pos: EntityPoint, level: number, name: string, coilType: keyof typeof sc.TESLA_COIL_TYPE): MapTeslaCoil {
         return new MapTeslaCoil(pos.x, pos.y, level, {
             name, mapId: mapId++,
             coilType
@@ -459,7 +459,7 @@ export class MapEnemySpawner implements MapEntity {
         public level: number, 
         public settings: ig.ENTITY.EnemySpawner.Settings) { }
 
-    static new(pos: Vec2, level: number, name: string, size: Vec2, enemyTypes: ig.ENTITY.EnemySpawner.Entry[], onActiveClear: boolean): MapEnemySpawner {
+    static new(pos: EntityPoint, level: number, name: string, size: EntityPoint, enemyTypes: ig.ENTITY.EnemySpawner.Entry[], onActiveClear: boolean): MapEnemySpawner {
         return new MapEnemySpawner(pos.x, pos.y, level, {
             name, mapId: mapId++,
             size, enemyTypes, onActiveClear,
@@ -476,7 +476,7 @@ export class MapMarker implements MapEntity {
         public level: number, 
         public settings: ig.ENTITY.Marker.Settings) { }
 
-    static new(pos: Vec2, level: number, name: string, dir: ig.ActorEntity.FACE8): MapMarker {
+    static new(pos: EntityPoint, level: number, name: string, dir: ig.ActorEntity.FACE8): MapMarker {
         return new MapMarker(pos.x, pos.y, level, {
             name, mapId: mapId++,
             dir: DirUtil.convertToStringFace8(dir)
@@ -493,7 +493,7 @@ export class MapEventTrigger implements MapEntity {
         public level: number, 
         public settings: ig.ENTITY.EventTrigger.Settings) { }
 
-    static new(pos: Vec2, level: number, name: string, 
+    static new(pos: EntityPoint, level: number, name: string, 
         eventType?: keyof typeof ig.EVENT_TYPE,
         startCondition?: string,
         triggerType?: keyof typeof ig.EVENT_TRIGGER_TYPE,

@@ -1,4 +1,5 @@
-import { MapLayer, CollisionTile, Tileset, CCMap, Rect, Dir, DirUtil, MapRect, Blitzkrieg } from './util.js'
+import { MapLayer, CollisionTile, Tileset, CCMap, Dir, DirUtil,
+    Blitzkrieg, Selection, Coll, Point, Rect, MapPoint, MapRect, EntityPoint, EntityRect } from './util.js'
 import { AreaInfo } from './area-builder.js'
 
 const tilesize: number = 16
@@ -137,6 +138,7 @@ interface RoomPlaceVars {
     navs: number[][][]
     theme: RoomTheme
     tc: RoomThemeConfig
+    masterLevel: number
 }
 
 export function getEmptyMap(width: number, height: number, levelCount: number, theme: RoomTheme, mapName: string, areaName: string): { map: CCMap, rpv: RoomPlaceVars }  {
@@ -181,23 +183,24 @@ export function getEmptyMap(width: number, height: number, levelCount: number, t
     return {
         map: new CCMap(mapName, levels, width, height, 0, theme.getMapAttributes(areaName), [], layers),
         rpv: {
-            background, shadow, light, colls, navs, theme, tc: theme.config
+            background, shadow, light, colls, navs, theme, tc: theme.config, masterLevel: 0
         }
     }
 }
 
-export function getPosOnRectSide(dir: Dir, rect: Rect, prefPos: Vec2 = { x: 0, y: 0 }): Vec2 {
-    const pos = { x: 0, y: 0 }
+export function getPosOnRectSide<T extends Point>
+    (init: new (x: number, y: number) => T, dir: Dir, rect: Rect, prefPos?: T): T {
+    const pos: T = new init(0, 0)
     switch (dir) {
-        case Dir.NORTH: pos.y = rect.y - 1;  break
-        case Dir.EAST:  pos.x = rect.x2 + 1; break
-        case Dir.SOUTH: pos.y = rect.y2 + 1; break
-        case Dir.WEST: pos.x = rect.x - 1; break
+        case Dir.NORTH: pos.y = rect.y - 16;  break
+        case Dir.EAST:  pos.x = rect.x2 + 16; break
+        case Dir.SOUTH: pos.y = rect.y2 + 16; break
+        case Dir.WEST: pos.x = rect.x - 16; break
     }
-    if (dir == Dir.NORTH || dir == Dir.SOUTH) {
-        pos.x = (prefPos.x ? prefPos.x/tilesize: rect.x + (rect.x2 - rect.x)/2) * tilesize
+    if (DirUtil.isVertical(dir)) {
+        pos.x = prefPos ? prefPos.x : (rect.x + (rect.x2 - rect.x)/2)
     } else {
-        pos.y = (prefPos.y ? pos.y = prefPos.y/tilesize : rect.y + (rect.y2 - rect.y)/2) * tilesize
+        pos.y = prefPos ? prefPos.y : (rect.y + (rect.y2 - rect.y)/2)
     }
 
     return pos
@@ -247,16 +250,16 @@ export class Room {
     baseRect: MapRect
     floorRect: MapRect
     private addWalls: boolean
-    door?: { name: string, dir: Dir, pos: Vec2 }
+    door?: { name: string, dir: Dir, pos: EntityPoint }
 
     constructor(
         public name: string,
-        rect: Rect,
+        rect: EntityRect,
         public wallSides: boolean[],
         public additionalSpace: number,
         public addNavMap: boolean,
     ) {
-        this.baseRect = MapRect.fromRect(rect)
+        this.baseRect = rect.to(MapRect)
         this.floorRect = MapRect.fromxy2(
             this.baseRect.x - this.additionalSpace,
             this.baseRect.y - this.additionalSpace,
@@ -274,8 +277,8 @@ export class Room {
         this.placeRoom(rpv, this.addNavMap)
     }
 
-    setDoor(name: string, dir: Dir, prefPos: Vec2) {
-        const doorPos = getPosOnRectSide(dir, this.floorRect, prefPos)
+    setDoor(name: string, dir: Dir, prefPos?: EntityPoint) {
+        const doorPos: EntityPoint = getPosOnRectSide(EntityPoint, dir, this.floorRect.to(EntityRect), prefPos)
 
         if (DirUtil.isVertical(dir)) { doorPos.x -= 16 } else { doorPos.y -= 16 }
         if (dir == Dir.SOUTH) { doorPos.y -= 16 }
@@ -299,7 +302,7 @@ export class Room {
 
             if (this.wallSides[Dir.NORTH]) {
                 for (let x = this.floorRect.x; x < this.floorRect.x2; x++) {
-                    this.placeWall(rpv, { x, y: this.floorRect.y }, Dir.NORTH)
+                    this.placeWall(rpv, new MapPoint(x, this.floorRect.y), Dir.NORTH)
                 }
             } else if (rpv.tc.addShadows) {
                 blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomLeft!, this.floorRect.x, this.floorRect.y - 2)
@@ -313,7 +316,7 @@ export class Room {
 
             if (this.wallSides[Dir.EAST]) {
                 for (let y = this.floorRect.y; y < this.floorRect.y2; y++) {
-                    this.placeWall(rpv, { x: this.floorRect.x2, y }, Dir.EAST)
+                    this.placeWall(rpv, new MapPoint(this.floorRect.x2, y), Dir.EAST)
                 }
             } else if (rpv.tc.addShadows) {
                 blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopLeft!, this.floorRect.x2, this.floorRect.y)
@@ -327,7 +330,7 @@ export class Room {
 
             if (this.wallSides[Dir.SOUTH]) {
                 for (let x = this.floorRect.x; x < this.floorRect.x2; x++) {
-                    this.placeWall(rpv, { x, y: this.floorRect.y2 }, Dir.SOUTH)
+                    this.placeWall(rpv, new MapPoint(x, this.floorRect.y2), Dir.SOUTH)
                 }
             } else if (rpv.tc.addShadows) {
                 blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopLeft!, this.floorRect.x, this.floorRect.y2)
@@ -341,7 +344,7 @@ export class Room {
             
             if (this.wallSides[Dir.WEST]) {
                 for (let y = this.floorRect.y; y < this.floorRect.y2; y++) {
-                    this.placeWall(rpv, { x: this.floorRect.x, y }, Dir.WEST)
+                    this.placeWall(rpv, new MapPoint(this.floorRect.x, y), Dir.WEST)
                 }
             } else if (rpv.tc.addShadows) {
                 blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopRight!, this.floorRect.x - 2, this.floorRect.y)
@@ -399,7 +402,7 @@ export class Room {
         }
     }
 
-    placeWall(rpv: RoomPlaceVars, pos: Vec2, dir: Dir): void {
+    placeWall(rpv: RoomPlaceVars, pos: MapPoint, dir: Dir): void {
         switch (dir) {
             case Dir.NORTH: {
                 for (let i = 0; i < rpv.tc.wallUp.length; i++) {
@@ -466,6 +469,62 @@ export class Room {
                     if (rpv.tc.addShadows && rpv.tc.wallLeftShadow![i]) { rpv.shadow![pos.y][x] = rpv.tc.wallLeftShadow![i] }
                 }
                 break
+            }
+        }
+    }
+
+    placeWallsInEmptySpace(rpv: RoomPlaceVars, sel: Selection) {
+        const mcollCopy: number[][] = ig.copy(rpv.colls[rpv.masterLevel])
+        const additional = 0
+        for (const bb of sel.bb) {
+            const rect: MapRect = bb.to(MapRect)
+            rect.width--
+            rect.height--
+
+            for (let y = rect.y; y < rect.y2 + 1; y++) {
+                if (mcollCopy[y][rect.x] == Coll.None || mcollCopy[y][rect.x] == Coll.Floor) {
+                    for (let y3 = y - additional; y3 < y + additional + 1; y3++) {
+                        const point: MapPoint = new MapPoint(rect.x, y3)
+                        const checkPoint: MapPoint = ig.copy(point)
+                        checkPoint.x -= 1/tilesize
+                        if (! blitzkrieg.puzzleSelections.isSelInPos(sel, checkPoint.to(EntityPoint))) {
+                            this.placeWall(rpv, point, Dir.WEST)
+                        }
+                    }
+                }
+                if (mcollCopy[y][rect.x2] == Coll.None || mcollCopy[y][rect.x2] == Coll.Floor) {
+                    for (let y3 = y - additional; y3 < y + additional + 1; y3++) {
+                        const point: MapPoint = new MapPoint(rect.x2 + 1, y3)
+                        const checkPoint: MapPoint = ig.copy(point)
+                        checkPoint.x += 1/tilesize
+                        if (! blitzkrieg.puzzleSelections.isSelInPos(sel, checkPoint.to(EntityPoint))) {
+                            this.placeWall(rpv, point, Dir.EAST)
+                        }
+                    }
+                }
+            }
+
+            for (let x = rect.x; x < rect.x2 + 1; x++) {
+                if (mcollCopy[rect.y][x] == Coll.None || mcollCopy[rect.y][x] == Coll.Floor) {
+                    for (let x3 = x - additional; x3 < x + additional + 1; x3++) {
+                        const point: MapPoint = new MapPoint(x3, rect.y)
+                        const checkPoint: MapPoint = ig.copy(point)
+                        checkPoint.y -= 1/tilesize
+                        if (! blitzkrieg.puzzleSelections.isSelInPos(sel, checkPoint.to(EntityPoint))) {
+                            this.placeWall(rpv, point, Dir.NORTH)
+                        }
+                    }
+                }
+                if (mcollCopy[rect.y2][x] == Coll.None || mcollCopy[rect.y2][x] == Coll.Floor) {
+                    for (let x3 = x - additional; x3 < x + additional + 1; x3++) {
+                        const point: MapPoint = new MapPoint(x3, rect.y2 + 1)
+                        const checkPoint: MapPoint = ig.copy(point)
+                        checkPoint.x += 1/tilesize
+                        if (! blitzkrieg.puzzleSelections.isSelInPos(sel, checkPoint.to(EntityPoint))) {
+                            this.placeWall(rpv, point, Dir.SOUTH)
+                        }
+                    }
+                }
             }
         }
     }

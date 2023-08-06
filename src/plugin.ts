@@ -1,12 +1,21 @@
 import { godlikeStats, Blitzkrieg } from './util.js'
+import { DungeonBuilder } from './dungeon-builder.js'
 
 declare const blitzkrieg: Blitzkrieg
+declare const dnggen: DngGen
 
 const initialMapName = 'rouge.start'
 const ngOptionName = 'dnggen'
 const ngOptionDisplayName = 'Generate Dungeon'
 const ngOptionDesc = 'Generate a dungeon'
 
+declare global {
+    namespace sc {
+        interface NEW_GAME_OPTIONS {
+            dnggen: sc.NewGameOption;
+        }
+    }
+}
 
 function updateLangLabels() {
     ig.lang.labels.sc.gui.menu['new-game'].options.names[ngOptionName] = ngOptionDisplayName
@@ -15,14 +24,10 @@ function updateLangLabels() {
 
 function addInjects() {
     // add NG+ option
-    // @ts-ignore
     sc.NEW_GAME_OPTIONS[ngOptionName] = { set: 'others', cost: 0 }
     sc.CrossCode.inject({
         transitionEnded() {
-            if (sc.model.currentSubState == sc.GAME_MODEL_SUBSTATE.NEWGAME &&
-                // @ts-ignore
-                sc.newgame.get(ngOptionName)) {
-
+            if (sc.newgame.get(ngOptionName)) {
                 ig.game.teleport(initialMapName, new ig.TeleportPosition('start'), 'NEW')
                 return
             }
@@ -52,11 +57,9 @@ async function startDnggenGame(titleGuiInstance: sc.TitleScreenButtonGui) {
     ig.game.start(sc.START_MODE.NEW_GAME_PLUS, 1)
     ig.game.setPaused(false);
 
-    // @ts-ignore
-    sc.newgame.setActive(ngOptionName)
-    // @ts-ignore
+    sc.newgame.active = true
     sc.newgame.options[ngOptionName] = true
-    // dnggen.dungeonGenerator.generate()
+    dnggen.dungeonBuilder.build()
 
     godlikeStats()
 }
@@ -83,6 +86,7 @@ export default class DngGen {
     puzzleFileIndex: number = -1
     battleFileIndex: number = -1
     loaded: boolean = false
+    dungeonBuilder!: DungeonBuilder
 
     constructor(mod: { baseDirectory: string }) {
         this.dir = mod.baseDirectory
@@ -102,7 +106,7 @@ export default class DngGen {
         blitzkrieg.battleSelections.jsonfiles.push(this.dir + 'json/genBattle.json')
         blitzkrieg.battleSelections.load(this.battleFileIndex)
  
-        
+        this.dungeonBuilder = new DungeonBuilder()
 
         addInjects()
 
@@ -114,5 +118,8 @@ export default class DngGen {
 
         registerStyles()
         updateLangLabels()
+
+        console.log('generating')
+        dnggen.dungeonBuilder.build()
     }
 }
