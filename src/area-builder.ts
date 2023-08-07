@@ -2,6 +2,7 @@ import { Stamp, Blitzkrieg, allLangs, doRectsOverlapArray, Dir,
     MapRect, AreaRect, AreaPoint } from './util.js'
 import { DungeonMapBuilder } from './dungeon-room.js'
 import DngGen from './plugin.js'
+import { DungeonBuilder } from './dungeon-builder.js'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
@@ -66,7 +67,6 @@ export class AreaBuilder {
     finalizeBuild() {
         this.trim()
         Stamp.addStampsToMenu(this.stamps)
-        console.log(this.maps)
         this.builtArea = {
             DOCTYPE: 'AREAS_MAP',
             name: allLangs(this.areaInfo.name),
@@ -89,10 +89,8 @@ export class AreaBuilder {
     }
 
     trim() {
-        console.log(this.size.x, this.size.y)
         const { x1, y1, x2, y2 } = blitzkrieg.util.getTrimArrayPos2d(this.tiles)
         const rect: MapRect = MapRect.fromxy2(x1, y1, x2, y2)
-        console.log(rect)
 
         this.tiles = this.tiles.slice(rect.y, rect.y2).map(row => row.slice(rect.x, rect.x2));
 
@@ -137,19 +135,28 @@ export class AreaBuilder {
             self.mapIndex++
             await mapBuilder.decideMapName(self.mapIndex)
             this.lastExit = self.placeMap(mapBuilder, offset, rects, exit, mapBuilder.battle.tunnel.room!.door!.dir)
+            mapBuilder.finalize()
             resolve(true)
         })
     }
 
     placeMap(mapBuilder: DungeonMapBuilder, offset: AreaPoint, rects: AreaRect[], pos: AreaPoint, dir: Dir): AreaPoint {
-        console.log('display name:', mapBuilder.displayName!)
+        console.log('placing map:', mapBuilder.displayName!)
         this.maps.push({
-            // . instead of / ????
-            path: mapBuilder.path!,
+            path: mapBuilder.path!.split('/').join('.'),
             name: allLangs(mapBuilder.displayName!),
             dungeon: 'DUNGEON',
             offset: { x: 0, y: 0 }
         })
+
+        mapBuilder.obtainTheme()
+        mapBuilder.place()
+
+        const { prevPath, prevMarker, nextPath, nextMarker } = this.getNextPrevRoomNames()
+
+        mapBuilder.battle.tunnel.room!.placeDoor(mapBuilder.rpv!, DungeonMapBuilder.roomEntarenceMarker, prevPath, prevMarker)
+        mapBuilder.puzzle.room.room!.placeDoor(mapBuilder.rpv!, DungeonMapBuilder.roomExitMarker, nextPath, nextMarker)
+    
 
         this.addStamps(mapBuilder, offset)
 
@@ -167,6 +174,25 @@ export class AreaBuilder {
             }
         }
         throw new Error('that shouldnt happen')
+    }
+
+    getNextPrevRoomNames(): { prevPath: string; prevMarker: string; nextPath: string; nextMarker: string } {
+        let prevPath, prevMarker, nextPath, nextMarker
+
+        if (this.mapIndex == 0) {
+            prevPath = DungeonBuilder.initialMap.path
+            prevMarker = DungeonBuilder.initialMap.exitMarker
+        } else {
+            const obj = DungeonMapBuilder.getGenRoomNames(this.mapIndex - 1)
+            prevPath = obj.path
+            prevMarker = DungeonMapBuilder.roomExitMarker
+        }
+        {
+            const obj = DungeonMapBuilder.getGenRoomNames(this.mapIndex + 1)
+            nextPath = obj.path
+            nextMarker = DungeonMapBuilder.roomEntarenceMarker
+        }
+        return { prevPath, prevMarker, nextPath, nextMarker }
     }
 
     addStamps(mapBuilder: DungeonMapBuilder, offset: AreaPoint) {

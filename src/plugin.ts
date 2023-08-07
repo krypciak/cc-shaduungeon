@@ -4,7 +4,6 @@ import { DungeonBuilder } from './dungeon-builder.js'
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
 
-const initialMapName = 'rouge.start'
 const ngOptionName = 'dnggen'
 const ngOptionDisplayName = 'Generate Dungeon'
 const ngOptionDesc = 'Generate a dungeon'
@@ -28,7 +27,7 @@ function addInjects() {
     sc.CrossCode.inject({
         transitionEnded() {
             if (sc.newgame.get(ngOptionName)) {
-                ig.game.teleport(initialMapName, new ig.TeleportPosition('start'), 'NEW')
+                ig.game.teleport(DungeonBuilder.initialMap.path, new ig.TeleportPosition(DungeonBuilder.initialMap.entarenceMarker), 'NEW')
                 return
             }
             this.parent()
@@ -119,7 +118,7 @@ export default class DngGen {
         registerStyles()
         updateLangLabels()
 
-        console.log('generating')
-        dnggen.dungeonBuilder.build()
+        // console.log('generating')
+        // dnggen.dungeonBuilder.build()
     }
 }

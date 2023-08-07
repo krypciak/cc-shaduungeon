@@ -7,6 +7,12 @@ declare const blitzkrieg: Blitzkrieg
 // declare const dnggen: DngGen
 
 export class DungeonBuilder {
+    static initialMap = {
+        path: 'rouge.start',
+        exitMarker: 'exit',
+        entarenceMarker: 'start'
+    }
+
     static puzzleMap: Map<string, Selection[]>
     static puzzleList: Selection[]
 
@@ -42,10 +48,10 @@ export class DungeonBuilder {
 
         const mapStack: Selection[] = []
         const fileWritePromises: Promise<void>[] = []
-        let lastSide: Dir = Dir.WEST
+        let lastSide: Dir = Dir.SOUTH
         
         for (let i = 0; i < puzzles.length; i++) {
-            console.log('------------- ', i, puzzles[i])
+            // console.log('------------- ', i, puzzles[i])
             mapStack.push(puzzles[i])
             for (let h = 0; h < mapStack.length; h++) {
                 const sel: Selection = mapStack[h]
@@ -58,6 +64,7 @@ export class DungeonBuilder {
                 const doesMapFit: boolean = await areaBuilder.tryArrangeMap(mapBuilder)
                 if (doesMapFit) {
                     mapStack.splice(h, 1)
+                    fileWritePromises.push(mapBuilder.save())
                 }
             }
             // console.log('doesnt fit: ', ig.copy(mapStack))

@@ -135,7 +135,7 @@ export class CCMap implements sc.MapModel.Map {
 
         return new Promise(async (resolve) => {
             map = await blitzkrieg.selectionCopyManager
-                .copySelToMap(emptyMap, this, newSel, 0, 0, map.name, {
+                .copySelToMap(emptyMap, map, newSel, 0, 0, map.name, {
                     makePuzzlesUnique: false,
                 })
 
@@ -321,7 +321,6 @@ export class Stamp {
 
     static addStampsToMenu(stamps: Stamp[]) {
         for (const stamp of stamps) {
-            console.log(stamp)
             stamp.addToMenu()
         }
     }
@@ -394,6 +393,7 @@ export function godlikeStats() {
 
 export interface Blitzkrieg {
     puzzleSelections: Selections
+    puzzleSelectionManager: PuzzleSelectionManager
     battleSelections: Selections
     bossSelections: Selections
     mod: { baseDirectory: string }
@@ -425,6 +425,10 @@ interface SelectionCopyManager {
         }): CCMap
 
     createUniquePuzzleSelection(puzzleSel: Selection, xOffset: number, yOffset: number, id: number): Selection
+}
+
+interface PuzzleSelectionManager {
+    getPuzzleSolveCondition(puzzleSel: Selection): string
 }
 
 interface B$Stack<T> {
@@ -464,8 +468,8 @@ export interface Selection {
         type?: 'whole room' | 'add walls' | 'dis'
         chapter?: number
         plotLine?: number
-        startPos: Vec3
-        endPos: Vec3
+        startPos: Vec3 & { level: number }
+        endPos: Vec3 & { level: number }
         recordLog: {
             log: any[]
         }

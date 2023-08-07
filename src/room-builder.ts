@@ -1,9 +1,12 @@
 import { MapLayer, CollisionTile, Tileset, CCMap, Dir, DirUtil,
     Blitzkrieg, Selection, Coll, Point, Rect, MapPoint, MapRect, EntityPoint, EntityRect } from './util.js'
+import { MapEntity, MapDoor } from './entity-spawn.js'
 import { AreaInfo } from './area-builder.js'
+import DngGen from './plugin.js'
 
 const tilesize: number = 16
 declare const blitzkrieg: Blitzkrieg
+declare const dnggen: DngGen
 
 export type RoomThemeConfig = {
     bgm: string,
@@ -93,10 +96,10 @@ const themes: Map<String, RoomTheme> = new Map([
         edgeShadowTopRight: [
             [185, 198],
             [166, 168]],
-        edgeShadowTopLeft: [
+        edgeShadowBottomRight: [
             [182, 184],
             [185, 214]],
-        edgeShadowBottomRight: [
+        edgeShadowTopLeft: [
             [197, 169],
             [168, 165]],
         edgeShadowBottomLeft: [
@@ -130,12 +133,13 @@ export function getRoomThemeFromArea(areaName: string): RoomTheme {
     return (themes.get(areaName) ?? defaultRoomTheme) as RoomTheme
 }
 
-interface RoomPlaceVars {
+export interface RoomPlaceVars {
     background: number[][]
     shadow?: number[][]
     light: number[][]
     colls: number[][][]
     navs: number[][][]
+    entities: MapEntity[]
     theme: RoomTheme
     tc: RoomThemeConfig
     masterLevel: number
@@ -180,10 +184,11 @@ export function getEmptyMap(width: number, height: number, levelCount: number, t
 
     if (! background) { throw new Error('Background layer is not set') }
 
+    const map: CCMap = new CCMap(mapName, levels, width, height, 0, theme.getMapAttributes(areaName), [], layers)
     return {
-        map: new CCMap(mapName, levels, width, height, 0, theme.getMapAttributes(areaName), [], layers),
+        map,
         rpv: {
-            background, shadow, light, colls, navs, theme, tc: theme.config, masterLevel: 0
+            background, shadow, light, colls, navs, entities: map.entities, theme, tc: theme.config, masterLevel: 0
         }
     }
 }
@@ -213,6 +218,11 @@ export class MapBuilder {
     rpv?: RoomPlaceVars
     private placed: boolean
 
+    pathParent?: string
+    name?: string
+    path?: string
+    displayName?: string
+
     constructor(
         public width: number,
         public height: number,
@@ -227,12 +237,13 @@ export class MapBuilder {
         this.rooms.push(room)
     }
 
-    place(theme: RoomTheme, mapName: string) {
-        this.theme = theme
+    place() {
         const { map, rpv } = getEmptyMap(
-            this.width, this.height, this.levelCount, this.theme, mapName, this.areaInfo.name)
+            this.width, this.height, this.levelCount, this.theme!, this.path!, this.areaInfo.name)
         this.map = map
         this.rpv = rpv
+
+        this.rooms = this.rooms.sort((a, b) => a.placeOrder- b.placeOrder)
         for (const room of this.rooms) {
             room.place(this.rpv)
         }
@@ -244,13 +255,28 @@ export class MapBuilder {
         const { map } = await CCMap.trim(this.map!, this.rpv!.tc)
         this.map = map
     }
+
+    save(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const path = dnggen.dir + 'assets/data/maps/' + this.path + '.json'
+            const json = JSON.stringify(this.map)
+            require('fs').writeFile(path, json, (err: Error) => {
+                if (err) {
+                    console.error('error writing map:', err)
+                    reject()
+                } else {
+                    resolve()
+                }
+            })
+        })
+    }
 }
 
 export class Room {
     baseRect: MapRect
     floorRect: MapRect
     private addWalls: boolean
-    door?: { name: string, dir: Dir, pos: EntityPoint }
+    door?: { name: string, dir: Dir, pos: EntityPoint, condition?: string }
 
     constructor(
         public name: string,
@@ -258,6 +284,8 @@ export class Room {
         public wallSides: boolean[],
         public additionalSpace: number,
         public addNavMap: boolean,
+        public placeOrder: Room.PlaceOrder,
+        public placeEvent: (rpv: RoomPlaceVars) => void,
     ) {
         this.baseRect = rect.to(MapRect)
         this.floorRect = MapRect.fromxy2(
@@ -274,6 +302,7 @@ export class Room {
     }
 
     place(rpv: RoomPlaceVars) {
+        if (this.placeOrder == Room.PlaceOrder.NoDraw) { return }
         this.placeRoom(rpv, this.addNavMap)
     }
 
@@ -285,6 +314,10 @@ export class Room {
         if (dir == Dir.EAST) { doorPos.x -= 16 }
 
         this.door = { name, dir, pos: doorPos }
+    }
+
+    placeDoor(rpv: RoomPlaceVars, marker: string, destMap: string, destMarker: string) {
+        rpv.entities.push(MapDoor.new(this.door!.pos, 0, this.door!.dir, marker, destMap, destMarker, this.door!.condition))
     }
 
     placeRoom(rpv: RoomPlaceVars, addNavMap: boolean) {
@@ -309,7 +342,7 @@ export class Room {
                 blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomRight!, this.floorRect.x2 - 2, this.floorRect.y - 2)
                 for (let x = this.floorRect.x + 2; x < this.floorRect.x2 - 2; x++) {
                     for (let y = this.floorRect.y - 2; y < this.floorRect.y; y++) {
-                        rpv.shadow!![y][x] = 0
+                        rpv.shadow![y][x] = 0
                     }
                 }
             }
@@ -323,7 +356,7 @@ export class Room {
                 blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomLeft!, this.floorRect.x2, this.floorRect.y2 - 2)
                 for (let y = this.floorRect.y + 2; y < this.floorRect.y2 - 2; y++) {
                     for (let x = this.floorRect.x2; x < this.floorRect.x2 + 2; x++) {
-                        rpv.shadow!![y][x] = 0
+                        rpv.shadow![y][x] = 0
                     }
                 }
             }
@@ -337,7 +370,7 @@ export class Room {
                 blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopRight!, this.floorRect.x2 - 2, this.floorRect.y2)
                 for (let x = this.floorRect.x + 2; x < this.floorRect.x2 - 2; x++) {
                     for (let y = this.floorRect.y2; y < this.floorRect.y2 + 2; y++) {
-                        rpv.shadow!![y][x] = 0
+                        rpv.shadow![y][x] = 0
                     }
                 }
             }
@@ -351,7 +384,7 @@ export class Room {
                 blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomRight!, this.floorRect.x - 2, this.floorRect.y2 - 2)
                 for (let y = this.floorRect.y + 2; y < this.floorRect.y2 - 2; y++) {
                     for (let x = this.floorRect.x - 2; x < this.floorRect.x; x++) {
-                        rpv.shadow!![y][x] = 0
+                        rpv.shadow![y][x] = 0
                     }
                 }
             }
@@ -412,11 +445,13 @@ export class Room {
                     }
                     if (rpv.tc.addShadows && rpv.tc.wallUpShadow![i]) { rpv.shadow![y][pos.x] = rpv.tc.wallUpShadow![i] }
                 }
-                for (let i = 0; i < rpv.colls.length; i++) {
-                    const coll = rpv.colls[i]
-                    if (i > 0) { coll[pos.y][pos.x] = 1 }
-                    coll[pos.y - 1][pos.x] = 2
-                    coll[pos.y - 2][pos.x] = 2
+                for (let i = rpv.masterLevel; i < rpv.colls.length; i++) {
+                    const coll: number[][] = rpv.colls[i]
+                    for (let y = pos.y - 3; y <= pos.y; y++) {
+                        coll[y - i*2][pos.x] = Coll.None
+                    }
+                    let y: number = pos.y - i*2 - 1
+                    coll[y][pos.x] = Coll.Coll
                 }
                 break
             }
@@ -427,8 +462,8 @@ export class Room {
                         if (! rpv.background[pos.y][x]) { rpv.background[pos.y][x] = rpv.tc.wallRight[i] }
 
                         for (const coll of rpv.colls) {
-                            coll[pos.y][x] = 2
-                            coll[pos.y][x + 1] = 2
+                            coll[pos.y][x] = Coll.Coll
+                            coll[pos.y][x + 1] = Coll.Coll
                         }
                     }
                     if (rpv.tc.addShadows && rpv.tc.wallRightShadow![i]) { rpv.shadow![pos.y][x] = rpv.tc.wallRightShadow![i] }
@@ -440,17 +475,16 @@ export class Room {
                     const y = pos.y - rpv.tc.wallDown.length + i + 1
                     if (rpv.tc.wallDown[i]) {
                         rpv.background[y][pos.x] = rpv.tc.wallDown[i]
-                        for (let h = 0; h < rpv.colls.length; h++) {
-                            const coll = rpv.colls[h]
-                            if (h > 0) { 
-                                coll[y - 1][pos.x] = 1
-                                coll[y - 2][pos.x] = 1
-                            }
-                            coll[y][pos.x] = 2
-                            coll[y + 1][pos.x] = 2
-                        }
                     }
                     if (rpv.tc.addShadows && rpv.tc.wallDownShadow![i]) { rpv.shadow![y][pos.x] = rpv.tc.wallDownShadow![i] }
+                }
+                for (let i = rpv.masterLevel; i < rpv.colls.length; i++) {
+                    const coll: number[][] = rpv.colls[i]
+                    for (let y = pos.y; y >= pos.y - 3; y--) {
+                        coll[y - i*2][pos.x] = Coll.None
+                    }
+                    const y: number = pos.y - i*2
+                    coll[y][pos.x] = Coll.Coll
                 }
                 break
             }
@@ -462,8 +496,8 @@ export class Room {
                             rpv.background[pos.y][x] = rpv.tc.wallLeft[i]
                         }
                         for (const coll of rpv.colls) {
-                            coll[pos.y][x] = 2
-                            coll[pos.y][x - 1] = 2
+                            coll[pos.y][x] = Coll.Coll
+                            coll[pos.y][x - 1] = Coll.Coll
                         }
                     }
                     if (rpv.tc.addShadows && rpv.tc.wallLeftShadow![i]) { rpv.shadow![pos.y][x] = rpv.tc.wallLeftShadow![i] }
@@ -527,5 +561,13 @@ export class Room {
                 }
             }
         }
+    }
+}
+
+export namespace Room {
+    export enum PlaceOrder {
+        NoDraw,
+        Room,
+        Tunnel,
     }
 }
