@@ -1,9 +1,11 @@
-import { CCMap, Dir, DirUtil, Selection, EntityRect, Blitzkrieg, Rect, MapPoint, EntityPoint } from './util.js'
+import { CCMap, Dir, DirUtil, Selection, EntityRect, Blitzkrieg, Rect, MapPoint, EntityPoint, assert } from './util.js'
 import { MapBuilder, Room, RoomPlaceVars, getPosOnRectSide, getRoomThemeFromArea } from './room-builder.js'
 import { AreaInfo } from './area-builder.js'
 import { MapEntity, MapFloorSwitch } from './entity-spawn.js'
+import DngGen from './plugin.js'
 
 declare const blitzkrieg: Blitzkrieg
+declare const dnggen: DngGen
 const tilesize: number = 16
 
 interface PuzzleData {
@@ -61,6 +63,8 @@ export class DungeonMapBuilder extends MapBuilder {
     constructor(
         public areaInfo: AreaInfo, 
         public puzzleSel: Selection) {
+        
+        assert(puzzleSel.data.type); assert(puzzleSel.data.completionType)
 
         super(150, 150, 5, areaInfo)
         
@@ -78,8 +82,8 @@ export class DungeonMapBuilder extends MapBuilder {
 
         this.puzzle = {
             exitCondition: this.battle.startCondition + ' && !' + this.battle.doneCondition,
-            type: puzzleSel.data.type!,
-            completion: puzzleSel.data.completionType!,
+            type: puzzleSel.data.type,
+            completion: puzzleSel.data.completionType,
             origMapName: puzzleSel.map,
             room: {
                 initialPos: new MapPoint(Math.floor(this.width/2.5), Math.floor(this.height/2.5)),
@@ -118,12 +122,17 @@ export class DungeonMapBuilder extends MapBuilder {
         if (exitDir !== null) {
             wallSides[DirUtil.flip(exitDir)] = false
         }
-        return new Room(name, rect, wallSides, 0, addNavMap, Room.PlaceOrder.Tunnel, () => {})
+        return new Room(name, rect, wallSides, 0, addNavMap, Room.PlaceOrder.Tunnel)
     }
 
-    async calculatePositions() {
-        const puzzle = this.puzzle
-        const battle = this.battle
+    async loadPuzzleMap() {
+        this.puzzle.map = await blitzkrieg.util.getMapObject(this.puzzle.origMapName)
+    }
+
+    calculatePositions() {
+        const puzzle: PuzzleData = this.puzzle
+        const battle: BattleData = this.battle
+        assert(puzzle.map)
 
         if (true) {
             const id = blitzkrieg.util.generateUniqueID()
@@ -136,7 +145,9 @@ export class DungeonMapBuilder extends MapBuilder {
         }
         if (true) {
             const spacing = puzzle.type == 'add walls' ? puzzle.room.spacing : 0
-            puzzle.room.room = new Room('puzzle', puzzle.unique.sel.size, [true, true, true, true], spacing, true, Room.PlaceOrder.Room, this.placePuzzleRoom)
+            puzzle.room.room = new Room('puzzle', puzzle.unique.sel.size, [true, true, true, true], spacing, true, Room.PlaceOrder.Room, (rpv) => {
+                return this.placePuzzleRoom(rpv)
+            })
             this.addRoom(puzzle.room.room)
         }
         if (true) {
@@ -154,9 +165,6 @@ export class DungeonMapBuilder extends MapBuilder {
 
             puzzle.end = { pos, dir }
         }
-
-        puzzle.map = await blitzkrieg.util.getMapObject(puzzle.origMapName)
-        if (! puzzle.map) { throw new Error('puzzle.map is undefined') }
         
         if (puzzle.completion != 'item') {
             const name = 'exit'
@@ -174,7 +182,7 @@ export class DungeonMapBuilder extends MapBuilder {
                         }
                     }
                 }
-                if (! closestEntity) { throw new Error('no doors found?') }
+                assert(closestEntity, 'no doors found?')
                 puzzle.room.room.door = { name, pos: EntityPoint.fromVec(closestEntity),
                     dir: DirUtil.convertToDir(
                         // @ts-ignore settings.dir is always there
@@ -183,7 +191,7 @@ export class DungeonMapBuilder extends MapBuilder {
             } else if (puzzle.type == 'add walls') {
                 puzzle.room.room.setDoor(name, puzzle.end.dir, EntityPoint.fromVec(puzzle.end.pos))
             }
-            if (! puzzle.room.room.door) { throw new Error('puzzle exit door is not set') }
+            assert(puzzle.room.room.door, 'puzzle door missing?')
         }
         puzzle.tunnel.room = this.createTunnelRoom(puzzle.room.room, 'puzzleTunnel', puzzle.start.dir,
             puzzle.tunnel.size, false, DirUtil.flip(puzzle.start.dir), EntityPoint.fromVec(puzzle.end.pos), puzzle.type == 'add walls')
@@ -216,14 +224,17 @@ export class DungeonMapBuilder extends MapBuilder {
                     case Dir.WEST:  pos.x = puzzleRoomFloorRect.x - tunnelSize.x - size.x; break
                 }
             }
-            battle.room.room = new Room('battle', EntityRect.fromTwoPoints(pos, size), [true, true, true, true], battle.room.spacing, true, Room.PlaceOrder.Room, this.placeBattleRoom)
+            battle.room.room = new Room('battle', EntityRect.fromTwoPoints(pos, size), [true, true, true, true],
+                battle.room.spacing, true, Room.PlaceOrder.Room, (rpv) => {
+                return this.placeBattleRoom(rpv)
+            })
             this.addRoom(battle.room.room)
         }
     }
 
     calculateBattleTunnel(dir: Dir) {
-        const puzzle = this.puzzle
-        const battle = this.battle
+        const puzzle: PuzzleData = this.puzzle
+        const battle: BattleData = this.battle
 
         if (! battle.room.room) { throw new Error('cannot calculate battle tunnel position') }
         if (dir == DirUtil.flip(puzzle.start!.dir)) { throw new Error('invalid battle tunnel dir input, conflicts with puzzle tunnel') }
@@ -240,11 +251,13 @@ export class DungeonMapBuilder extends MapBuilder {
     }
 
     async decideMapName(index: number) {
+        assert(this.puzzle.map)
+
         const { pathParent, name, path } = DungeonMapBuilder.getGenRoomNames(index)
         this.pathParent = pathParent
         this.name = name
         this.path = path
-        const mapDisplayName: string = await getMapDisplayName(this.puzzle.map!)
+        const mapDisplayName: string = await getMapDisplayName(this.puzzle.map)
         this.displayName = `${index.toString()} => ${mapDisplayName}`
     }
 
@@ -259,15 +272,17 @@ export class DungeonMapBuilder extends MapBuilder {
         this.theme = getRoomThemeFromArea(this.puzzle.map!.attributes.area)
     }
 
-    async placePuzzleRoom(rpv: RoomPlaceVars) {
-        const puzzle = this.puzzle
+    async placePuzzleRoom(rpv: RoomPlaceVars): Promise<RoomPlaceVars> {
+        const puzzle: PuzzleData = this.puzzle
+
+        assert(puzzle.unique); assert(puzzle.room.room); assert(puzzle.end); assert(puzzle.map); assert(this.path)
+
 
         let solveCond: string | undefined
         let solveCondUnique: string | undefined
-        let doorCondition: string | undefined
         switch (puzzle.completion) {
             case 'normal':
-                solveCond = blitzkrieg.puzzleSelectionManager.getPuzzleSolveCondition(puzzle.unique!.sel)
+                solveCond = blitzkrieg.puzzleSelectionManager.getPuzzleSolveCondition(puzzle.unique.sel)
                 
                 break
             case 'getTo':
@@ -281,24 +296,54 @@ export class DungeonMapBuilder extends MapBuilder {
         }
         if (solveCond) {
             solveCondUnique = solveCond
-            if (solveCond && ! solveCond.includes('_destroyed')) { solveCondUnique += '_' + puzzle.unique!.id }
+            if (solveCond &&  solveCond.includes('_destroyed')) { solveCondUnique += '_' + puzzle.unique.id }
         }
 
-        if (puzzle.room.room!.door) {
-            puzzle.room.room!.door.condition = solveCondUnique
+        if (puzzle.room.room.door) {
+            puzzle.room.room.door.condition = solveCondUnique
         }
 
         if (puzzle.completion == 'getTo' && puzzle.type == 'add walls') {
-            rpv.entities.push(MapFloorSwitch.new(EntityPoint.fromVec(puzzle.end!.pos), puzzle.end!.pos.level, 'puzzleSolveSwitch', solveCond!))
+            assert(solveCondUnique)
+            rpv.entities.push(MapFloorSwitch.new(EntityPoint.fromVec(puzzle.end.pos), puzzle.end.pos.level, 'puzzleSolveSwitch', solveCondUnique))
         }
 
         if (puzzle.type == 'whole room') {
-            puzzle.room.room!.placeWallsInEmptySpace(rpv, puzzle.unique!.sel)
+            puzzle.room.room.placeWallsInEmptySpace(rpv, puzzle.unique.sel)
         }
+
+        const pastePos: EntityPoint = puzzle.room.initialPos.to(EntityPoint)
+        const map: sc.MapModel.Map = await blitzkrieg.selectionCopyManager
+            .copySelToMap(ig.copy(rpv.map), ig.copy(puzzle.map), this.puzzleSel, pastePos.x, pastePos.y, this.path, {
+                disableEntities: false,
+                mergeLayers: false,
+                removeCutscenes: true,
+                makePuzzlesUnique: true,
+                uniqueId: puzzle.unique.id,
+                uniqueSel: puzzle.unique.sel,
+            })
+        rpv = RoomPlaceVars.fromRawMap(map, rpv.theme)
+
+        blitzkrieg.puzzleSelections.setSelHashMapEntry(this.path, {
+            sels: [ puzzle.unique.sel ],
+            fileIndex: dnggen.puzzleFileIndex,
+        })
+        this.addSelection(puzzle.unique.sel)
+        return rpv
     }
 
-    async placeBattleRoom(rpv: RoomPlaceVars) {
+    async placeBattleRoom(rpv: RoomPlaceVars): Promise<undefined> {
+        const puzzle: PuzzleData = this.puzzle
+        const battle: BattleData = this.battle
+        assert(this.path); assert(battle.room.room)
 
+        battle.sel = blitzkrieg.util.getSelFromRect(battle.room.room.floorRect.to(EntityRect), this.path, 0)
+
+        blitzkrieg.battleSelections.setSelHashMapEntry(this.path, {
+            sels: [ battle.sel ],
+            fileIndex: dnggen.puzzleFileIndex,
+        })
+        this.addSelection(battle.sel)
     }
 }
 

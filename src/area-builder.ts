@@ -1,5 +1,5 @@
 import { Stamp, Blitzkrieg, allLangs, doRectsOverlapArray, Dir, 
-    MapRect, AreaRect, AreaPoint } from './util.js'
+    MapRect, AreaRect, AreaPoint, assert } from './util.js'
 import { DungeonMapBuilder } from './dungeon-room.js'
 import DngGen from './plugin.js'
 import { DungeonBuilder } from './dungeon-builder.js'
@@ -111,52 +111,56 @@ export class AreaBuilder {
         }
     }
 
-    tryArrangeMap(mapBuilder: DungeonMapBuilder): Promise<boolean> {
-        const self = this
-        return new Promise<boolean>(async (resolve) => {
-            const ent: AreaPoint = mapBuilder.puzzle.room.room!.door!.pos.to(AreaPoint)
-            const exit: AreaPoint = mapBuilder.battle.tunnel.room!.door!.pos.to(AreaPoint)
+    async tryArrangeMap(mapBuilder: DungeonMapBuilder): Promise<boolean> {
+        assert(mapBuilder.puzzle.room.room); assert(mapBuilder.puzzle.room.room.door)
+        assert(mapBuilder.battle.tunnel.room); assert(mapBuilder.battle.tunnel.room.door)
 
-            const offset: AreaPoint = new AreaPoint(this.lastExit.x - ent.x, this.lastExit.y - ent.y)
-            
-            exit.x += offset.x
-            exit.y += offset.y
+        const ent: AreaPoint = mapBuilder.puzzle.room.room.door.pos.to(AreaPoint)
+        const exit: AreaPoint = mapBuilder.battle.tunnel.room.door.pos.to(AreaPoint)
 
-            const rects: AreaRect[] = []
+        const offset: AreaPoint = new AreaPoint(this.lastExit.x - ent.x, this.lastExit.y - ent.y)
+        
+        exit.x += offset.x
+        exit.y += offset.y
 
-            for (const room of mapBuilder.rooms) {
-                rects.push(AreaRect.fromMapRect(room.floorRect, offset))
-            }
+        const rects: AreaRect[] = []
 
-            if (doRectsOverlapArray(this.tiles, rects)) {
-                resolve(false)
-                return
-            }
-            self.mapIndex++
-            await mapBuilder.decideMapName(self.mapIndex)
-            this.lastExit = self.placeMap(mapBuilder, offset, rects, exit, mapBuilder.battle.tunnel.room!.door!.dir)
-            mapBuilder.finalize()
-            resolve(true)
-        })
+        for (const room of mapBuilder.rooms) {
+            rects.push(AreaRect.fromMapRect(room.floorRect, offset))
+        }
+
+        if (doRectsOverlapArray(this.tiles, rects)) {
+            return false
+        }
+        this.mapIndex++
+        await mapBuilder.decideMapName(this.mapIndex)
+        this.lastExit = await this.placeMap(mapBuilder, offset, rects, exit, mapBuilder.battle.tunnel.room.door.dir)
+        return true
     }
 
-    placeMap(mapBuilder: DungeonMapBuilder, offset: AreaPoint, rects: AreaRect[], pos: AreaPoint, dir: Dir): AreaPoint {
-        console.log('placing map:', mapBuilder.displayName!)
+    async placeMap(mapBuilder: DungeonMapBuilder, offset: AreaPoint, rects: AreaRect[], pos: AreaPoint, dir: Dir): Promise<AreaPoint> {
+        assert(mapBuilder.puzzle.room.room); assert(mapBuilder.puzzle.room.room.door)
+        assert(mapBuilder.battle.tunnel.room); assert(mapBuilder.battle.tunnel.room.door)
+        assert(mapBuilder.displayName); assert(mapBuilder.path)
+
+        console.log('placing map:', mapBuilder.displayName)
         this.maps.push({
-            path: mapBuilder.path!.split('/').join('.'),
-            name: allLangs(mapBuilder.displayName!),
+            path: mapBuilder.path.split('/').join('.'),
+            name: allLangs(mapBuilder.displayName),
             dungeon: 'DUNGEON',
             offset: { x: 0, y: 0 }
         })
 
         mapBuilder.obtainTheme()
-        mapBuilder.place()
+        await mapBuilder.place()
+        assert(mapBuilder.rpv); 
 
         const { prevPath, prevMarker, nextPath, nextMarker } = this.getNextPrevRoomNames()
 
-        mapBuilder.battle.tunnel.room!.placeDoor(mapBuilder.rpv!, DungeonMapBuilder.roomEntarenceMarker, prevPath, prevMarker)
-        mapBuilder.puzzle.room.room!.placeDoor(mapBuilder.rpv!, DungeonMapBuilder.roomExitMarker, nextPath, nextMarker)
-    
+        mapBuilder.battle.tunnel.room.placeDoor(mapBuilder.rpv, DungeonMapBuilder.roomEntarenceMarker, prevPath, prevMarker)
+        mapBuilder.puzzle.room.room.placeDoor(mapBuilder.rpv, DungeonMapBuilder.roomExitMarker, nextPath, nextMarker)
+
+        await mapBuilder.finalize()
 
         this.addStamps(mapBuilder, offset)
 
@@ -200,6 +204,8 @@ export class AreaBuilder {
         const puzzle = mapBuilder.puzzle
         const battle = mapBuilder.battle
 
+        assert(puzzle.room.room); assert(puzzle.room.room.door); assert(battle.tunnel.room); assert(battle.tunnel.room.door); assert(puzzle.start); assert(puzzle.end)
+
         const level = 0
         function applyOffset(pos: Vec2): Vec2 {
             const pos1: Vec2 = { x: Math.floor(pos.x + offset.x*8), y: Math.floor(pos.y + offset.y*8) }
@@ -207,19 +213,19 @@ export class AreaBuilder {
         }
 
         // puzzle exit door
-        this.stamps.push(Stamp.new(area, applyOffset(puzzle.room.room!.door!.pos), level, puzzle.room.room!.door!.dir))
+        this.stamps.push(Stamp.new(area, applyOffset(puzzle.room.room.door.pos), level, puzzle.room.room.door.dir))
         // battle entrance door
-        this.stamps.push(Stamp.new(area, applyOffset(battle.tunnel.room!.door!.pos), level, battle.tunnel.room!.door!.dir))
+        this.stamps.push(Stamp.new(area, applyOffset(battle.tunnel.room.door.pos), level, battle.tunnel.room.door.dir))
         
         // puzzle start
-        this.stamps.push(Stamp.new(area, applyOffset(puzzle.start!.pos), level, 'GREEN'))
+        this.stamps.push(Stamp.new(area, applyOffset(puzzle.start.pos), level, 'GREEN'))
 
         // puzzle end
-        this.stamps.push(Stamp.new(area, applyOffset(puzzle.end!.pos), level, 'ENEMY'))
+        this.stamps.push(Stamp.new(area, applyOffset(puzzle.end.pos), level, 'ENEMY'))
     }
 
     saveToFile() {
-        if (! this.builtArea) { throw new Error('called saveToFile() before finalizing build') }
+        assert(this.builtArea, 'called saveToFile() before finalizing build') 
         require('fs').writeFileSync(dnggen.dir + 'assets/data/areas/' + this.areaInfo.name + '.json', JSON.stringify(this.builtArea))
     }
 }

@@ -1,7 +1,8 @@
+import { off } from 'process'
 import { RoomThemeConfig } from './room-builder.js'
 
 const tilesize: number = 16
-declare const blitzkrieg: any
+declare const blitzkrieg: Blitzkrieg
 
 export enum CollisionTile {
     Empty,
@@ -39,6 +40,12 @@ export class MapLayer implements sc.MapModel.MapLayer {
             }
         }
     }
+
+    toJSON() { return this as sc.MapModel.MapLayer }
+
+    static convertArray(arr: sc.MapModel.MapLayer[]): MapLayer[] {
+        return arr.map((layer) => new MapLayer(layer.width, layer.height, layer.name, layer.type, layer.tilesetName, layer.level, layer.data))
+    }
 }
 
 export class CCMap implements sc.MapModel.Map {
@@ -51,10 +58,9 @@ export class CCMap implements sc.MapModel.Map {
         public masterLevel: number,
         public attributes: sc.MapModel.MapAttributes,
         public entities: sc.MapModel.MapEntity[],
-        public layer: MapLayer[]) {
-    }
+        public layer: MapLayer[]) { }
 
-    static async trim(map: CCMap, theme: RoomThemeConfig): Promise<{ offset: MapPoint, map: CCMap }> {
+    static async trim(map: CCMap, theme: RoomThemeConfig, selections: Selection[] = []): Promise<{ offset: MapPoint, map: sc.MapModel.Map }> {
         const origW: number = map.mapWidth
         const origH: number = map.mapHeight
 
@@ -127,21 +133,28 @@ export class CCMap implements sc.MapModel.Map {
             }
             if (foundTile) { nh += 2; break }
         }
-        const newW: number = nw - nx + 1
-        const newH: number = nh - ny + 1
+        
+        const offset: MapPoint = new MapPoint(nx, ny)
+        const newSize: MapPoint = new MapPoint(nw - nx + 1, nh - ny + 1)
 
-        const emptyMap: CCMap = new CCMap('empty', [], newW, newH, 0, map.attributes, [], [])
-        const newSel = blitzkrieg.util.getSelFromRect({ x: nx*tilesize, y: ny*tilesize, width: newW*tilesize, height: newH*tilesize }, map.name, 0)
+        const emptyMap: CCMap = new CCMap('empty', [], newSize.x, newSize.y, 0, map.attributes, [], [])
+        const newSel: Selection = blitzkrieg.util.getSelFromRect(MapRect.fromTwoPoints(offset, newSize).to(EntityRect), map.name, 0)
 
-        return new Promise(async (resolve) => {
-            map = await blitzkrieg.selectionCopyManager
-                .copySelToMap(emptyMap, map, newSel, 0, 0, map.name, {
-                    makePuzzlesUnique: false,
-                })
-
-            resolve({ offset: new MapPoint(nx*tilesize, ny*tilesize), map })
+        const newMap: sc.MapModel.Map = await blitzkrieg.selectionCopyManager
+            .copySelToMap(emptyMap, map, newSel, 0, 0, map.name, {
+                makePuzzlesUnique: false,
         })
+        
+        const entityOffset: EntityPoint = offset.to(EntityPoint)
+
+        for (const sel of selections) {
+            blitzkrieg.util.setSelPos(sel, sel.size.x - entityOffset.x, sel.size.y - entityOffset.y)
+        }
+
+        return { offset, map: newMap }
     }
+
+    toJSON() { return this as sc.MapModel.Map }
 }
 
 export enum Dir {
@@ -218,6 +231,15 @@ export class Rect {
         ) as InstanceType<T>
     }
 
+    toJSON(): bareRect {
+        return {
+            x: this.x,
+            y: this.y,
+            width: this.width,
+            height: this.height
+        }
+    }
+
     static new<T extends Rect>
         (init: new (x: number, y: number, width: number, height: number) => T, rect: bareRect): T {
         return new init(rect.x, rect.y, rect.width, rect.height)
@@ -280,6 +302,13 @@ export class Point {
             Math.floor(this.x * multi),
             Math.floor(this.y * multi),
         ) as InstanceType<T>
+    }
+
+    toJSON() {
+        return {
+            x: this.x,
+            y: this.y,
+        }
     }
 }
 
@@ -379,6 +408,12 @@ export function doesRectOverlapArray(array: number[][], rect: Rect) {
     return false
 }
 
+export function assert(arg: any, msg: string = ''): asserts arg {
+    if (arg != 0 && ! arg) {
+        throw new Error(`Assertion failed: ${msg}`)
+    }
+}
+
 export function godlikeStats() {
     sc.model.player.setSpLevel(4)
     sc.model.player.setLevel(99)
@@ -411,18 +446,20 @@ interface B$Util {
     parseArrayAt2d(arr1: number[][], arr2: number[][], x: number, y: number): void
     emptyArray2d(width: number, height: number): number[][]
     getTrimArrayPos2d(arr: number[][]): { x1: number; y1: number; x2: number; y2: number; }
+    getSelFromRect(rect: EntityRect, mapName: string, z: number): Selection
+    setSelPos(sel: Selection, x: number, y: number): void
 }
 
 interface SelectionCopyManager {
     copySelToMap(baseMap: CCMap, selMap: CCMap, sel: Selection,
         xOffset: number, yOffset: number, newName: string, options: {
-            uniqueId: number
-            uniqueSel: Selection
-            disableEntities: boolean
-            mergeLayers: boolean
-            removeCutscenes: boolean
-            makePuzzlesUnique: boolean
-        }): CCMap
+            uniqueId?: number
+            uniqueSel?: Selection
+            disableEntities?: boolean
+            mergeLayers?: boolean
+            removeCutscenes?: boolean
+            makePuzzlesUnique?: boolean
+    }): Promise<sc.MapModel.Map>
 
     createUniquePuzzleSelection(puzzleSel: Selection, xOffset: number, yOffset: number, id: number): Selection
 }
@@ -441,14 +478,16 @@ interface B$Stack<T> {
 
 interface Selections {
     name: string
-    selHashMap: [string: SelectionMapEntry]
+    selIndexes: number[]
+    selHashMap: { [key: string]: SelectionMapEntry }
     mapSels: SelectionMapEntry
+    inSelStack: B$Stack<Selection>
+    jsonfiles: string[]
+
+    setSelHashMapEntry(mapName: string, entry: SelectionMapEntry): void
     newSelEvent: (sel: Selection) => void
     walkInEvent: (sel: Selection) => void
     walkOutEvent: (sel: Selection) => void
-    selIndexes: number[]
-    inSelStack: B$Stack<Selection>
-    jsonfiles: string[]
     load(index: number): void
     isSelInPos(sel: Selection, pos: Point): boolean
     save(): void
@@ -478,6 +517,6 @@ export interface Selection {
 
 export interface SelectionMapEntry {
     sels: Selection[]
-    tempSel: Selection
+    tempSel?: Selection
     fileIndex: number
 }

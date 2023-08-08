@@ -1,4 +1,4 @@
-import { godlikeStats, Blitzkrieg } from './util.js'
+import { godlikeStats, Blitzkrieg, assert } from './util.js'
 import { DungeonBuilder } from './dungeon-builder.js'
 
 declare const blitzkrieg: Blitzkrieg
@@ -7,6 +7,8 @@ declare const dnggen: DngGen
 const ngOptionName = 'dnggen'
 const ngOptionDisplayName = 'Generate Dungeon'
 const ngOptionDesc = 'Generate a dungeon'
+
+const blitzkriegMissingMsg: string = '\n!!!!!!!!!!!!!!!!!!!!!\nInstall https://github.com/krypciak/cc-blitzkrieg\n!!!!!!!!!!!!!!!!!!!!!'
 
 declare global {
     namespace sc {
@@ -94,7 +96,8 @@ export default class DngGen {
     }
 
     async prestart() {
-        if (! blitzkrieg || ! ('loaded' in blitzkrieg && blitzkrieg.loaded)) { return }
+        assert(blitzkrieg, blitzkriegMissingMsg)
+        assert(blitzkrieg.loaded, blitzkriegMissingMsg)
 
         // register selections
         this.puzzleFileIndex = blitzkrieg.puzzleSelections.jsonfiles.length
@@ -113,7 +116,8 @@ export default class DngGen {
     }
 
     async main() {
-        if (! blitzkrieg || ! ('loaded' in blitzkrieg && blitzkrieg.loaded)) { return }
+        assert(blitzkrieg, blitzkriegMissingMsg)
+        assert(blitzkrieg.loaded, blitzkriegMissingMsg)
 
         registerStyles()
         updateLangLabels()

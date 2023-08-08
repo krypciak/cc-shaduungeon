@@ -1,5 +1,5 @@
 import { MapLayer, CollisionTile, Tileset, CCMap, Dir, DirUtil,
-    Blitzkrieg, Selection, Coll, Point, Rect, MapPoint, MapRect, EntityPoint, EntityRect } from './util.js'
+    Blitzkrieg, Selection, Coll, Point, Rect, MapPoint, MapRect, EntityPoint, EntityRect, assert } from './util.js'
 import { MapEntity, MapDoor } from './entity-spawn.js'
 import { AreaInfo } from './area-builder.js'
 import DngGen from './plugin.js'
@@ -133,7 +133,46 @@ export function getRoomThemeFromArea(areaName: string): RoomTheme {
     return (themes.get(areaName) ?? defaultRoomTheme) as RoomTheme
 }
 
+export namespace RoomPlaceVars {
+    export function fromRawMap(map: sc.MapModel.Map, theme: RoomTheme): RoomPlaceVars {
+        let background: number[][] | undefined
+        let shadow: number[][] | undefined
+        let light: number[][] | undefined
+        const colls: number[][][] = []
+        const navs: number[][][] = []
+
+        for (let i = 0; i < map.layer.length; i++) {
+            const layer: sc.MapModel.MapLayer = map.layer[i]
+            if (layer.level == map.masterLevel && layer.type == 'Background') {
+                if (layer.name == 'NEW_BACKGROUND') {
+                    background = layer.data
+                } else if (layer.name == 'NEW_SHADOW') {
+                    shadow = layer.data
+                }
+            }
+            switch (layer.type) {
+                case 'Collision': colls.push(layer.data); break
+                case 'Navigation': navs.push(layer.data); break
+                case 'Light': light = layer.data; break
+             }
+        }
+        assert(background)
+        assert(shadow)
+        assert(light)
+
+        return {
+            map: new CCMap(map.name, map.levels, map.mapWidth, map.mapHeight,
+                map.masterLevel, map.attributes, map.entities, MapLayer.convertArray(map.layer)),
+            background, shadow, light, colls, navs,
+            entities: map.entities,
+            theme, tc: theme.config,
+            masterLevel: map.masterLevel,
+        }
+    }
+}
+
 export interface RoomPlaceVars {
+    map: CCMap
     background: number[][]
     shadow?: number[][]
     light: number[][]
@@ -145,7 +184,7 @@ export interface RoomPlaceVars {
     masterLevel: number
 }
 
-export function getEmptyMap(width: number, height: number, levelCount: number, theme: RoomTheme, mapName: string, areaName: string): { map: CCMap, rpv: RoomPlaceVars }  {
+export function getEmptyMap(width: number, height: number, levelCount: number, theme: RoomTheme, mapName: string, areaName: string):  RoomPlaceVars  {
     const layers: MapLayer[] = []
     const levels: { height: number }[] = []
 
@@ -182,14 +221,15 @@ export function getEmptyMap(width: number, height: number, levelCount: number, t
     const light: number[][] = lightLayer.data
     layers.push(lightLayer)
 
-    if (! background) { throw new Error('Background layer is not set') }
+    assert(background)
 
     const map: CCMap = new CCMap(mapName, levels, width, height, 0, theme.getMapAttributes(areaName), [], layers)
     return {
         map,
-        rpv: {
-            background, shadow, light, colls, navs, entities: map.entities, theme, tc: theme.config, masterLevel: 0
-        }
+        background, shadow, light, colls, navs,
+        entities: map.entities,
+        theme, tc: theme.config,
+        masterLevel: 0
     }
 }
 
@@ -213,7 +253,6 @@ export function getPosOnRectSide<T extends Point>
 
 export class MapBuilder {
     rooms: Room[]
-    map?: CCMap
     theme?: RoomTheme
     rpv?: RoomPlaceVars
     private placed: boolean
@@ -223,6 +262,9 @@ export class MapBuilder {
     path?: string
     displayName?: string
 
+    builtMap?: sc.MapModel.Map
+    selections: Selection[]
+
     constructor(
         public width: number,
         public height: number,
@@ -230,36 +272,46 @@ export class MapBuilder {
         public areaInfo: AreaInfo) {
 
         this.rooms = []
+        this.selections = []
         this.placed = false
+    }
+
+    addSelection(sel: Selection) {
+        this.selections.push(sel)
     }
 
     addRoom(room: Room) {
         this.rooms.push(room)
     }
 
-    place() {
-        const { map, rpv } = getEmptyMap(
-            this.width, this.height, this.levelCount, this.theme!, this.path!, this.areaInfo.name)
-        this.map = map
+    async place() {
+        assert(this.theme); assert(this.path)
+        const rpv: RoomPlaceVars = getEmptyMap(
+            this.width, this.height, this.levelCount, this.theme, this.path, this.areaInfo.name)
         this.rpv = rpv
 
         this.rooms = this.rooms.sort((a, b) => a.placeOrder- b.placeOrder)
         for (const room of this.rooms) {
-            room.place(this.rpv)
+            const rpv: RoomPlaceVars | undefined = await room.place(this.rpv)
+            if (rpv) {
+                this.rpv = rpv
+            }
         }
         this.placed = true
     }
 
     async finalize() {
-        if (! this.placed) { throw new Error('cannot finalize, map in undefinded') }
-        const { map } = await CCMap.trim(this.map!, this.rpv!.tc)
-        this.map = map
+        assert(this.placed); assert(this.rpv)
+        const { map } = await CCMap.trim(this.rpv.map, this.rpv.tc, this.selections)
+        this.builtMap = map
     }
 
     save(): Promise<void> {
         return new Promise((resolve, reject) => {
+            assert(this.builtMap, 'cannot save map before finalize()')
+            console.log('map: ', ig.copy(this.builtMap))
             const path = dnggen.dir + 'assets/data/maps/' + this.path + '.json'
-            const json = JSON.stringify(this.map)
+            const json = JSON.stringify(this.builtMap)
             require('fs').writeFile(path, json, (err: Error) => {
                 if (err) {
                     console.error('error writing map:', err)
@@ -285,7 +337,7 @@ export class Room {
         public additionalSpace: number,
         public addNavMap: boolean,
         public placeOrder: Room.PlaceOrder,
-        public placeEvent: (rpv: RoomPlaceVars) => void,
+        public placeEvent?: (rpv: RoomPlaceVars) => Promise<RoomPlaceVars | undefined>,
     ) {
         this.baseRect = rect.to(MapRect)
         this.floorRect = MapRect.fromxy2(
@@ -301,9 +353,13 @@ export class Room {
         }
     }
 
-    place(rpv: RoomPlaceVars) {
+    async place(rpv: RoomPlaceVars): Promise<RoomPlaceVars | undefined> {
         if (this.placeOrder == Room.PlaceOrder.NoDraw) { return }
         this.placeRoom(rpv, this.addNavMap)
+
+        if (this.placeEvent) {
+            return await this.placeEvent(rpv)
+        }
     }
 
     setDoor(name: string, dir: Dir, prefPos?: EntityPoint) {
@@ -317,7 +373,8 @@ export class Room {
     }
 
     placeDoor(rpv: RoomPlaceVars, marker: string, destMap: string, destMarker: string) {
-        rpv.entities.push(MapDoor.new(this.door!.pos, 0, this.door!.dir, marker, destMap, destMarker, this.door!.condition))
+        assert(this.door)
+        rpv.entities.push(MapDoor.new(this.door.pos, 0, this.door.dir, marker, destMap, destMarker, this.door.condition))
     }
 
     placeRoom(rpv: RoomPlaceVars, addNavMap: boolean) {
@@ -329,7 +386,7 @@ export class Room {
                     if (rpv.tc.addShadows) { rpv.shadow![y][x] = 0 }
                     for (const coll of rpv.colls) { coll[y][x] = 0 }
                     rpv.light[y][x] = 0
-                    if (! addNavMap) { for (const nav of rpv.navs) { nav[y][x] = 1 } }
+                    if (addNavMap) { for (const nav of rpv.navs) { nav[y][x] = 1 } }
                 }
             }
 
@@ -408,6 +465,7 @@ export class Room {
         
 
             if (rpv.tc.addLight) {
+                assert(rpv.tc.lightStep); assert(rpv.tc.lightTile);
                 const distFromWall = 5
                 const lx1 = this.floorRect.x + distFromWall - 1
                 const ly1 = this.floorRect.y + distFromWall - 1
@@ -416,21 +474,21 @@ export class Room {
 
                 const mx = Math.floor(lx1 + (lx2 - lx1)/2)
                 const my = Math.floor(ly1 + (ly2 - ly1)/2)
-                rpv.light[my][mx] = rpv.tc.lightTile!
+                rpv.light[my][mx] = rpv.tc.lightTile
 
-                for (let x = lx1; x <= mx; x += rpv.tc.lightStep!) {
-                    for (let y = ly1; y <= my; y += rpv.tc.lightStep!) { rpv.light[y][x] = rpv.tc.lightTile! }
-                    for (let y = ly2; y >= my; y -= rpv.tc.lightStep!) { rpv.light[y][x] = rpv.tc.lightTile! }
-                    rpv.light[my][x] = rpv.tc.lightTile!
+                for (let x = lx1; x <= mx; x += rpv.tc.lightStep) {
+                    for (let y = ly1; y <= my; y += rpv.tc.lightStep) { rpv.light[y][x] = rpv.tc.lightTile }
+                    for (let y = ly2; y >= my; y -= rpv.tc.lightStep) { rpv.light[y][x] = rpv.tc.lightTile }
+                    rpv.light[my][x] = rpv.tc.lightTile
                 }
-                for (let x = lx2; x >= mx; x -= rpv.tc.lightStep!) {
-                    for (let y = ly1; y <= my; y += rpv.tc.lightStep!) { rpv.light[y][x] = rpv.tc.lightTile! }
-                    for (let y = ly2; y >= my; y -= rpv.tc.lightStep!) { rpv.light[y][x] = rpv.tc.lightTile! }
-                    rpv.light[my][x] = rpv.tc.lightTile!
+                for (let x = lx2; x >= mx; x -= rpv.tc.lightStep) {
+                    for (let y = ly1; y <= my; y += rpv.tc.lightStep) { rpv.light[y][x] = rpv.tc.lightTile }
+                    for (let y = ly2; y >= my; y -= rpv.tc.lightStep) { rpv.light[y][x] = rpv.tc.lightTile }
+                    rpv.light[my][x] = rpv.tc.lightTile
                 }
 
-                for (let y = ly1; y <= ly2; y += rpv.tc.lightStep!) { rpv.light[y][mx] = rpv.tc.lightTile! }
-                for (let y = ly2; y >= my; y -= rpv.tc.lightStep!) { rpv.light[y][mx] = rpv.tc.lightTile! }
+                for (let y = ly1; y <= ly2; y += rpv.tc.lightStep) { rpv.light[y][mx] = rpv.tc.lightTile }
+                for (let y = ly2; y >= my; y -= rpv.tc.lightStep) { rpv.light[y][mx] = rpv.tc.lightTile }
             }
         }
     }

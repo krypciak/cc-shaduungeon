@@ -56,7 +56,8 @@ export class DungeonBuilder {
             for (let h = 0; h < mapStack.length; h++) {
                 const sel: Selection = mapStack[h]
                 const mapBuilder: DungeonMapBuilder = new DungeonMapBuilder(areaInfo, sel)
-                await mapBuilder.calculatePositions()
+                await mapBuilder.loadPuzzleMap()
+                mapBuilder.calculatePositions()
                 mapBuilder.calculateBattleTunnel(lastSide)
 
                 lastSide = DirUtil.flip(mapBuilder.puzzle!.end!.dir)
