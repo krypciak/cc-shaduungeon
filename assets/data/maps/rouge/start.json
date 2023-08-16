@@ -4,7 +4,7 @@
     "mapWidth": 50,
     "mapHeight": 40,
     "masterLevel": 0,
-    "attributes": { "saveMode": "", "bgm": "puzzle", "cameraInBounds": true, "map-sounds": "", "mapStyle": "rhombus-puzzle", "weather": "NONE", "area": "rhombus-dng" },
+    "attributes": { "saveMode": "", "bgm": "puzzle", "cameraInBounds": true, "map-sounds": "", "mapStyle": "rhombus-puzzle", "weather": "NONE", "area": "gendng" },
     "screen": { "x": 38, "y": 170 },
     "entities": [
         {
@@ -35,7 +35,7 @@
             }
         },
         { "type": "TeleportField", "x": 436, "y": 436, "level": 0, "settings": { "name": "start", "central": { "global": true, "name": "" }, "dir": "NORTH", "teleportLabel": { "en_US": "en_US", "de_DE": "de_DE", "fr_FR": "fr_FR", "langUid": 24, "zh_CN": "<<A<<[CHANGED 2017/06/29]" }, "longTelCond": "false", "mapId": 23, "marker": false, "blockEventCondition": "" } },
-        { "type": "Door", "x": 432, "y": 112, "level": 0, "settings": { "name": "exit", "dir": "SOUTH", "condition": null, "map": "rouge.room-1", "marker": "start", "hideCondition": "", "blockEventCondition": "", "mapId": 24, "variation": "" } },
+        { "type": "Door", "x": 432, "y": 112, "level": 0, "settings": { "name": "exit", "dir": "SOUTH", "condition": null, "map": "rouge/gen/0", "marker": "start", "hideCondition": "", "blockEventCondition": "", "mapId": 24, "variation": "" } },
         { "type": "ScalableProp", "x": 336, "y": 396, "level": { "level": 1, "offset": 48 }, "settings": { "name": "", "size": { "x": 224, "y": 8 }, "patternOffset": { "x": 0, "y": 0 }, "timeOffset": 0, "propConfig": { "sheet": "dungeon-ar", "name": "textWelcome", "ends": { "west": "STOP", "east": "STOP" } }, "spawnCondition": "map.arSign", "mapId": 4, "blockNavMap": false } },
         { "type": "ScalableProp", "x": 432, "y": 160, "level": 0, "settings": { "name": "", "size": { "x": 16, "y": 256 }, "patternOffset": { "x": 0, "y": 0 }, "timeOffset": 0, "propConfig": { "sheet": "dungeon-ar", "name": "arrowUp", "ends": null }, "spawnCondition": null, "mapId": 19 } },
         { "type": "ScalableProp", "x": 448, "y": 160, "level": 0, "settings": { "name": "", "size": { "x": 16, "y": 256 }, "patternOffset": { "x": 0, "y": 0 }, "timeOffset": 0, "propConfig": { "sheet": "dungeon-ar", "name": "arrowUp", "ends": null }, "spawnCondition": null, "mapId": 20 } }
