@@ -238,14 +238,14 @@ export function getPosOnRectSide<T extends Point>
     const pos: T = new init(0, 0)
     switch (dir) {
         case Dir.NORTH: pos.y = rect.y - 16;  break
-        case Dir.EAST:  pos.x = rect.x2 + 16; break
-        case Dir.SOUTH: pos.y = rect.y2 + 16; break
+        case Dir.EAST:  pos.x = rect.x2() + 16; break
+        case Dir.SOUTH: pos.y = rect.y2() + 16; break
         case Dir.WEST: pos.x = rect.x - 16; break
     }
     if (DirUtil.isVertical(dir)) {
-        pos.x = prefPos ? prefPos.x : (rect.x + (rect.x2 - rect.x)/2)
+        pos.x = prefPos ? prefPos.x : (rect.x + (rect.x2() - rect.x)/2)
     } else {
-        pos.y = prefPos ? prefPos.y : (rect.y + (rect.y2 - rect.y)/2)
+        pos.y = prefPos ? prefPos.y : (rect.y + (rect.y2() - rect.y)/2)
     }
 
     return pos
@@ -354,8 +354,8 @@ export class Room {
         this.floorRect = MapRect.fromxy2(
             this.baseRect.x - this.additionalSpace,
             this.baseRect.y - this.additionalSpace,
-            this.baseRect.x2 + this.additionalSpace,
-            this.baseRect.y2 + this.additionalSpace,
+            this.baseRect.x2() + this.additionalSpace,
+            this.baseRect.y2() + this.additionalSpace,
         )
 
         this.addWalls = false
@@ -398,8 +398,8 @@ export class Room {
     placeRoom(rpv: RoomPlaceVars, addNavMap: boolean) {
         if (this.addWalls) {
             // draw floor
-            for (let y = this.floorRect.y; y < this.floorRect.y2; y++) {
-                for (let x = this.floorRect.x; x < this.floorRect.x2; x++) {
+            for (let y = this.floorRect.y; y < this.floorRect.y2(); y++) {
+                for (let x = this.floorRect.x; x < this.floorRect.x2(); x++) {
                     rpv.background[y][x] = rpv.tc.floorTile
                     if (rpv.tc.addShadows) { rpv.shadow![y][x] = 0 }
                     for (const coll of rpv.colls) { coll[y][x] = 0 }
@@ -409,13 +409,13 @@ export class Room {
             }
 
             if (this.wallSides[Dir.NORTH]) {
-                for (let x = this.floorRect.x; x < this.floorRect.x2; x++) {
+                for (let x = this.floorRect.x; x < this.floorRect.x2(); x++) {
                     this.placeWall(rpv, new MapPoint(x, this.floorRect.y), Dir.NORTH)
                 }
             } else if (rpv.tc.addShadows) {
                 blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomLeft!, this.floorRect.x, this.floorRect.y - 2)
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomRight!, this.floorRect.x2 - 2, this.floorRect.y - 2)
-                for (let x = this.floorRect.x + 2; x < this.floorRect.x2 - 2; x++) {
+                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomRight!, this.floorRect.x2() - 2, this.floorRect.y - 2)
+                for (let x = this.floorRect.x + 2; x < this.floorRect.x2() - 2; x++) {
                     for (let y = this.floorRect.y - 2; y < this.floorRect.y; y++) {
                         rpv.shadow![y][x] = 0
                     }
@@ -423,41 +423,41 @@ export class Room {
             }
 
             if (this.wallSides[Dir.EAST]) {
-                for (let y = this.floorRect.y; y < this.floorRect.y2; y++) {
-                    this.placeWall(rpv, new MapPoint(this.floorRect.x2, y), Dir.EAST)
+                for (let y = this.floorRect.y; y < this.floorRect.y2(); y++) {
+                    this.placeWall(rpv, new MapPoint(this.floorRect.x2(), y), Dir.EAST)
                 }
             } else if (rpv.tc.addShadows) {
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopLeft!, this.floorRect.x2, this.floorRect.y)
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomLeft!, this.floorRect.x2, this.floorRect.y2 - 2)
-                for (let y = this.floorRect.y + 2; y < this.floorRect.y2 - 2; y++) {
-                    for (let x = this.floorRect.x2; x < this.floorRect.x2 + 2; x++) {
+                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopLeft!, this.floorRect.x2(), this.floorRect.y)
+                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomLeft!, this.floorRect.x2(), this.floorRect.y2() - 2)
+                for (let y = this.floorRect.y + 2; y < this.floorRect.y2() - 2; y++) {
+                    for (let x = this.floorRect.x2(); x < this.floorRect.x2() + 2; x++) {
                         rpv.shadow![y][x] = 0
                     }
                 }
             }
 
             if (this.wallSides[Dir.SOUTH]) {
-                for (let x = this.floorRect.x; x < this.floorRect.x2; x++) {
-                    this.placeWall(rpv, new MapPoint(x, this.floorRect.y2), Dir.SOUTH)
+                for (let x = this.floorRect.x; x < this.floorRect.x2(); x++) {
+                    this.placeWall(rpv, new MapPoint(x, this.floorRect.y2()), Dir.SOUTH)
                 }
             } else if (rpv.tc.addShadows) {
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopLeft!, this.floorRect.x, this.floorRect.y2)
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopRight!, this.floorRect.x2 - 2, this.floorRect.y2)
-                for (let x = this.floorRect.x + 2; x < this.floorRect.x2 - 2; x++) {
-                    for (let y = this.floorRect.y2; y < this.floorRect.y2 + 2; y++) {
+                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopLeft!, this.floorRect.x, this.floorRect.y2())
+                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopRight!, this.floorRect.x2() - 2, this.floorRect.y2())
+                for (let x = this.floorRect.x + 2; x < this.floorRect.x2() - 2; x++) {
+                    for (let y = this.floorRect.y2(); y < this.floorRect.y2() + 2; y++) {
                         rpv.shadow![y][x] = 0
                     }
                 }
             }
             
             if (this.wallSides[Dir.WEST]) {
-                for (let y = this.floorRect.y; y < this.floorRect.y2; y++) {
+                for (let y = this.floorRect.y; y < this.floorRect.y2(); y++) {
                     this.placeWall(rpv, new MapPoint(this.floorRect.x, y), Dir.WEST)
                 }
             } else if (rpv.tc.addShadows) {
                 blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopRight!, this.floorRect.x - 2, this.floorRect.y)
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomRight!, this.floorRect.x - 2, this.floorRect.y2 - 2)
-                for (let y = this.floorRect.y + 2; y < this.floorRect.y2 - 2; y++) {
+                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomRight!, this.floorRect.x - 2, this.floorRect.y2() - 2)
+                for (let y = this.floorRect.y + 2; y < this.floorRect.y2() - 2; y++) {
                     for (let x = this.floorRect.x - 2; x < this.floorRect.x; x++) {
                         rpv.shadow![y][x] = 0
                     }
@@ -471,13 +471,13 @@ export class Room {
                     blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.cornerShadowTopLeft!, this.floorRect.x, this.floorRect.y)
                 }
                 if (this.wallSides[Dir.NORTH] && this.wallSides[Dir.EAST]) {
-                    blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.cornerShadowTopRight!, this.floorRect.x2 - 2, this.floorRect.y)
+                    blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.cornerShadowTopRight!, this.floorRect.x2() - 2, this.floorRect.y)
                 }
                 if (this.wallSides[Dir.SOUTH] && this.wallSides[Dir.WEST]) {
-                    blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.cornerShadowBottomLeft!, this.floorRect.x, this.floorRect.y2 - 2)
+                    blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.cornerShadowBottomLeft!, this.floorRect.x, this.floorRect.y2() - 2)
                 }
                 if (this.wallSides[Dir.SOUTH] && this.wallSides[Dir.EAST]) {
-                    blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.cornerShadowBottomRight!, this.floorRect.x2 - 2, this.floorRect.y2 - 2)
+                    blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.cornerShadowBottomRight!, this.floorRect.x2() - 2, this.floorRect.y2() - 2)
                 }
             }
         
@@ -487,8 +487,8 @@ export class Room {
                 const distFromWall = 5
                 const lx1 = this.floorRect.x + distFromWall - 1
                 const ly1 = this.floorRect.y + distFromWall - 1
-                const lx2 = this.floorRect.x2 - distFromWall
-                const ly2 = this.floorRect.y2 - distFromWall
+                const lx2 = this.floorRect.x2() - distFromWall
+                const ly2 = this.floorRect.y2() - distFromWall
 
                 const mx = Math.floor(lx1 + (lx2 - lx1)/2)
                 const my = Math.floor(ly1 + (ly2 - ly1)/2)
@@ -593,7 +593,7 @@ export class Room {
             rect.width--
             rect.height--
 
-            for (let y = rect.y; y < rect.y2 + 1; y++) {
+            for (let y = rect.y; y < rect.y2() + 1; y++) {
                 if (mcollCopy[y][rect.x] == Coll.None || mcollCopy[y][rect.x] == Coll.Floor) {
                     for (let y3 = y - additional; y3 < y + additional + 1; y3++) {
                         const point: MapPoint = new MapPoint(rect.x, y3)
@@ -604,9 +604,9 @@ export class Room {
                         }
                     }
                 }
-                if (mcollCopy[y][rect.x2] == Coll.None || mcollCopy[y][rect.x2] == Coll.Floor) {
+                if (mcollCopy[y][rect.x2()] == Coll.None || mcollCopy[y][rect.x2()] == Coll.Floor) {
                     for (let y3 = y - additional; y3 < y + additional + 1; y3++) {
-                        const point: MapPoint = new MapPoint(rect.x2 + 1, y3)
+                        const point: MapPoint = new MapPoint(rect.x2() + 1, y3)
                         const checkPoint: MapPoint = MapPoint.fromVec(point)
                         checkPoint.x += 1/tilesize
                         if (! blitzkrieg.puzzleSelections.isSelInPos(sel, checkPoint.to(EntityPoint))) {
@@ -616,7 +616,7 @@ export class Room {
                 }
             }
 
-            for (let x = rect.x; x < rect.x2 + 1; x++) {
+            for (let x = rect.x; x < rect.x2() + 1; x++) {
                 if (mcollCopy[rect.y][x] == Coll.None || mcollCopy[rect.y][x] == Coll.Floor) {
                     for (let x3 = x - additional; x3 < x + additional + 1; x3++) {
                         const point: MapPoint = new MapPoint(x3, rect.y)
@@ -627,9 +627,9 @@ export class Room {
                         }
                     }
                 }
-                if (mcollCopy[rect.y2][x] == Coll.None || mcollCopy[rect.y2][x] == Coll.Floor) {
+                if (mcollCopy[rect.y2()][x] == Coll.None || mcollCopy[rect.y2()][x] == Coll.Floor) {
                     for (let x3 = x - additional; x3 < x + additional + 1; x3++) {
-                        const point: MapPoint = new MapPoint(x3, rect.y2 + 1)
+                        const point: MapPoint = new MapPoint(x3, rect.y2() + 1)
                         const checkPoint: MapPoint = MapPoint.fromVec(point)
                         checkPoint.x += 1/tilesize
                         if (! blitzkrieg.puzzleSelections.isSelInPos(sel, checkPoint.to(EntityPoint))) {

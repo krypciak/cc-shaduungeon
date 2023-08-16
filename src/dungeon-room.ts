@@ -66,17 +66,17 @@ export class DungeonMapBuilder extends MapBuilder {
         
         assert(puzzleSel.data.type); assert(puzzleSel.data.completionType)
 
-        super(150, 150, 5, areaInfo)
+        super(200, 200, 3, areaInfo)
         
         this.battle = {
             startCondition: 'tmp.battle1',
             doneCondition: 'map.battle1done',
             room: {
-                size: new MapPoint(21, 21),
+                size: new MapPoint(9, 9),
                 spacing: 2,
             },
             tunnel: {
-                size: new MapPoint(5, 8),
+                size: new MapPoint(5, 3),
             }
         }
 
@@ -90,7 +90,7 @@ export class DungeonMapBuilder extends MapBuilder {
                 spacing: 3
             },
             tunnel: {
-                size: new MapPoint(5, 16),
+                size: new MapPoint(5, 8),
             }
         }
     }
@@ -105,13 +105,13 @@ export class DungeonMapBuilder extends MapBuilder {
         }
         switch (dir) {
             case Dir.NORTH:
-                rect.x += rect.width/2 - tilesize
+                rect.x += -rect.width/2
                 rect.y += -rect.height + tilesize; break
             case Dir.EAST:
                 rect.x += -tilesize
                 rect.y += -rect.height/2; break
             case Dir.SOUTH:
-                rect.x += rect.width/2
+                rect.x += -rect.width/2
                 rect.y += -tilesize; break
             case Dir.WEST:
                 rect.x += -rect.width + tilesize
@@ -132,7 +132,7 @@ export class DungeonMapBuilder extends MapBuilder {
     calculatePositions() {
         const puzzle: PuzzleData = this.puzzle
         const battle: BattleData = this.battle
-        assert(puzzle.map)
+        assert(puzzle.map);
 
         if (true) {
             const id = blitzkrieg.util.generateUniqueID()
@@ -144,8 +144,17 @@ export class DungeonMapBuilder extends MapBuilder {
             puzzle.unique.sel.size = Rect.new(EntityRect, puzzle.unique.sel.size)
         }
         if (true) {
-            const spacing = puzzle.type == 'add walls' ? puzzle.room.spacing : 0
-            puzzle.room.room = new Room('puzzle', puzzle.unique.sel.size, [true, true, true, true], spacing, true, Room.PlaceOrder.Room, (rpv) => {
+            let spacing: number, placeOrder = Room.PlaceOrder.Room, wallSides: boolean[]
+            if (puzzle.type == 'whole room') {
+                spacing = 0
+                placeOrder = Room.PlaceOrder.Room
+                wallSides = [false, false, false, false]
+            } else {
+                // puzzle.type == 'add walls'
+                spacing = puzzle.room.spacing
+                wallSides = [true, true, true, true]
+            }
+            puzzle.room.room = new Room('puzzle', puzzle.unique.sel.size, wallSides, spacing, true, placeOrder, (rpv) => {
                 return this.placePuzzleRoom(rpv)
             })
             this.addRoom(puzzle.room.room)
@@ -212,24 +221,23 @@ export class DungeonMapBuilder extends MapBuilder {
 
             const pos: EntityPoint = new EntityPoint(0, 0)
             if (DirUtil.isVertical(puzzle.start.dir)) {
-                // pos.x = puzzle.start.pos.x - size.x/2 + puzzleTunnelSize.x/2
                 pos.x = puzzleTunnelPos.x - size.x/2 + puzzleTunnelSize.x/2
             } else {
-                pos.y = puzzleTunnelPos.y - size.y/2 + puzzleTunnelSize.y/2
+                pos.y = puzzleTunnelPos.y - size.y/2 + puzzleTunnelSize.x/2
             }
             if (puzzle.type == 'whole room') {
                 switch (puzzle.start.dir) {
-                    case Dir.NORTH: pos.y = puzzle.start.pos.y - puzzleTunnelSize.y - size.y + tilesize; break
-                    case Dir.EAST:  pos.x = puzzle.start.pos.x + puzzleTunnelSize.x - tilesize; break
+                    case Dir.NORTH: pos.y = puzzle.start.pos.y - puzzleTunnelSize.y - size.y - tilesize; break
+                    case Dir.EAST:  pos.x = puzzle.start.pos.x + puzzleTunnelSize.y + tilesize; break
                     case Dir.SOUTH: pos.y = puzzle.start.pos.y + puzzleTunnelSize.y - tilesize; break
-                    case Dir.WEST:  pos.x = puzzle.start.pos.x - puzzleTunnelSize.x - size.x + tilesize; break
+                    case Dir.WEST:  pos.x = puzzle.start.pos.x - puzzleTunnelSize.y - size.x + tilesize; break
                 }
             } else {
                 switch (puzzle.start.dir) {
                     case Dir.NORTH: pos.y = puzzleRoomFloorRect.y - puzzleTunnelSize.y - size.y; break
-                    case Dir.EAST:  pos.x = puzzleRoomFloorRect.x2 + puzzleTunnelSize.x; break
-                    case Dir.SOUTH: pos.y = puzzleRoomFloorRect.y2 + puzzleTunnelSize.y + tilesize*2; break
-                    case Dir.WEST:  pos.x = puzzleRoomFloorRect.x - puzzleTunnelSize.x - size.x; break
+                    case Dir.EAST:  pos.x = puzzleRoomFloorRect.x2() + puzzleTunnelSize.y + tilesize*2; break
+                    case Dir.SOUTH: pos.y = puzzleRoomFloorRect.y2() + puzzleTunnelSize.y + tilesize*2; break
+                    case Dir.WEST:  pos.x = puzzleRoomFloorRect.x - puzzleTunnelSize.y - size.x; break
                 }
             }
             battle.room.room = new Room('battle', EntityRect.fromTwoPoints(pos, size), [true, true, true, true],
@@ -252,8 +260,8 @@ export class DungeonMapBuilder extends MapBuilder {
         }
 
         const prefPos: EntityPoint = new MapPoint(
-            battle.room.room.floorRect.x + battle.room.room.floorRect.width/2 - battle.tunnel.size.x,
-            battle.room.room.floorRect.y + battle.room.room.floorRect.height/2 - battle.tunnel.size.y/2
+            battle.room.room.floorRect.x + battle.room.room.floorRect.width/2,
+            battle.room.room.floorRect.y + battle.room.room.floorRect.height/2,
         ).to(EntityPoint)
 
         battle.tunnel.room = this.createTunnelRoom(battle.room.room, 'battleTunnel', dir, battle.tunnel.size, false, null, prefPos, true)

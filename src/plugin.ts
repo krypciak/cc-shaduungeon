@@ -50,6 +50,16 @@ function addInjects() {
             );
         },
     });
+
+    // ig.Game.inject({
+    //     // @ts-ignore
+    //     preloadLevel(mapName: string) {
+    //         blitzkrieg.util.getMapObject(mapName.split('.').join('/')).then((levelData: sc.MapModel.Map) => {
+    //             // @ts-expect-error
+    //             this.teleporting.levelData = levelData
+    //         })
+    //     }
+    // })
 }
 
 async function startDnggenGame(titleGuiInstance: sc.TitleScreenButtonGui) {
@@ -89,14 +99,14 @@ export default class DngGen {
     loaded: boolean = false
     dungeonBuilder!: DungeonBuilder
 
+    // all should be true
     debug = {
         discoverAllMaps: true,
         pastePuzzle: true,
         decorateBattleRoom: false,
         trimMaps: true,
-        trimAreas: false,
-        skipOnAreaMapCollision: false,
-        ignoreGenCrash: true,
+        trimAreas: true,
+        collisionlessMapArrange: true,
     }
 
     constructor(mod: { baseDirectory: string }) {

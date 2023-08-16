@@ -193,14 +193,21 @@ export class DirUtil {
     static isVertical(dir: Dir): boolean {
         return dir == Dir.NORTH || dir == Dir.SOUTH
     }
+
+    static moveInDirection(pos: Vec2, dir: Dir) {
+        switch (dir) {
+            case Dir.NORTH: pos.y -= 1; break
+            case Dir.EAST: pos.x += 1; break
+            case Dir.SOUTH: pos.y += 1; break
+            case Dir.WEST: pos.x -= 1; break
+        }
+    }
 }
 
 type bareRect = { x: number; y: number; width: number; height: number }
 
 export class Rect {
     static multiplier: number
-    x2: number
-    y2: number
 
     constructor(
         public x: number,
@@ -214,8 +221,13 @@ export class Rect {
         if (height < 0) {
             throw new Error('Height cannot be less than 0')
         }
-        this.x2 = x + width
-        this.y2 = y + height
+    }
+
+    x2() {
+        return this.x + this.width
+    }
+    y2() {
+        return this.y + this.height
     }
 
     to<T extends typeof Rect>(ins: T): InstanceType<T> {
@@ -274,15 +286,8 @@ export class MapRect extends Rect {
 export class AreaRect extends Rect {
     private _arearect: boolean = true
     static multiplier: number = 1
-    private static div: number = MapRect.multiplier / AreaRect.multiplier 
+    static div: number = MapRect.multiplier / AreaRect.multiplier 
 
-    static fromMapRect(rect: MapRect, offset: AreaPoint): AreaRect {
-        return new AreaRect(
-            Math.floor(rect.x / AreaRect.div + offset.x),
-            Math.floor(rect.y / AreaRect.div + offset.y),
-            Math.ceil(rect.width / AreaRect.div),
-            Math.ceil(rect.height / AreaRect.div))
-    }
     static fromTwoPoints(pos: AreaPoint, size: AreaPoint): AreaRect {
         return new AreaRect(pos.x, pos.y, size.x, size.y)
     }
@@ -399,6 +404,8 @@ export class Stamp {
     }
 }
 
+let langUid = 30000
+
 export function allLangs(text: string): ig.LangLabel.Data {
     return {
         en_US: text,
@@ -407,20 +414,29 @@ export function allLangs(text: string): ig.LangLabel.Data {
         zh_CN: text,
         ko_KR: text,
         zh_TW: text,
-        langUid: 0,
+        langUid: langUid++,
     }
 }
 
-export function doRectsOverlapArray(array: number[][], rects: Rect[]) {
+export function doRectsOverlap<T extends Rect>(rect1: T, rect2: T): boolean {
+  return (
+    rect1.x < rect2.x2() &&
+    rect1.x2() > rect2.x &&
+    rect1.y < rect2.y2() &&
+    rect1.y2() > rect2.y
+  )
+}
+
+export function doRectsOverlapGrid(array: number[][], rects: Rect[]) {
     for (const rect of rects) {
-        if (doesRectOverlapArray(array, rect)) { return true }
+        if (doesRectOverlapGrid(array, rect)) { return true }
     }
     return false
 }
 
-export function doesRectOverlapArray(array: number[][], rect: Rect) {
-    for (let y = rect.y; y < rect.y2; y++) {
-        for (let x = rect.x; x < rect.x2; x++) {
+export function doesRectOverlapGrid(array: number[][], rect: Rect) {
+    for (let y = rect.y; y < rect.y2(); y++) {
+        for (let x = rect.x; x < rect.x2(); x++) {
             if (array[y][x] != 0) { return true }
         }
     }

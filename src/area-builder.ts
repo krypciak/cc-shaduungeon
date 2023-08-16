@@ -1,9 +1,10 @@
-import { Stamp, Blitzkrieg, allLangs, doRectsOverlapArray, Dir, DirUtil,
+import { Stamp, Blitzkrieg, allLangs, doRectsOverlapGrid, doRectsOverlap, Dir, DirUtil,
     MapRect, MapPoint, EntityPoint, AreaRect, AreaPoint, assert } from './util.js'
 import { DungeonMapBuilder } from './dungeon-room.js'
 import DngGen from './plugin.js'
 import { DungeonBuilder } from './dungeon-builder.js'
 import { MapDoor } from './entity-spawn.js'
+import { Room } from './room-builder.js'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
@@ -75,10 +76,13 @@ export class AreaBuilder {
         const doorPoint: AreaPoint = EntityPoint.fromVec(doorEntity).to(AreaPoint)
         const offset: AreaPoint = new AreaPoint(this.lastExit.x - doorPoint.x, this.lastExit.y - doorPoint.y)
         Vec2.add(doorPoint, offset)
-        this.lastExit = this.findClosestFreeTile(doorPoint, dir)
 
         const rects: AreaRect[] = [ AreaRect.fromTwoPoints(offset, new MapPoint(map.mapWidth, map.mapHeight).to(AreaPoint)) ]
         this.placeMapTiles(rects)
+
+        console.log(ig.copy(doorPoint))
+        this.lastExit = this.findClosestFreeTile(doorPoint, dir)
+        console.log(ig.copy(this.lastExit))
 
         if (dnggen.debug.discoverAllMaps) { ig.vars.storage.maps[path] = {} }
 
@@ -131,30 +135,60 @@ export class AreaBuilder {
             const { x1, y1, x2, y2 } = blitzkrieg.util.getTrimArrayPos2d(this.tiles)
             const rect: MapRect = MapRect.fromxy2(x1, y1, x2, y2)
 
-            this.tiles = this.tiles.slice(rect.y, rect.y2).map(row => row.slice(rect.x, rect.x2));
+            this.tiles = this.tiles.slice(rect.y, rect.y2()).map(row => row.slice(rect.x, rect.x2()));
 
             this.size = new AreaPoint(this.tiles[0].length, this.tiles.length)
 
-            const stampOffset: EntityPoint = new MapPoint(rect.x, rect.y).to(EntityPoint)
             for (const stamp of this.stamps) {
-                stamp.pos.x -= rect.x
-                stamp.pos.y -= rect.y
+                stamp.pos.x -= rect.x*8
+                stamp.pos.y -= rect.y*8
             }
         }
     }
 
     placeMapTiles(rects: AreaRect[]) {
         for (const rect of rects) {
-            for (let y = rect.y; y < rect.y2; y++) {
-                for (let x = rect.x; x < rect.x2; x++) {
+            for (let y = rect.y; y < rect.y2(); y++) {
+                for (let x = rect.x; x < rect.x2(); x++) {
                     this.tiles[y][x] = this.mapIndex + 1
                 }
             }
         }
     }
 
+    roomToAreaRect(room: Room, offset: AreaPoint, overlapRect?: AreaRect): AreaRect {
+        const rect: MapRect = room.floorRect
+        if (! overlapRect) {
+            return new AreaRect(
+                Math.floor(rect.x / AreaRect.div + offset.x),
+                Math.floor(rect.y / AreaRect.div + offset.y),
+                Math.ceil(rect.width / AreaRect.div),
+                Math.ceil(rect.height / AreaRect.div))
+        } else {
+            assert(room.door)
+            const mul = 4
+            const newRect: AreaRect = new MapRect(
+                rect.x,
+                rect.y,
+                Math.ceil(rect.width/mul)*mul,
+                Math.ceil(rect.height/mul)*mul,
+            ).to(AreaRect)
+            Vec2.add(newRect, offset)
+
+            for (let i = 0; i < 3; i++) {
+                if (doRectsOverlap(newRect, overlapRect)) {
+                    DirUtil.moveInDirection(newRect, room.door.dir)
+                } else {
+                    return newRect
+                }
+            }
+            throw new Error('what')
+        }
+    }
+
     async tryArrangeMap(mapBuilder: DungeonMapBuilder): Promise<boolean> {
-        assert(mapBuilder.puzzle.room.room); assert(mapBuilder.puzzle.room.room.door)
+        assert(mapBuilder.puzzle.room.room);   assert(mapBuilder.puzzle.room.room.door)
+        assert(mapBuilder.puzzle.tunnel.room); assert(mapBuilder.battle.room.room)
         assert(mapBuilder.battle.tunnel.room); assert(mapBuilder.battle.tunnel.room.door)
 
         const ent: AreaPoint = mapBuilder.battle.tunnel.room.door.pos.to(AreaPoint)
@@ -167,11 +201,17 @@ export class AreaBuilder {
 
         const rects: AreaRect[] = []
 
+        rects.push(this.roomToAreaRect(mapBuilder.puzzle.room.room, offset))
+        rects.push(this.roomToAreaRect(mapBuilder.puzzle.tunnel.room, offset))
+        const battleAreaRect: AreaRect = this.roomToAreaRect(mapBuilder.battle.room.room, offset)
+        rects.push(battleAreaRect)
+        rects.push(this.roomToAreaRect(mapBuilder.battle.tunnel.room, offset, battleAreaRect))
+
         for (const room of mapBuilder.rooms) {
-            rects.push(AreaRect.fromMapRect(room.floorRect, offset))
+            rects.push(this.roomToAreaRect(room, offset))
         }
 
-        if (dnggen.debug.skipOnAreaMapCollision && doRectsOverlapArray(this.tiles, rects)) {
+        if (dnggen.debug.collisionlessMapArrange && doRectsOverlapGrid(this.tiles, rects)) {
             return false
         }
         this.lastExit = await this.placeMap(mapBuilder, offset.to(EntityPoint), rects, exit, mapBuilder.puzzle.room.room.door.dir)
@@ -195,10 +235,12 @@ export class AreaBuilder {
             case Dir.SOUTH: yInc = 1; break
             case Dir.WEST: xInc = -1; break
         }
-        for (let x = Math.floor(pos.x), y = Math.floor(pos.y), i = 0; i < 15; x += xInc, y += yInc, i++) {
-            if (this.tiles[y][x] == 0) {
-                return new AreaPoint(x, y)
+        const newPos: AreaPoint = pos.copy()
+        for (let i = 0; i < 15; i++) {
+            if (this.tiles[newPos.y][newPos.x] == 0) {
+                return newPos
             }
+            DirUtil.moveInDirection(newPos, dir)
         }
         throw new Error('didint find free tile? how')
     }

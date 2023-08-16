@@ -36,7 +36,7 @@ export class DungeonBuilder {
         await this.preloadPuzzleList()
 
         const puzzles: Selection[] = []
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < DungeonBuilder.puzzleList.length; i++) {
             puzzles.push(DungeonBuilder.puzzleList[i])
         }
 
