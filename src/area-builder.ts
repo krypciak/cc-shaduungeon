@@ -1,5 +1,5 @@
 import { Stamp, Blitzkrieg, allLangs, doRectsOverlapGrid, doRectsOverlap, Dir, DirUtil,
-    MapRect, MapPoint, EntityPoint, AreaRect, AreaPoint, assert } from './util.js'
+    MapRect, MapPoint, EntityPoint, EntityRect, AreaRect, AreaPoint, assert } from './util.js'
 import { DungeonMapBuilder } from './dungeon-room.js'
 import DngGen from './plugin.js'
 import { DungeonBuilder } from './dungeon-builder.js'
@@ -80,9 +80,7 @@ export class AreaBuilder {
         const rects: AreaRect[] = [ AreaRect.fromTwoPoints(offset, new MapPoint(map.mapWidth, map.mapHeight).to(AreaPoint)) ]
         this.placeMapTiles(rects)
 
-        console.log(ig.copy(doorPoint))
         this.lastExit = this.findClosestFreeTile(doorPoint, dir)
-        console.log(ig.copy(this.lastExit))
 
         if (dnggen.debug.discoverAllMaps) { ig.vars.storage.maps[path] = {} }
 
@@ -236,7 +234,7 @@ export class AreaBuilder {
             case Dir.WEST: xInc = -1; break
         }
         const newPos: AreaPoint = pos.copy()
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < 20; i++) {
             if (this.tiles[newPos.y][newPos.x] == 0) {
                 return newPos
             }
@@ -308,12 +306,12 @@ export class AreaBuilder {
         const puzzle = mapBuilder.puzzle
         const battle = mapBuilder.battle
 
-        assert(puzzle.room.room); assert(puzzle.room.room.door); assert(battle.tunnel.room); assert(battle.tunnel.room.door); assert(puzzle.start); assert(puzzle.end)
+        assert(puzzle.room.room);        assert(puzzle.room.room.door); assert(battle.tunnel.room)
+        assert(battle.tunnel.room.door); assert(puzzle.start);          assert(puzzle.end)
 
         const level = 0
         function applyOffset(pos: Vec2): Vec2 {
-            const pos1: Vec2 = { x: Math.floor(pos.x + offset.x), y: Math.floor(pos.y + offset.y) }
-            return pos1
+            return { x: Math.floor(pos.x + offset.x), y: Math.floor(pos.y + offset.y) }
         }
 
         // puzzle exit door

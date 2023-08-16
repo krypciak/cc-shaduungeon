@@ -1,5 +1,5 @@
 // import DngGen from './plugin.js'
-import { Selection, SelectionMapEntry, Blitzkrieg, Dir, DirUtil } from './util.js'
+import { Selection, SelectionMapEntry, Blitzkrieg, Dir, DirUtil, assert } from './util.js'
 import { AreaInfo, AreaBuilder } from './area-builder.js'
 import { DungeonMapBuilder } from './dungeon-room.js'
 
@@ -36,8 +36,10 @@ export class DungeonBuilder {
         await this.preloadPuzzleList()
 
         const puzzles: Selection[] = []
-        for (let i = 0; i < DungeonBuilder.puzzleList.length; i++) {
-            puzzles.push(DungeonBuilder.puzzleList[i])
+        // DungeonBuilder.puzzleList.length
+        const puzzleList = ig.copy(DungeonBuilder.puzzleList).sort(() => Math.random() - 0.5)
+        for (let i = 0; i < puzzleList.length; i++) {
+            puzzles.push(puzzleList[i])
         }
 
         console.log('puzzles:', puzzles)
@@ -46,31 +48,37 @@ export class DungeonBuilder {
         const areaBuilder: AreaBuilder = new AreaBuilder(areaInfo)
         areaBuilder.beginBuild()
 
-        const mapStack: Selection[] = []
         const fileWritePromises: Promise<void>[] = []
         let lastSide: Dir = await areaBuilder.placeStartingMap()
         
+        const builders: DungeonMapBuilder[] = []
+        for (const sel of puzzles) {
+            const mapBuilder: DungeonMapBuilder = new DungeonMapBuilder(areaInfo, sel)
+            await mapBuilder.loadPuzzleMap()
+            mapBuilder.calculatePositions()
+            builders.push(mapBuilder)
+        }
+        const builderStack: DungeonMapBuilder[] = []
+
         for (let i = 0; i < puzzles.length; i++) {
-            mapStack.push(puzzles[i])
-            for (let h = 0; h < mapStack.length; h++) {
-                const sel: Selection = mapStack[h]
-                const mapBuilder: DungeonMapBuilder = new DungeonMapBuilder(areaInfo, sel)
-                await mapBuilder.loadPuzzleMap()
-                mapBuilder.calculatePositions()
+            builderStack.push(builders[i])
+            for (let h = 0; h < builderStack.length; h++) {
+                const mapBuilder: DungeonMapBuilder = builderStack[h]
                 if (! mapBuilder.calculateBattleTunnel(lastSide)) {
                     continue
                 }
 
                 const doesMapFit: boolean = await areaBuilder.tryArrangeMap(mapBuilder)
                 if (doesMapFit) {
-                    lastSide = DirUtil.flip(mapBuilder.puzzle!.end!.dir)
-                    mapStack.splice(h, 1)
+                    assert(mapBuilder.puzzle); assert(mapBuilder.puzzle.end)
+                    lastSide = DirUtil.flip(mapBuilder.puzzle.end.dir)
+                    builderStack.splice(h, 1)
                     fileWritePromises.push(mapBuilder.save())
                 }
             }
         }
 
-        console.log('leftovers:', mapStack)
+        console.log('leftovers:', builderStack.map(b => b.puzzle.unique!.sel))
 
         areaBuilder.addToDatabase()
         areaBuilder.finalizeBuild()

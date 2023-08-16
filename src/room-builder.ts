@@ -157,7 +157,6 @@ export namespace RoomPlaceVars {
              }
         }
         assert(background)
-        assert(shadow)
         assert(light)
 
         return {

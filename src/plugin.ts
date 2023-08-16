@@ -103,7 +103,7 @@ export default class DngGen {
     debug = {
         discoverAllMaps: true,
         pastePuzzle: true,
-        decorateBattleRoom: false,
+        decorateBattleRoom: true,
         trimMaps: true,
         trimAreas: true,
         collisionlessMapArrange: true,
@@ -141,8 +141,5 @@ export default class DngGen {
 
         registerStyles()
         updateLangLabels()
-
-        // console.log('generating')
-        // dnggen.dungeonBuilder.build()
     }
 }

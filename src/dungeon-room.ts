@@ -1,7 +1,7 @@
 import { Dir, DirUtil, Selection, EntityRect, Blitzkrieg, Rect, MapPoint, EntityPoint, assert } from './util.js'
 import { MapBuilder, Room, RoomPlaceVars, getPosOnRectSide, getRoomThemeFromArea } from './room-builder.js'
 import { AreaInfo } from './area-builder.js'
-import { MapEntity, MapFloorSwitch, MapTransporter } from './entity-spawn.js'
+import { MapFloorSwitch, MapTransporter } from './entity-spawn.js'
 import DngGen from './plugin.js'
 
 declare const blitzkrieg: Blitzkrieg
@@ -190,17 +190,21 @@ export class DungeonMapBuilder extends MapBuilder {
                         }
                     }
                 }
-                assert(closestTransporter, 'no doors found?')
-                // console.log('door dist:', closestDistance)
+                if (closestTransporter) {
+                    // console.log('door dist:', closestDistance)
 
-                const newPos: EntityPoint = EntityPoint.fromVec(closestTransporter)
-                Vec2.add(newPos, puzzle.room.initialPos.to(EntityPoint))
-                
-                puzzle.room.room.door = {
-                    name,
-                    pos: newPos,
-                    dir: DirUtil.flip(DirUtil.convertToDir(closestTransporter.settings.dir)),
-                    entity: closestTransporter
+                    const newPos: EntityPoint = EntityPoint.fromVec(closestTransporter)
+                    Vec2.sub(newPos, this.puzzleSel.size)
+                    Vec2.add(newPos, puzzle.room.initialPos.to(EntityPoint))
+
+                    puzzle.room.room.door = {
+                        name,
+                        pos: newPos,
+                        dir: DirUtil.flip(DirUtil.convertToDir(closestTransporter.settings.dir)),
+                        entity: closestTransporter
+                    }
+                } else {
+                    puzzle.room.room.setDoor(name, puzzle.end.dir, EntityPoint.fromVec(puzzle.end.pos))
                 }
             } else if (puzzle.type == 'add walls') {
                 puzzle.room.room.setDoor(name, puzzle.end.dir, EntityPoint.fromVec(puzzle.end.pos))
@@ -280,7 +284,7 @@ export class DungeonMapBuilder extends MapBuilder {
         this.name = name
         this.path = path
         const mapDisplayName: string = await getMapDisplayName(this.puzzle.map)
-        this.displayName = `${index.toString()} => ${mapDisplayName}`
+        this.displayName = `${index.toString()} => ${this.puzzle.map.name} ${mapDisplayName}`
     }
 
     static getGenRoomNames(index: number) {
