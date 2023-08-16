@@ -522,11 +522,12 @@ export class Room {
                     if (rpv.tc.addShadows && rpv.tc.wallUpShadow![i]) { rpv.shadow![y][pos.x] = rpv.tc.wallUpShadow![i] }
                 }
                 for (let i = rpv.masterLevel; i < rpv.colls.length; i++) {
+                    const ri = i - rpv.masterLevel
                     const coll: number[][] = rpv.colls[i]
                     for (let y = pos.y - 3; y <= pos.y; y++) {
-                        coll[y - i*2][pos.x] = Coll.None
+                        coll[y - ri*2][pos.x] = Coll.None
                     }
-                    let y: number = pos.y - i*2 - 1
+                    let y: number = pos.y - ri*2 - 1
                     coll[y][pos.x] = Coll.Coll
                 }
                 break
@@ -555,11 +556,12 @@ export class Room {
                     if (rpv.tc.addShadows && rpv.tc.wallDownShadow![i]) { rpv.shadow![y][pos.x] = rpv.tc.wallDownShadow![i] }
                 }
                 for (let i = rpv.masterLevel; i < rpv.colls.length; i++) {
+                    const ri = i - rpv.masterLevel
                     const coll: number[][] = rpv.colls[i]
                     for (let y = pos.y; y >= pos.y - 3; y--) {
-                        coll[y - i*2][pos.x] = Coll.None
+                        coll[y - ri*2][pos.x] = Coll.None
                     }
-                    const y: number = pos.y - i*2
+                    const y: number = pos.y - ri*2
                     coll[y][pos.x] = Coll.Coll
                 }
                 break
