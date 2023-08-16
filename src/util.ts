@@ -283,6 +283,9 @@ export class AreaRect extends Rect {
             Math.ceil(rect.width / AreaRect.div),
             Math.ceil(rect.height / AreaRect.div))
     }
+    static fromTwoPoints(pos: AreaPoint, size: AreaPoint): AreaRect {
+        return new AreaRect(pos.x, pos.y, size.x, size.y)
+    }
 }
 
 
@@ -316,6 +319,10 @@ export class EntityPoint extends Point {
     static multiplier: number = EntityRect.multiplier
     private _entityPoint: boolean = true
 
+    copy(): EntityPoint {
+        return new EntityPoint(this.x, this.y)
+    }
+
     static fromMapPoint(pos: MapPoint): Point {
         return new Point(pos.x * tilesize, pos.y * tilesize)
     }
@@ -328,11 +335,23 @@ export class EntityPoint extends Point {
 export class MapPoint extends Point {
     static multiplier: number = MapRect.multiplier
     private _mapPoint: boolean = true
+
+    copy(): MapPoint {
+        return new MapPoint(this.x, this.y)
+    }
+
+    static fromVec(pos: Vec2): MapPoint {
+        return new MapPoint(pos.x, pos.y)
+    }
 }
 
 export class AreaPoint extends Point {
     static multiplier: number = AreaRect.multiplier
     private _areaPoint: boolean = true
+
+    copy(): AreaPoint {
+        return new AreaPoint(this.x, this.y)
+    }
 }
 
 
@@ -442,7 +461,7 @@ interface B$Util {
     generateUniqueID(): number
     setToClosestRectSide(pos: Vec2, rect: Rect): { side: Dir, distance: number }
     setToClosestSelSide(pos: Vec2, sel: Selection): Dir
-    getMapObject(mapName: string): Promise<CCMap>
+    getMapObject(mapName: string): Promise<sc.MapModel.Map>
     parseArrayAt2d(arr1: number[][], arr2: number[][], x: number, y: number): void
     emptyArray2d(width: number, height: number): number[][]
     getTrimArrayPos2d(arr: number[][]): { x1: number; y1: number; x2: number; y2: number; }
@@ -451,7 +470,7 @@ interface B$Util {
 }
 
 interface SelectionCopyManager {
-    copySelToMap(baseMap: CCMap, selMap: CCMap, sel: Selection,
+    copySelToMap(baseMap: sc.MapModel.Map, selMap: sc.MapModel.Map, sel: Selection,
         xOffset: number, yOffset: number, newName: string, options: {
             uniqueId?: number
             uniqueSel?: Selection

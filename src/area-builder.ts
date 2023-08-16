@@ -1,8 +1,9 @@
-import { Stamp, Blitzkrieg, allLangs, doRectsOverlapArray, Dir, 
-    MapRect, AreaRect, AreaPoint, assert } from './util.js'
+import { Stamp, Blitzkrieg, allLangs, doRectsOverlapArray, Dir, DirUtil,
+    MapRect, MapPoint, EntityPoint, AreaRect, AreaPoint, assert } from './util.js'
 import { DungeonMapBuilder } from './dungeon-room.js'
 import DngGen from './plugin.js'
 import { DungeonBuilder } from './dungeon-builder.js'
+import { MapDoor } from './entity-spawn.js'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
@@ -27,6 +28,7 @@ export class AreaBuilder {
     tiles!: number[][]
 
     mapIndex!: number
+    genIndex!: number
     lastExit!: AreaPoint
     stamps!: Stamp[]
 
@@ -44,7 +46,43 @@ export class AreaBuilder {
         this.tiles = blitzkrieg.util.emptyArray2d(this.size.x, this.size.y)
         this.maps = []
         this.mapIndex = -1
+        this.genIndex = -1
         this.lastExit = new AreaPoint(this.size.x/2, this.size.y/2)
+    }
+
+    async placeStartingMap(): Promise<Dir> {
+        this.mapIndex++
+        const path: string = DungeonBuilder.initialMap.path
+        this.addMapToList(path, 'Start')
+        
+        const map: sc.MapModel.Map = await blitzkrieg.util.getMapObject(path)
+
+        let doorEntity: MapDoor | undefined
+        for (const entity of map.entities) {
+            if (entity.type == 'Door') {
+                doorEntity = entity as MapDoor
+                break
+            }
+        }
+        assert(doorEntity)
+
+        const { nextPath, nextMarker } = this.getNextPrevRoomNames()
+        doorEntity.settings.map = nextPath
+        doorEntity.settings.marker = nextMarker
+        doorEntity.settings.name = DungeonBuilder.initialMap.exitMarker
+        const dir: Dir = DirUtil.flip(DirUtil.convertToDir(doorEntity.settings.dir!))
+
+        const doorPoint: AreaPoint = EntityPoint.fromVec(doorEntity).to(AreaPoint)
+        const offset: AreaPoint = new AreaPoint(this.lastExit.x - doorPoint.x, this.lastExit.y - doorPoint.y)
+        Vec2.add(doorPoint, offset)
+        this.lastExit = this.findClosestFreeTile(doorPoint, dir)
+
+        const rects: AreaRect[] = [ AreaRect.fromTwoPoints(offset, new MapPoint(map.mapWidth, map.mapHeight).to(AreaPoint)) ]
+        this.placeMapTiles(rects)
+
+        if (dnggen.debug.discoverAllMaps) { ig.vars.storage.maps[path] = {} }
+
+        return DirUtil.flip(dir)
     }
 
     addToDatabase() {
@@ -89,15 +127,19 @@ export class AreaBuilder {
     }
 
     trim() {
-        const { x1, y1, x2, y2 } = blitzkrieg.util.getTrimArrayPos2d(this.tiles)
-        const rect: MapRect = MapRect.fromxy2(x1, y1, x2, y2)
+        if (dnggen.debug.trimAreas) {
+            const { x1, y1, x2, y2 } = blitzkrieg.util.getTrimArrayPos2d(this.tiles)
+            const rect: MapRect = MapRect.fromxy2(x1, y1, x2, y2)
 
-        this.tiles = this.tiles.slice(rect.y, rect.y2).map(row => row.slice(rect.x, rect.x2));
+            this.tiles = this.tiles.slice(rect.y, rect.y2).map(row => row.slice(rect.x, rect.x2));
 
-        this.size = new AreaPoint(this.tiles[0].length, this.tiles.length)
-        for (const stamp of this.stamps) {
-            stamp.pos.x -= rect.x
-            stamp.pos.y -= rect.y
+            this.size = new AreaPoint(this.tiles[0].length, this.tiles.length)
+
+            const stampOffset: EntityPoint = new MapPoint(rect.x, rect.y).to(EntityPoint)
+            for (const stamp of this.stamps) {
+                stamp.pos.x -= rect.x
+                stamp.pos.y -= rect.y
+            }
         }
     }
 
@@ -115,8 +157,8 @@ export class AreaBuilder {
         assert(mapBuilder.puzzle.room.room); assert(mapBuilder.puzzle.room.room.door)
         assert(mapBuilder.battle.tunnel.room); assert(mapBuilder.battle.tunnel.room.door)
 
-        const ent: AreaPoint = mapBuilder.puzzle.room.room.door.pos.to(AreaPoint)
-        const exit: AreaPoint = mapBuilder.battle.tunnel.room.door.pos.to(AreaPoint)
+        const ent: AreaPoint = mapBuilder.battle.tunnel.room.door.pos.to(AreaPoint)
+        const exit: AreaPoint = mapBuilder.puzzle.room.room.door.pos.to(AreaPoint)
 
         const offset: AreaPoint = new AreaPoint(this.lastExit.x - ent.x, this.lastExit.y - ent.y)
         
@@ -129,42 +171,23 @@ export class AreaBuilder {
             rects.push(AreaRect.fromMapRect(room.floorRect, offset))
         }
 
-        if (doRectsOverlapArray(this.tiles, rects)) {
+        if (dnggen.debug.skipOnAreaMapCollision && doRectsOverlapArray(this.tiles, rects)) {
             return false
         }
-        this.mapIndex++
-        await mapBuilder.decideMapName(this.mapIndex)
-        this.lastExit = await this.placeMap(mapBuilder, offset, rects, exit, mapBuilder.battle.tunnel.room.door.dir)
+        this.lastExit = await this.placeMap(mapBuilder, offset.to(EntityPoint), rects, exit, mapBuilder.puzzle.room.room.door.dir)
         return true
     }
 
-    async placeMap(mapBuilder: DungeonMapBuilder, offset: AreaPoint, rects: AreaRect[], pos: AreaPoint, dir: Dir): Promise<AreaPoint> {
-        assert(mapBuilder.puzzle.room.room); assert(mapBuilder.puzzle.room.room.door)
-        assert(mapBuilder.battle.tunnel.room); assert(mapBuilder.battle.tunnel.room.door)
-        assert(mapBuilder.displayName); assert(mapBuilder.path)
-
-        console.log('placing map:', mapBuilder.displayName)
+    addMapToList(path: string, displayName: string) {
         this.maps.push({
-            path: mapBuilder.path.split('/').join('.'),
-            name: allLangs(mapBuilder.displayName),
+            path: path.split('/').join('.'),
+            name: allLangs(displayName),
             dungeon: 'DUNGEON',
             offset: { x: 0, y: 0 }
         })
+    }
 
-        mapBuilder.obtainTheme()
-        await mapBuilder.place()
-        assert(mapBuilder.rpv); 
-
-        const { prevPath, prevMarker, nextPath, nextMarker } = this.getNextPrevRoomNames()
-
-        mapBuilder.battle.tunnel.room.placeDoor(mapBuilder.rpv, DungeonMapBuilder.roomEntarenceMarker, prevPath, prevMarker)
-        mapBuilder.puzzle.room.room.placeDoor(mapBuilder.rpv, DungeonMapBuilder.roomExitMarker, nextPath, nextMarker)
-
-        await mapBuilder.finalize()
-
-        this.addStamps(mapBuilder, offset)
-
-        this.placeMapTiles(rects)
+    findClosestFreeTile(pos: AreaPoint, dir: Dir): AreaPoint {
         let xInc = 0, yInc = 0
         switch (dir) {
             case Dir.NORTH: yInc = -1; break
@@ -172,34 +195,73 @@ export class AreaBuilder {
             case Dir.SOUTH: yInc = 1; break
             case Dir.WEST: xInc = -1; break
         }
-        for (let x = Math.floor(pos.x), y = Math.floor(pos.y), i = 0; i < 100; x += xInc, y += yInc, i++) {
+        for (let x = Math.floor(pos.x), y = Math.floor(pos.y), i = 0; i < 15; x += xInc, y += yInc, i++) {
             if (this.tiles[y][x] == 0) {
                 return new AreaPoint(x, y)
             }
         }
-        throw new Error('that shouldnt happen')
+        throw new Error('didint find free tile? how')
+    }
+
+    async placeMap(mapBuilder: DungeonMapBuilder, offset: EntityPoint, rects: AreaRect[], pos: AreaPoint, dir: Dir): Promise<AreaPoint> {
+        assert(mapBuilder.puzzle.room.room); assert(mapBuilder.puzzle.room.room.door)
+        assert(mapBuilder.battle.tunnel.room); assert(mapBuilder.battle.tunnel.room.door)
+
+        this.mapIndex++
+        this.genIndex++
+        await mapBuilder.decideMapName(this.genIndex)
+        assert(mapBuilder.displayName); assert(mapBuilder.path)
+
+        this.addMapToList(mapBuilder.path, mapBuilder.displayName)
+
+        const { prevPath, prevMarker, nextPath, nextMarker } = this.getNextPrevRoomNames()
+
+        mapBuilder.obtainTheme()
+        mapBuilder.createEmptyMap()
+        assert(mapBuilder.rpv); 
+        mapBuilder.battle.tunnel.room.placeDoor(mapBuilder.rpv, DungeonMapBuilder.roomEntarenceMarker, prevPath, prevMarker)
+        mapBuilder.puzzle.room.room.placeDoor(mapBuilder.rpv, DungeonMapBuilder.roomExitMarker, nextPath, nextMarker)
+
+        await mapBuilder.place()
+
+        if (dnggen.debug.discoverAllMaps) { ig.vars.storage.maps[mapBuilder.path] = {} }
+
+        this.placeMapTiles(rects)
+        const exitPoint = this.findClosestFreeTile(pos, dir)
+
+        await mapBuilder.finalize()
+
+        this.addStamps(mapBuilder, new EntityPoint(
+            offset.x,
+            offset.y
+        ))
+
+        return exitPoint
     }
 
     getNextPrevRoomNames(): { prevPath: string; prevMarker: string; nextPath: string; nextMarker: string } {
         let prevPath, prevMarker, nextPath, nextMarker
 
-        if (this.mapIndex == 0) {
+        if (this.genIndex == 0) {
             prevPath = DungeonBuilder.initialMap.path
             prevMarker = DungeonBuilder.initialMap.exitMarker
+        } else if (this.genIndex == -1) {
+            prevPath = ''
+            prevMarker = ''
         } else {
-            const obj = DungeonMapBuilder.getGenRoomNames(this.mapIndex - 1)
+            const obj = DungeonMapBuilder.getGenRoomNames(this.genIndex - 1)
             prevPath = obj.path
             prevMarker = DungeonMapBuilder.roomExitMarker
         }
         {
-            const obj = DungeonMapBuilder.getGenRoomNames(this.mapIndex + 1)
+            const obj = DungeonMapBuilder.getGenRoomNames(this.genIndex + 1)
             nextPath = obj.path
             nextMarker = DungeonMapBuilder.roomEntarenceMarker
         }
         return { prevPath, prevMarker, nextPath, nextMarker }
     }
 
-    addStamps(mapBuilder: DungeonMapBuilder, offset: AreaPoint) {
+    addStamps(mapBuilder: DungeonMapBuilder, offset: EntityPoint) {
         const area: string = mapBuilder.areaInfo.name
         const puzzle = mapBuilder.puzzle
         const battle = mapBuilder.battle
@@ -208,14 +270,14 @@ export class AreaBuilder {
 
         const level = 0
         function applyOffset(pos: Vec2): Vec2 {
-            const pos1: Vec2 = { x: Math.floor(pos.x + offset.x*8), y: Math.floor(pos.y + offset.y*8) }
+            const pos1: Vec2 = { x: Math.floor(pos.x + offset.x), y: Math.floor(pos.y + offset.y) }
             return pos1
         }
 
         // puzzle exit door
         this.stamps.push(Stamp.new(area, applyOffset(puzzle.room.room.door.pos), level, puzzle.room.room.door.dir))
         // battle entrance door
-        this.stamps.push(Stamp.new(area, applyOffset(battle.tunnel.room.door.pos), level, battle.tunnel.room.door.dir))
+        this.stamps.push(Stamp.new(area, applyOffset(battle.tunnel.room.door.pos), level, DirUtil.flip(battle.tunnel.room.door.dir)))
         
         // puzzle start
         this.stamps.push(Stamp.new(area, applyOffset(puzzle.start.pos), level, 'GREEN'))

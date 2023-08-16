@@ -36,7 +36,7 @@ export class DungeonBuilder {
         await this.preloadPuzzleList()
 
         const puzzles: Selection[] = []
-        for (let i = 0; i < 1; i++) {
+        for (let i = 0; i < 3; i++) {
             puzzles.push(DungeonBuilder.puzzleList[i])
         }
 
@@ -48,28 +48,26 @@ export class DungeonBuilder {
 
         const mapStack: Selection[] = []
         const fileWritePromises: Promise<void>[] = []
-        let lastSide: Dir = Dir.SOUTH
+        let lastSide: Dir = await areaBuilder.placeStartingMap()
         
         for (let i = 0; i < puzzles.length; i++) {
-            // console.log('------------- ', i, puzzles[i])
             mapStack.push(puzzles[i])
             for (let h = 0; h < mapStack.length; h++) {
                 const sel: Selection = mapStack[h]
                 const mapBuilder: DungeonMapBuilder = new DungeonMapBuilder(areaInfo, sel)
                 await mapBuilder.loadPuzzleMap()
                 mapBuilder.calculatePositions()
-                mapBuilder.calculateBattleTunnel(lastSide)
-
-                lastSide = DirUtil.flip(mapBuilder.puzzle!.end!.dir)
+                if (! mapBuilder.calculateBattleTunnel(lastSide)) {
+                    continue
+                }
 
                 const doesMapFit: boolean = await areaBuilder.tryArrangeMap(mapBuilder)
                 if (doesMapFit) {
+                    lastSide = DirUtil.flip(mapBuilder.puzzle!.end!.dir)
                     mapStack.splice(h, 1)
                     fileWritePromises.push(mapBuilder.save())
                 }
             }
-            // console.log('doesnt fit: ', ig.copy(mapStack))
-            //console.log('------------------------')
         }
 
         console.log('leftovers:', mapStack)

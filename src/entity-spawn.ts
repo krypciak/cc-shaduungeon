@@ -4,14 +4,36 @@ let mapId: number = 1000
 
 export interface MapEntity extends sc.MapModel.MapEntity { }
 
-export class MapDoor implements MapEntity {
+export namespace MapTransporter {
+    export function check(e: MapEntity): e is MapTransporter {
+        return 'map' in e.settings && 'marker' in e.settings && 'dir' in e.settings
+    }
+}
+
+// Door, Teleport Ground itd.
+export interface MapTransporter extends MapEntity {
+    settings: {
+        name: string
+        mapId: number
+        map: string
+        dir: keyof typeof Dir
+        marker: string
+        condition?: string
+        hideCondition?: string 
+    }
+}
+
+interface DoorSettings extends ig.ENTITY.Door.Settings {
+    dir: keyof typeof Dir
+}
+
+export class MapDoor implements MapTransporter {
     type: string = 'Door'
     constructor(
         public x: number, 
         public y: number, 
         public level: number, 
-        public settings: ig.ENTITY.Door.Settings) {}
-
+        public settings: DoorSettings) {}
     
     static new(pos: EntityPoint, level: number, dir: Dir,
         marker: string, destMap: string, destMarker: string, condition?: string): MapDoor {

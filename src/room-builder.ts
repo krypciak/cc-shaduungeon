@@ -1,6 +1,6 @@
 import { MapLayer, CollisionTile, Tileset, CCMap, Dir, DirUtil,
     Blitzkrieg, Selection, Coll, Point, Rect, MapPoint, MapRect, EntityPoint, EntityRect, assert } from './util.js'
-import { MapEntity, MapDoor } from './entity-spawn.js'
+import { MapEntity, MapDoor, MapTransporter } from './entity-spawn.js'
 import { AreaInfo } from './area-builder.js'
 import DngGen from './plugin.js'
 
@@ -50,7 +50,7 @@ export class RoomTheme {
             weather: this.config.weather,
             area: areaName,
             saveMode: 'ENABLED',
-            cameraInBounds: true,
+            cameraInBounds: false,
             npcRunners: ''
         }
     }
@@ -284,12 +284,17 @@ export class MapBuilder {
         this.rooms.push(room)
     }
 
-    async place() {
+
+    createEmptyMap() {
         assert(this.theme); assert(this.path)
         const rpv: RoomPlaceVars = getEmptyMap(
             this.width, this.height, this.levelCount, this.theme, this.path, this.areaInfo.name)
         this.rpv = rpv
 
+    }
+
+    async place() {
+        assert(this.rpv)
         this.rooms = this.rooms.sort((a, b) => a.placeOrder- b.placeOrder)
         for (const room of this.rooms) {
             const rpv: RoomPlaceVars | undefined = await room.place(this.rpv)
@@ -300,10 +305,16 @@ export class MapBuilder {
         this.placed = true
     }
 
-    async finalize() {
+    async finalize(): Promise<MapPoint> {
         assert(this.placed); assert(this.rpv)
-        const { map } = await CCMap.trim(this.rpv.map, this.rpv.tc, this.selections)
-        this.builtMap = map
+        if (dnggen.debug.trimMaps) {
+            const { offset, map } = await CCMap.trim(this.rpv.map, this.rpv.tc, this.selections)
+            this.builtMap = map
+            return offset
+        } else {
+            this.builtMap = this.rpv.map
+            return new MapPoint(0, 0)
+        }
     }
 
     save(): Promise<void> {
@@ -328,7 +339,7 @@ export class Room {
     baseRect: MapRect
     floorRect: MapRect
     private addWalls: boolean
-    door?: { name: string, dir: Dir, pos: EntityPoint, condition?: string }
+    door?: { name: string, dir: Dir, pos: EntityPoint, condition?: string, entity?: MapTransporter }
 
     constructor(
         public name: string,
@@ -374,7 +385,14 @@ export class Room {
 
     placeDoor(rpv: RoomPlaceVars, marker: string, destMap: string, destMarker: string) {
         assert(this.door)
-        rpv.entities.push(MapDoor.new(this.door.pos, 0, this.door.dir, marker, destMap, destMarker, this.door.condition))
+        if (this.door.entity) {
+            this.door.entity.settings.name = marker
+            this.door.entity.settings.map = destMap 
+            this.door.entity.settings.marker = destMarker
+        } else {
+            const door = MapDoor.new(this.door.pos, rpv.masterLevel, this.door.dir, marker, destMap, destMarker, this.door.condition)
+            rpv.entities.push(door)
+        }
     }
 
     placeRoom(rpv: RoomPlaceVars, addNavMap: boolean) {
@@ -569,7 +587,7 @@ export class Room {
         const mcollCopy: number[][] = ig.copy(rpv.colls[rpv.masterLevel])
         const additional = 0
         for (const bb of sel.bb) {
-            const rect: MapRect = bb.to(MapRect)
+            const rect: MapRect = Rect.new(EntityRect, bb).to(MapRect)
             rect.width--
             rect.height--
 
@@ -577,7 +595,7 @@ export class Room {
                 if (mcollCopy[y][rect.x] == Coll.None || mcollCopy[y][rect.x] == Coll.Floor) {
                     for (let y3 = y - additional; y3 < y + additional + 1; y3++) {
                         const point: MapPoint = new MapPoint(rect.x, y3)
-                        const checkPoint: MapPoint = ig.copy(point)
+                        const checkPoint: MapPoint = MapPoint.fromVec(point)
                         checkPoint.x -= 1/tilesize
                         if (! blitzkrieg.puzzleSelections.isSelInPos(sel, checkPoint.to(EntityPoint))) {
                             this.placeWall(rpv, point, Dir.WEST)
@@ -587,7 +605,7 @@ export class Room {
                 if (mcollCopy[y][rect.x2] == Coll.None || mcollCopy[y][rect.x2] == Coll.Floor) {
                     for (let y3 = y - additional; y3 < y + additional + 1; y3++) {
                         const point: MapPoint = new MapPoint(rect.x2 + 1, y3)
-                        const checkPoint: MapPoint = ig.copy(point)
+                        const checkPoint: MapPoint = MapPoint.fromVec(point)
                         checkPoint.x += 1/tilesize
                         if (! blitzkrieg.puzzleSelections.isSelInPos(sel, checkPoint.to(EntityPoint))) {
                             this.placeWall(rpv, point, Dir.EAST)
@@ -600,7 +618,7 @@ export class Room {
                 if (mcollCopy[rect.y][x] == Coll.None || mcollCopy[rect.y][x] == Coll.Floor) {
                     for (let x3 = x - additional; x3 < x + additional + 1; x3++) {
                         const point: MapPoint = new MapPoint(x3, rect.y)
-                        const checkPoint: MapPoint = ig.copy(point)
+                        const checkPoint: MapPoint = MapPoint.fromVec(point)
                         checkPoint.y -= 1/tilesize
                         if (! blitzkrieg.puzzleSelections.isSelInPos(sel, checkPoint.to(EntityPoint))) {
                             this.placeWall(rpv, point, Dir.NORTH)
@@ -610,7 +628,7 @@ export class Room {
                 if (mcollCopy[rect.y2][x] == Coll.None || mcollCopy[rect.y2][x] == Coll.Floor) {
                     for (let x3 = x - additional; x3 < x + additional + 1; x3++) {
                         const point: MapPoint = new MapPoint(x3, rect.y2 + 1)
-                        const checkPoint: MapPoint = ig.copy(point)
+                        const checkPoint: MapPoint = MapPoint.fromVec(point)
                         checkPoint.x += 1/tilesize
                         if (! blitzkrieg.puzzleSelections.isSelInPos(sel, checkPoint.to(EntityPoint))) {
                             this.placeWall(rpv, point, Dir.SOUTH)

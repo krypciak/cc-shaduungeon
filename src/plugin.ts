@@ -28,11 +28,11 @@ function addInjects() {
     sc.NEW_GAME_OPTIONS[ngOptionName] = { set: 'others', cost: 0 }
     sc.CrossCode.inject({
         transitionEnded() {
-            if (sc.newgame.get(ngOptionName)) {
+            if (sc.model.currentSubState == sc.GAME_MODEL_SUBSTATE.NEWGAME && sc.newgame.get(ngOptionName)) {
                 ig.game.teleport(DungeonBuilder.initialMap.path, new ig.TeleportPosition(DungeonBuilder.initialMap.entarenceMarker), 'NEW')
-                return
+            } else {
+                this.parent()
             }
-            this.parent()
         }
     })
 
@@ -88,6 +88,16 @@ export default class DngGen {
     battleFileIndex: number = -1
     loaded: boolean = false
     dungeonBuilder!: DungeonBuilder
+
+    debug = {
+        discoverAllMaps: true,
+        pastePuzzle: true,
+        decorateBattleRoom: false,
+        trimMaps: true,
+        trimAreas: false,
+        skipOnAreaMapCollision: false,
+        ignoreGenCrash: true,
+    }
 
     constructor(mod: { baseDirectory: string }) {
         this.dir = mod.baseDirectory
