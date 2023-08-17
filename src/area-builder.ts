@@ -35,6 +35,8 @@ export class AreaBuilder {
 
     builtArea?: sc.AreaLoadable.Data
 
+    mapConnectionSize: number = 1
+
 
     constructor(public areaInfo: AreaInfo) { }
 
@@ -190,19 +192,15 @@ export class AreaBuilder {
     }
 
     addMapConnection(pos: AreaPoint, dir: Dir, i1: number, i2: number) {
-            // pos = pos.copy()
-            // const moveDir: Dir = DirUtil.flip(dir)
-            // DirUtil.moveInDirection(pos, moveDir)
             const connection: sc.AreaLoadable.Connection = {
                 tx: pos.x,
                 ty: pos.y,
                 dir: (DirUtil.isVertical(dir)) ? 'VERTICAL' : 'HORIZONTAL',
-                size: 1,
+                size: this.mapConnectionSize,
                 map1: i1,
                 map2: i2,
             }
             this.connections.push(connection)
-            console.log(connection)
     }
 
     async tryArrangeMap(mapBuilder: DungeonMapBuilder): Promise<boolean> {
@@ -267,7 +265,7 @@ export class AreaBuilder {
     async placeMap(mapBuilder: DungeonMapBuilder, offset: EntityPoint, rects: AreaRect[], pos: AreaPoint, dir: Dir): Promise<AreaPoint> {
         assert(mapBuilder.puzzle.room.room); assert(mapBuilder.puzzle.room.room.door)
         assert(mapBuilder.battle.tunnel.room); assert(mapBuilder.battle.tunnel.room.door)
-         assert(mapBuilder.battle.tunnel.room.index)
+        assert(mapBuilder.battle.tunnel.room.index)
 
         this.mapIndex++
         this.genIndex++
@@ -281,10 +279,12 @@ export class AreaBuilder {
         mapBuilder.obtainTheme()
         mapBuilder.createEmptyMap()
         assert(mapBuilder.rpv); 
+
         mapBuilder.battle.tunnel.room.placeDoor(mapBuilder.rpv, DungeonMapBuilder.roomEntarenceMarker, prevPath, prevMarker)
         mapBuilder.puzzle.room.room.placeDoor(mapBuilder.rpv, DungeonMapBuilder.roomExitMarker, nextPath, nextMarker)
 
         await mapBuilder.place()
+        
 
         if (! dnggen.debug.dontDiscoverAllMaps) { ig.vars.storage.maps[mapBuilder.path] = {} }
 
@@ -294,11 +294,8 @@ export class AreaBuilder {
             const dir: Dir = mapBuilder.battle.tunnel.room.door.dir
             const rect: AreaRect = rects[mapBuilder.battle.tunnel.room.index]
             const size = DirUtil.isVertical(dir) ? rect.width : rect.height
-            const offset = size/2 - 0.5
+            const offset = (size + this.mapConnectionSize)/2
             let side: AreaPoint
-            if (dir == Dir.NORTH) {
-                console.log(rect)
-            }
             switch (dir) {
                 case Dir.NORTH: side = new AreaPoint(rect.x, rect.y); break
                 case Dir.EAST: side = new AreaPoint(rect.x, rect.y); break

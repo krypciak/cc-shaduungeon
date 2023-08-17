@@ -23,9 +23,11 @@ interface PuzzleData {
         size: MapPoint
         room?: Room
     }
-    unique?: {
+    usel?: {
         id: number
         sel: Selection
+        solveCondition?: string
+        solveConditionUnique?: string
     }
     end?: {
         pos: Vec3 & { level: number },
@@ -139,9 +141,29 @@ export class DungeonMapBuilder extends MapBuilder {
             const pos: EntityPoint = puzzle.room.initialPos.to(EntityPoint)
             const sel = blitzkrieg.selectionCopyManager
                 .createUniquePuzzleSelection(this.puzzleSel, pos.x, pos.y, id)
-            puzzle.unique = { id, sel }
-            
-            puzzle.unique.sel.size = Rect.new(EntityRect, puzzle.unique.sel.size)
+
+            let solveCondition: string | undefined
+            let solveConditionUnique: string | undefined
+            switch (puzzle.completion) {
+                case 'normal':
+                    solveCondition = blitzkrieg.puzzleSelectionManager.getPuzzleSolveCondition(sel)
+                    break
+                case 'getTo':
+                    if (puzzle.type == 'whole room') {
+                        solveCondition = ''
+                    } else if (puzzle.type == 'add walls') {
+                        solveCondition = 'map.puzzleSolution1'; break
+                    }
+                case 'item':
+                    solveCondition = undefined
+            }
+            if (solveCondition) {
+                solveConditionUnique = solveCondition
+                if (solveCondition && solveCondition.includes('_destroyed')) { solveConditionUnique += '_' + id }
+            }
+            puzzle.usel = { id, sel, solveCondition, solveConditionUnique }
+
+            puzzle.usel.sel.size = Rect.new(EntityRect, puzzle.usel.sel.size)
         }
         if (true) {
             let spacing: number, placeOrder = Room.PlaceOrder.Room, wallSides: boolean[]
@@ -154,23 +176,23 @@ export class DungeonMapBuilder extends MapBuilder {
                 spacing = puzzle.room.spacing
                 wallSides = [true, true, true, true]
             }
-            puzzle.room.room = new Room('puzzle', puzzle.unique.sel.size, wallSides, spacing, true, placeOrder, (rpv) => {
+            puzzle.room.room = new Room('puzzle', puzzle.usel.sel.size, wallSides, spacing, true, placeOrder, (rpv) => {
                 return this.placePuzzleRoom(rpv)
             })
             this.addRoom(puzzle.room.room)
         }
         if (true) {
-            const pos: Vec3  & { level: number } = ig.copy(puzzle.unique.sel.data.startPos)
+            const pos: Vec3  & { level: number } = ig.copy(puzzle.usel.sel.data.startPos)
             const dir: Dir = puzzle.type == 'whole room' ?
-                blitzkrieg.util.setToClosestSelSide(pos, puzzle.unique.sel) :
-                blitzkrieg.util.setToClosestRectSide(pos, puzzle.unique.sel.size).side
+                blitzkrieg.util.setToClosestSelSide(pos, puzzle.usel.sel) :
+                blitzkrieg.util.setToClosestRectSide(pos, puzzle.usel.sel.size).side
             puzzle.start = { pos, dir }
         }
         if (true) {
-            const pos: Vec3  & { level: number } = ig.copy(puzzle.unique.sel.data.endPos)
+            const pos: Vec3  & { level: number } = ig.copy(puzzle.usel.sel.data.endPos)
             const dir: Dir = puzzle.type == 'whole room' ?
-                blitzkrieg.util.setToClosestSelSide(pos, puzzle.unique.sel) :
-                blitzkrieg.util.setToClosestRectSide(pos, puzzle.unique.sel.size).side
+                blitzkrieg.util.setToClosestSelSide(pos, puzzle.usel.sel) :
+                blitzkrieg.util.setToClosestRectSide(pos, puzzle.usel.sel.size).side
 
             puzzle.end = { pos, dir }
         }
@@ -210,6 +232,10 @@ export class DungeonMapBuilder extends MapBuilder {
                 puzzle.room.room.setDoor(name, puzzle.end.dir, EntityPoint.fromVec(puzzle.end.pos))
             }
             assert(puzzle.room.room.door, 'puzzle door missing?')
+
+            if (puzzle.room.room.door) {
+                puzzle.room.room.door.condition = puzzle.usel.solveConditionUnique
+            }
         }
 
         puzzle.tunnel.room = this.createTunnelRoom(puzzle.room.room, 'puzzleTunnel', puzzle.start.dir,
@@ -301,42 +327,16 @@ export class DungeonMapBuilder extends MapBuilder {
     async placePuzzleRoom(rpv: RoomPlaceVars): Promise<RoomPlaceVars> {
         const puzzle: PuzzleData = this.puzzle
 
-        assert(puzzle.unique); assert(puzzle.room.room);     assert(puzzle.end); assert(puzzle.map);
+        assert(puzzle.usel); assert(puzzle.room.room);     assert(puzzle.end); assert(puzzle.map);
         assert(this.path);     assert(puzzle.room.room.door)
 
-
-        let solveCond: string | undefined
-        let solveCondUnique: string | undefined
-        switch (puzzle.completion) {
-            case 'normal':
-                solveCond = blitzkrieg.puzzleSelectionManager.getPuzzleSolveCondition(puzzle.unique.sel)
-                
-                break
-            case 'getTo':
-                if (puzzle.type == 'whole room') {
-                    solveCond = ''
-                } else if (puzzle.type == 'add walls') {
-                    solveCond = 'map.puzzleSolution1'; break
-                }
-            case 'item':
-                solveCond = undefined
-        }
-        if (solveCond) {
-            solveCondUnique = solveCond
-            if (solveCond &&  solveCond.includes('_destroyed')) { solveCondUnique += '_' + puzzle.unique.id }
-        }
-
-        if (puzzle.room.room.door) {
-            puzzle.room.room.door.condition = solveCondUnique
-        }
-
         if (puzzle.completion == 'getTo' && puzzle.type == 'add walls') {
-            assert(solveCondUnique)
-            rpv.entities.push(MapFloorSwitch.new(EntityPoint.fromVec(puzzle.end.pos), puzzle.end.pos.level, 'puzzleSolveSwitch', solveCondUnique))
+            assert(puzzle.usel.solveConditionUnique)
+            rpv.entities.push(MapFloorSwitch.new(EntityPoint.fromVec(puzzle.end.pos), puzzle.end.pos.level, 'puzzleSolveSwitch', puzzle.usel.solveConditionUnique))
         }
 
         if (puzzle.type == 'whole room') {
-            puzzle.room.room.placeWallsInEmptySpace(rpv, puzzle.unique.sel)
+            puzzle.room.room.placeWallsInEmptySpace(rpv, puzzle.usel.sel)
         }
 
         if (dnggen.debug.pastePuzzle) {
@@ -347,17 +347,17 @@ export class DungeonMapBuilder extends MapBuilder {
                     mergeLayers: false,
                     removeCutscenes: true,
                     makePuzzlesUnique: true,
-                    uniqueId: puzzle.unique.id,
-                    uniqueSel: puzzle.unique.sel,
+                    uniqueId: puzzle.usel.id,
+                    uniqueSel: puzzle.usel.sel,
                 })
             rpv = RoomPlaceVars.fromRawMap(map, rpv.theme)
         }
 
         blitzkrieg.puzzleSelections.setSelHashMapEntry(this.path, {
-            sels: [ puzzle.unique.sel ],
+            sels: [ puzzle.usel.sel ],
             fileIndex: dnggen.puzzleFileIndex,
         })
-        this.addSelection(puzzle.unique.sel)
+        this.addSelection(puzzle.usel.sel)
         return rpv
     }
 

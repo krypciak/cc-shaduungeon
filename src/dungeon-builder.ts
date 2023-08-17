@@ -79,7 +79,7 @@ export class DungeonBuilder {
             }
         }
 
-        console.log('leftovers:', builderStack.map(b => b.puzzle.unique!.sel))
+        console.log('leftovers:', builderStack.map(b => b.puzzle.usel!.sel))
 
         areaBuilder.addToDatabase()
         areaBuilder.finalizeBuild()
