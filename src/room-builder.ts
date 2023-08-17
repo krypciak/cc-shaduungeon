@@ -280,6 +280,7 @@ export class MapBuilder {
     }
 
     addRoom(room: Room) {
+        room.index = this.rooms.length
         this.rooms.push(room)
     }
 
@@ -339,6 +340,7 @@ export class Room {
     floorRect: MapRect
     private addWalls: boolean
     door?: { name: string, dir: Dir, pos: EntityPoint, condition?: string, entity?: MapTransporter }
+    index?: number
 
     constructor(
         public name: string,

@@ -288,6 +288,9 @@ export class AreaRect extends Rect {
     static multiplier: number = 1
     static div: number = MapRect.multiplier / AreaRect.multiplier 
 
+    static fromxy2(x: number, y: number, x2: number, y2: number): AreaRect {
+        return new AreaRect(x, y, x2 - x, y2 - y)
+    }
     static fromTwoPoints(pos: AreaPoint, size: AreaPoint): AreaRect {
         return new AreaRect(pos.x, pos.y, size.x, size.y)
     }

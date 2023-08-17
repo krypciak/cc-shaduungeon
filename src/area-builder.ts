@@ -82,7 +82,7 @@ export class AreaBuilder {
 
         this.lastExit = this.findClosestFreeTile(doorPoint, dir)
 
-        if (dnggen.debug.discoverAllMaps) { ig.vars.storage.maps[path] = {} }
+        if (! dnggen.debug.dontDiscoverAllMaps) { ig.vars.storage.maps[path] = {} }
 
         return DirUtil.flip(dir)
     }
@@ -131,7 +131,7 @@ export class AreaBuilder {
     trim() {
         if (dnggen.debug.trimAreas) {
             const { x1, y1, x2, y2 } = blitzkrieg.util.getTrimArrayPos2d(this.tiles)
-            const rect: MapRect = MapRect.fromxy2(x1, y1, x2, y2)
+            const rect: AreaRect = AreaRect.fromxy2(x1, y1, x2, y2)
 
             this.tiles = this.tiles.slice(rect.y, rect.y2()).map(row => row.slice(rect.x, rect.x2()));
 
@@ -140,6 +140,11 @@ export class AreaBuilder {
             for (const stamp of this.stamps) {
                 stamp.pos.x -= rect.x*8
                 stamp.pos.y -= rect.y*8
+            }
+
+            for (const connection of this.connections) {
+                connection.tx -= rect.x
+                connection.ty -= rect.y
             }
         }
     }
@@ -182,6 +187,22 @@ export class AreaBuilder {
             }
             throw new Error('what')
         }
+    }
+
+    addMapConnection(pos: AreaPoint, dir: Dir, i1: number, i2: number) {
+            // pos = pos.copy()
+            // const moveDir: Dir = DirUtil.flip(dir)
+            // DirUtil.moveInDirection(pos, moveDir)
+            const connection: sc.AreaLoadable.Connection = {
+                tx: pos.x,
+                ty: pos.y,
+                dir: (DirUtil.isVertical(dir)) ? 'VERTICAL' : 'HORIZONTAL',
+                size: 1,
+                map1: i1,
+                map2: i2,
+            }
+            this.connections.push(connection)
+            console.log(connection)
     }
 
     async tryArrangeMap(mapBuilder: DungeonMapBuilder): Promise<boolean> {
@@ -246,6 +267,7 @@ export class AreaBuilder {
     async placeMap(mapBuilder: DungeonMapBuilder, offset: EntityPoint, rects: AreaRect[], pos: AreaPoint, dir: Dir): Promise<AreaPoint> {
         assert(mapBuilder.puzzle.room.room); assert(mapBuilder.puzzle.room.room.door)
         assert(mapBuilder.battle.tunnel.room); assert(mapBuilder.battle.tunnel.room.door)
+         assert(mapBuilder.battle.tunnel.room.index)
 
         this.mapIndex++
         this.genIndex++
@@ -264,17 +286,39 @@ export class AreaBuilder {
 
         await mapBuilder.place()
 
-        if (dnggen.debug.discoverAllMaps) { ig.vars.storage.maps[mapBuilder.path] = {} }
+        if (! dnggen.debug.dontDiscoverAllMaps) { ig.vars.storage.maps[mapBuilder.path] = {} }
 
         this.placeMapTiles(rects)
+
+        if (dnggen.debug.areaMapConnections) {
+            const dir: Dir = mapBuilder.battle.tunnel.room.door.dir
+            const rect: AreaRect = rects[mapBuilder.battle.tunnel.room.index]
+            const size = DirUtil.isVertical(dir) ? rect.width : rect.height
+            const offset = size/2 - 0.5
+            let side: AreaPoint
+            if (dir == Dir.NORTH) {
+                console.log(rect)
+            }
+            switch (dir) {
+                case Dir.NORTH: side = new AreaPoint(rect.x, rect.y); break
+                case Dir.EAST: side = new AreaPoint(rect.x, rect.y); break
+                case Dir.SOUTH: side = new AreaPoint(rect.x, rect.y); break
+                case Dir.WEST: side = new AreaPoint(rect.x2(), rect.y); break
+            }
+            if (DirUtil.isVertical(dir)) {
+                side.x += offset
+            } else {
+                side.y += offset
+            }
+
+            this.addMapConnection(side, dir, this.mapIndex, this.mapIndex - 1)
+        }
+
         const exitPoint = this.findClosestFreeTile(pos, dir)
 
         await mapBuilder.finalize()
 
-        this.addStamps(mapBuilder, new EntityPoint(
-            offset.x,
-            offset.y
-        ))
+        if (! dnggen.debug.disableDebugStamps) { this.addStamps(mapBuilder, offset) }
 
         return exitPoint
     }

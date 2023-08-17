@@ -101,12 +101,14 @@ export default class DngGen {
 
     // all should be true
     debug = {
-        discoverAllMaps: true,
         pastePuzzle: true,
         decorateBattleRoom: true,
         trimMaps: true,
         trimAreas: true,
         collisionlessMapArrange: true,
+        disableDebugStamps: true,
+        dontDiscoverAllMaps: true,
+        areaMapConnections: true,
     }
 
     constructor(mod: { baseDirectory: string }) {

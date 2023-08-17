@@ -37,7 +37,8 @@ export class DungeonBuilder {
 
         const puzzles: Selection[] = []
         // DungeonBuilder.puzzleList.length
-        const puzzleList = ig.copy(DungeonBuilder.puzzleList).sort(() => Math.random() - 0.5)
+        let puzzleList = ig.copy(DungeonBuilder.puzzleList)
+        // puzzleList = puzzleList.sort(() => Math.random() - 0.5)
         for (let i = 0; i < puzzleList.length; i++) {
             puzzles.push(puzzleList[i])
         }
