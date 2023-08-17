@@ -1,4 +1,7 @@
+[![](https://tokei.rs/b1/github/krypciak/cc-rouge?type=typescript&label=TypeScript&style=flat)](https://github.com/krypciak/cc-rouge)
+[![](https://tokei.rs/b1/github/krypciak/cc-rouge?type=JSON&label=Json&style=flat)](https://github.com/krypciak/cc-rouge)
 # WIP CrossCode Dungeon Generator
+
 
 ![Realeses](https://github.com/CCDirectLink/organization/blob/master/assets/badges/releases%402x.png)  
 Don't get too excited lol
