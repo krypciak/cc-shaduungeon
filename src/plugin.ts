@@ -107,7 +107,7 @@ export default class DngGen {
         trimAreas: true,
         collisionlessMapArrange: true,
         disableDebugStamps: true,
-        dontDiscoverAllMaps: true,
+        dontDiscoverAllMaps: false,
         areaMapConnections: true,
     }
 

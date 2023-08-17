@@ -230,6 +230,22 @@ export class Rect {
         return this.y + this.height
     }
 
+    getSide(dir: Dir, smallerSize: number = 0.5): Rect {
+        let pos: Point
+        switch (dir) {
+            case Dir.NORTH: pos = new Point(this.x, this.y); break
+            case Dir.EAST: pos = new Point(this.x2(), this.y); break
+            case Dir.SOUTH: pos = new Point(this.x, this.y2()); break
+            case Dir.WEST: pos = new Point(this.x, this.y); break
+        }
+        const size: Point = DirUtil.isVertical(dir) ? new Point(this.width, smallerSize) : new Point(smallerSize, this.height)
+        return Rect.fromTwoPoints(pos, size)
+    }
+
+    middlePoint<T extends Point>(type: new (x: number, y: number) => T): T {
+        return new type(this.x + this.width/2, this.y + this.height/2)
+    }
+
     to<T extends typeof Rect>(ins: T): InstanceType<T> {
         const multi = ins.multiplier / 
             // @ts-expect-error
@@ -250,6 +266,9 @@ export class Rect {
             width: this.width,
             height: this.height
         }
+    }
+    static fromTwoPoints(pos: Point, size: Point): Rect {
+        return new Rect(pos.x, pos.y, size.x, size.y)
     }
 
     static new<T extends Rect>

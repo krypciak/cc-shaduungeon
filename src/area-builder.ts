@@ -294,8 +294,9 @@ export class AreaBuilder {
             const dir: Dir = mapBuilder.battle.tunnel.room.door.dir
             const rect: AreaRect = rects[mapBuilder.battle.tunnel.room.index]
             const size = DirUtil.isVertical(dir) ? rect.width : rect.height
-            const offset = (size + this.mapConnectionSize)/2
+            const offset = (size - this.mapConnectionSize)/2
             let side: AreaPoint
+            // this isnt the same as Rect.getSide for some reason? Rect.getSide doesnt work in this case
             switch (dir) {
                 case Dir.NORTH: side = new AreaPoint(rect.x, rect.y); break
                 case Dir.EAST: side = new AreaPoint(rect.x, rect.y); break

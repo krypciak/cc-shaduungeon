@@ -1,7 +1,7 @@
 import { Dir, DirUtil, Selection, EntityRect, Blitzkrieg, Rect, MapPoint, EntityPoint, assert } from './util.js'
 import { MapBuilder, Room, RoomPlaceVars, getPosOnRectSide, getRoomThemeFromArea } from './room-builder.js'
 import { AreaInfo } from './area-builder.js'
-import { MapFloorSwitch, MapTransporter } from './entity-spawn.js'
+import { MapEnemyCounter, MapEventTrigger, MapFloorSwitch, MapGlowingLine, MapHiddenBlock, MapTouchTrigger, MapTransporter, MapWall } from './entity-spawn.js'
 import DngGen from './plugin.js'
 
 declare const blitzkrieg: Blitzkrieg
@@ -13,7 +13,7 @@ interface PuzzleData {
     completion: 'normal' | 'getTo' | 'item'
     origMapName: string
     map?: sc.MapModel.Map
-    exitCondition: string
+    enterCondition: string
     room: {
         initialPos: MapPoint
         spacing: number
@@ -50,6 +50,7 @@ interface BattleData {
     tunnel: {
         size: MapPoint
         room?: Room
+        dir?: Dir
     }
     sel?: Selection
 }
@@ -83,7 +84,7 @@ export class DungeonMapBuilder extends MapBuilder {
         }
 
         this.puzzle = {
-            exitCondition: this.battle.startCondition + ' && !' + this.battle.doneCondition,
+            enterCondition: this.battle.startCondition + ' && !' + this.battle.doneCondition,
             type: puzzleSel.data.type,
             completion: puzzleSel.data.completionType,
             origMapName: puzzleSel.map,
@@ -288,11 +289,9 @@ export class DungeonMapBuilder extends MapBuilder {
         if (dir == DirUtil.flip(puzzle.start.dir)) {
             return false
         }
+        battle.tunnel.dir = dir
 
-        const prefPos: EntityPoint = new MapPoint(
-            battle.room.room.floorRect.x + battle.room.room.floorRect.width/2,
-            battle.room.room.floorRect.y + battle.room.room.floorRect.height/2,
-        ).to(EntityPoint)
+        const prefPos: EntityPoint = battle.room.room.floorRect.middlePoint(MapPoint).to(EntityPoint)
 
         battle.tunnel.room = this.createTunnelRoom(battle.room.room, 'battleTunnel', dir, battle.tunnel.size, false, null, prefPos, true)
         this.addRoom(battle.tunnel.room)
@@ -328,7 +327,7 @@ export class DungeonMapBuilder extends MapBuilder {
         const puzzle: PuzzleData = this.puzzle
 
         assert(puzzle.usel); assert(puzzle.room.room);     assert(puzzle.end); assert(puzzle.map);
-        assert(this.path);     assert(puzzle.room.room.door)
+        assert(this.path);   assert(puzzle.room.room.door)
 
         if (puzzle.completion == 'getTo' && puzzle.type == 'add walls') {
             assert(puzzle.usel.solveConditionUnique)
@@ -364,7 +363,8 @@ export class DungeonMapBuilder extends MapBuilder {
     async placeBattleRoom(rpv: RoomPlaceVars): Promise<undefined> {
         const puzzle: PuzzleData = this.puzzle
         const battle: BattleData = this.battle
-        assert(this.path); assert(battle.room.room)
+        assert(this.path); assert(battle.room.room); assert(puzzle.tunnel.room)
+        assert(battle.tunnel.room); assert(battle.tunnel.dir); assert(puzzle.start)
 
         battle.sel = blitzkrieg.util.getSelFromRect(battle.room.room.floorRect.to(EntityRect), this.path, 0)
 
@@ -375,7 +375,38 @@ export class DungeonMapBuilder extends MapBuilder {
         this.addSelection(battle.sel)
 
         if (dnggen.debug.decorateBattleRoom) {
+            const puzzleTunnelExitRect: EntityRect = puzzle.tunnel.room.getSideEntityRect(puzzle.start.dir)
+            rpv.entities.push(                       MapWall.new(puzzleTunnelExitRect, rpv.masterLevel, 'puzzle1TunnelExitWall', puzzle.enterCondition))
+            rpv.entities.push(MapHiddenBlock.newInvisibleBlocker(puzzleTunnelExitRect, rpv.masterLevel, 'puzzle1TunnelExitBlocker', '!' + battle.doneCondition))
 
+            const middlePoint: EntityPoint = battle.room.room.floorRect.middlePoint(MapPoint).to(EntityPoint)
+            Vec2.sub(middlePoint, { x: 16, y: 16})
+            rpv.entities.push(MapEnemyCounter.new(middlePoint, rpv.masterLevel, 'battle1EnemyCounter',
+                /* enemyGroup */ '', /* enemyCount */ 0, /* preVariable */ '', /* postVariable */ '', /* countVariable */ ''))
+
+            const glowingLineSize: number = DirUtil.isVertical(puzzle.start.dir) ?
+                Math.abs(middlePoint.y - puzzleTunnelExitRect.y) : 
+                Math.abs(middlePoint.x - puzzleTunnelExitRect.x)
+
+            rpv.entities.push(MapGlowingLine
+                .newPerpendicular(puzzleTunnelExitRect, rpv.masterLevel, 'battle1GlowingLine', puzzle.start.dir, glowingLineSize, battle.doneCondition))
+
+            const battleTunnelEntarenceRect: EntityRect = battle.tunnel.room.getSideEntityRect(DirUtil.flip(battle.tunnel.dir))
+            rpv.entities.push(                                 MapWall.new(battleTunnelEntarenceRect, rpv.masterLevel, 'battle1EntarenceWall', puzzle.enterCondition))
+            rpv.entities.push(MapHiddenBlock.newInvisibleProjectileBlocker(battleTunnelEntarenceRect, rpv.masterLevel, 'battle1EntarencePBlocker', '!' + battle.startCondition))
+            rpv.entities.push(                 MapTouchTrigger.newParallel(battleTunnelEntarenceRect, rpv.masterLevel, 'battle1TouchTriggerStart', battle.tunnel.dir, 10, 32, battle.startCondition))
+
+            // doesnt work?
+            rpv.entities.push(MapEventTrigger
+                .new(EntityPoint.fromVec(puzzleTunnelExitRect), rpv.masterLevel, 'battle1EndEvent', 'PARALLEL', battle.doneCondition, 'ONCE_PER_ENTRY', '', [
+                    {
+                        entity: { player: true },
+                        marker: { global: true, name: DungeonMapBuilder.roomEntarenceMarker },
+                        type: 'SET_RESPAWN_POINT',
+                    },
+                    { type: 'SAVE' }
+                ]
+            ))
         }
     }
 }

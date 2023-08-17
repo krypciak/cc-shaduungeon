@@ -1,4 +1,4 @@
-import { Dir, DirUtil, EntityPoint, EntityRect } from './util.js'
+import { Dir, DirUtil, EntityPoint, EntityRect, Point } from './util.js'
 
 let mapId: number = 1000
 
@@ -85,6 +85,8 @@ export class MapGlowingLine implements MapEntity {
     }
 
     static new(pos: EntityPoint, level: number, name: string, size: EntityPoint, condition?: string): MapGlowingLine {
+        size.x = Math.floor(size.x / 8)*8
+        size.y = Math.floor(size.y / 8)*8
         return new MapGlowingLine(pos.x, pos.y, level, {
             name, size, condition: condition ?? '', mapId: mapId++, 
         })
@@ -202,7 +204,7 @@ export class MapHiddenBlock implements MapEntity {
         if (settings.collType && ! Object.keys(ig.COLLTYPE).includes(settings.collType)) { throw new Error('Invalid HiddenBlock collType') }
     }
         
-    static new(pos: EntityPoint, level: number, name: string, size: EntityPoint,
+    static new(rect: EntityRect, level: number, name: string,
         collType: keyof typeof ig.COLLTYPE,
         shape: keyof typeof ig.COLLSHAPE,
         terrain: keyof typeof ig.TERRAIN,
@@ -210,19 +212,20 @@ export class MapHiddenBlock implements MapEntity {
         zHeight: number,
         condition: string = ''): MapHiddenBlock {
 
-        return new MapHiddenBlock(pos.x, pos.y, level, {
+        return new MapHiddenBlock(rect.x, rect.y, level, {
             name, mapId: mapId++,
-            size, collType, shape, terrain, heightShape, zHeight, spawnCondition: condition,
+            size: new Point(rect.width, rect.height),
+            collType, shape, terrain, heightShape, zHeight, spawnCondition: condition,
             blockNavMap: false,
         })
     }
 
-    newInvisibleBlocker(pos: EntityPoint, level: number, size: EntityPoint, condition: string = ''): MapHiddenBlock {
-        return MapHiddenBlock.new(pos, level, 'invisibleBlocker' + mapId, size, 'BLOCK', 'RECTANGLE', 'NORMAL', 'NONE', 256, condition)
+    static newInvisibleBlocker(rect: EntityRect, level: number, name: string, condition: string = ''): MapHiddenBlock {
+        return MapHiddenBlock.new(rect, level, name, 'BLOCK', 'RECTANGLE', 'NORMAL', 'NONE', 64, condition)
     }
 
-    newInvisibleProjectileBlocker(pos: EntityPoint, level: number, size: EntityPoint, condition: string = ''): MapHiddenBlock {
-        return MapHiddenBlock.new(pos, level, 'invisibleBlocker' + mapId, size, 'PBLOCK', 'RECTANGLE', 'NORMAL', 'NONE', 256, condition)
+    static newInvisibleProjectileBlocker(rect: EntityRect, level: number, name: string, condition: string = ''): MapHiddenBlock {
+        return MapHiddenBlock.new(rect, level, name, 'PBLOCK', 'RECTANGLE', 'NORMAL', 'NONE', 64, condition)
     }
 }
 
@@ -273,7 +276,7 @@ export class MapTouchTrigger implements MapEntity {
         switch (dir) {
             case Dir.NORTH:
                 rect.x = rect.x - size
-                rect.y = rect.y + 12 + offset
+                rect.y = rect.y + 8 + offset
                 break
             case Dir.EAST:
                 rect.x = rect.x - size - offset
@@ -520,7 +523,7 @@ export class MapEventTrigger implements MapEntity {
         startCondition?: string,
         triggerType?: keyof typeof ig.EVENT_TRIGGER_TYPE,
         loadCondition?: string,
-        event?: ig.Event.Settings): MapEventTrigger {
+        event: any[] = []): MapEventTrigger {
         return new MapEventTrigger(pos.x, pos.y, level, {
             name, mapId: mapId++,
             eventType, startCondition, triggerType, loadCondition, event

@@ -641,6 +641,17 @@ export class Room {
             }
         }
     }
+
+    getSideEntityRect(dir: Dir) {
+        const rect: EntityRect = Rect.new(MapRect, this.floorRect.getSide(dir)).to(EntityRect)
+        if (dir == Dir.EAST) {
+            rect.x -= 8
+        }
+        if (dir == Dir.SOUTH) {
+            rect.y -= 8
+        }
+        return rect
+    }
 }
 
 export namespace Room {
