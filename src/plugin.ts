@@ -103,10 +103,9 @@ export default class DngGen {
     debug = {
         pastePuzzle: true,
         decorateBattleRoom: true,
-        trimMaps: true,
         trimAreas: true,
         collisionlessMapArrange: true,
-        disableDebugStamps: true,
+        disableDebugStamps: false,
         dontDiscoverAllMaps: false,
         areaMapConnections: true,
     }

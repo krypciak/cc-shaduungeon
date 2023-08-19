@@ -1,8 +1,4 @@
-import { off } from 'process'
-import { RoomThemeConfig } from './room-builder.js'
-
 const tilesize: number = 16
-declare const blitzkrieg: Blitzkrieg
 
 export enum CollisionTile {
     Empty,
@@ -60,6 +56,7 @@ export class CCMap implements sc.MapModel.Map {
         public entities: sc.MapModel.MapEntity[],
         public layer: MapLayer[]) { }
 
+    /*
     static async trim(map: CCMap, theme: RoomThemeConfig, selections: Selection[] = []): Promise<{ offset: MapPoint, map: sc.MapModel.Map }> {
         const origW: number = map.mapWidth
         const origH: number = map.mapHeight
@@ -153,6 +150,7 @@ export class CCMap implements sc.MapModel.Map {
 
         return { offset, map: newMap }
     }
+    */
 
     toJSON() { return this as sc.MapModel.Map }
 }

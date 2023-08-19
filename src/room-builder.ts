@@ -254,7 +254,10 @@ export class MapBuilder {
     rooms: Room[]
     theme?: RoomTheme
     rpv?: RoomPlaceVars
-    private placed: boolean
+
+    width?: number
+    height?: number
+    trimOffset?: MapPoint
 
     pathParent?: string
     name?: string
@@ -265,14 +268,11 @@ export class MapBuilder {
     selections: Selection[]
 
     constructor(
-        public width: number,
-        public height: number,
         public levelCount: number,
         public areaInfo: AreaInfo) {
 
         this.rooms = []
         this.selections = []
-        this.placed = false
     }
 
     addSelection(sel: Selection) {
@@ -284,9 +284,32 @@ export class MapBuilder {
         this.rooms.push(room)
     }
 
+    trimRoomPositions(additionalSpace: MapRect) {
+        const newSize: MapRect = new MapRect(10000, 10000, 0, 0)
+
+        for (const room of this.rooms) {
+            const rect = room.floorRect
+            if (rect.x < newSize.x) { newSize.x = rect.x }
+            if (rect.y < newSize.y) { newSize.y = rect.y }
+            if (rect.x2() > newSize.width ) { newSize.width = rect.x2() }
+            if (rect.y2() > newSize.height ) { newSize.height = rect.y2() }
+        }
+
+        const offset = MapPoint.fromVec(newSize)
+        offset.x -= additionalSpace.x
+        offset.y -= additionalSpace.y
+        this.trimOffset = offset
+        this.width = newSize.width - offset.x + additionalSpace.width
+        this.height = newSize.height - offset.y + additionalSpace.height
+
+        Vec2.mulC(offset, -1)
+        for (const room of this.rooms) {
+            room.offsetBy(offset)
+        }
+    }
 
     createEmptyMap() {
-        assert(this.theme); assert(this.path)
+        assert(this.theme); assert(this.path); assert(this.width); assert(this.height)
         const rpv: RoomPlaceVars = getEmptyMap(
             this.width, this.height, this.levelCount, this.theme, this.path, this.areaInfo.name)
         this.rpv = rpv
@@ -302,27 +325,14 @@ export class MapBuilder {
                 this.rpv = rpv
             }
         }
-        this.placed = true
-    }
-
-    async finalize(): Promise<MapPoint> {
-        assert(this.placed); assert(this.rpv)
-        if (dnggen.debug.trimMaps) {
-            const { offset, map } = await CCMap.trim(this.rpv.map, this.rpv.tc, this.selections)
-            this.builtMap = map
-            return offset
-        } else {
-            this.builtMap = this.rpv.map
-            return new MapPoint(0, 0)
-        }
     }
 
     save(): Promise<void> {
         return new Promise((resolve, reject) => {
-            assert(this.builtMap, 'cannot save map before finalize()')
-            console.log('map: ', ig.copy(this.builtMap))
+            assert(this.rpv)
+            console.log('map: ', ig.copy(this.rpv.map))
             const path = dnggen.dir + 'assets/data/maps/' + this.path + '.json'
-            const json = JSON.stringify(this.builtMap)
+            const json = JSON.stringify(this.rpv.map)
             require('fs').writeFile(path, json, (err: Error) => {
                 if (err) {
                     console.error('error writing map:', err)
@@ -362,6 +372,15 @@ export class Room {
         this.addWalls = false
         for (const addSide of this.wallSides) {
             if (addSide) { this.addWalls = true; break }
+        }
+    }
+
+    offsetBy(offset: MapPoint) {
+        Vec2.add(this.baseRect, offset)
+        Vec2.add(this.floorRect, offset)
+        if (this.door) {
+            const entityOffset: EntityPoint = offset.to(EntityPoint)
+            Vec2.add(this.door.pos, entityOffset)
         }
     }
 

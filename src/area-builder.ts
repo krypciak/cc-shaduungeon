@@ -314,8 +314,6 @@ export class AreaBuilder {
 
         const exitPoint = this.findClosestFreeTile(pos, dir)
 
-        await mapBuilder.finalize()
-
         if (! dnggen.debug.disableDebugStamps) { this.addStamps(mapBuilder, offset) }
 
         return exitPoint

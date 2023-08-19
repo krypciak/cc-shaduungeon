@@ -1,4 +1,4 @@
-import { Dir, DirUtil, Selection, EntityRect, Blitzkrieg, Rect, MapPoint, EntityPoint, assert } from './util.js'
+import { Dir, DirUtil, Selection, EntityRect, Blitzkrieg, Rect, MapPoint, EntityPoint, assert, MapRect } from './util.js'
 import { MapBuilder, Room, RoomPlaceVars, getPosOnRectSide, getRoomThemeFromArea } from './room-builder.js'
 import { AreaInfo } from './area-builder.js'
 import { MapEnemyCounter, MapEventTrigger, MapFloorSwitch, MapGlowingLine, MapHiddenBlock, MapTouchTrigger, MapTransporter, MapWall } from './entity-spawn.js'
@@ -15,7 +15,6 @@ interface PuzzleData {
     map?: sc.MapModel.Map
     enterCondition: string
     room: {
-        initialPos: MapPoint
         spacing: number
         room?: Room
     }
@@ -69,7 +68,7 @@ export class DungeonMapBuilder extends MapBuilder {
         
         assert(puzzleSel.data.type); assert(puzzleSel.data.completionType)
 
-        super(200, 200, 3, areaInfo)
+        super(3, areaInfo)
         
         this.battle = {
             startCondition: 'tmp.battle1',
@@ -89,7 +88,6 @@ export class DungeonMapBuilder extends MapBuilder {
             completion: puzzleSel.data.completionType,
             origMapName: puzzleSel.map,
             room: {
-                initialPos: new MapPoint(Math.floor(this.width/2.5), Math.floor(this.height/2.5)),
                 spacing: 3
             },
             tunnel: {
@@ -139,9 +137,8 @@ export class DungeonMapBuilder extends MapBuilder {
 
         if (true) {
             const id = blitzkrieg.util.generateUniqueID()
-            const pos: EntityPoint = puzzle.room.initialPos.to(EntityPoint)
             const sel = blitzkrieg.selectionCopyManager
-                .createUniquePuzzleSelection(this.puzzleSel, pos.x, pos.y, id)
+                .createUniquePuzzleSelection(this.puzzleSel, 0, 0, id)
 
             let solveCondition: string | undefined
             let solveConditionUnique: string | undefined
@@ -218,7 +215,6 @@ export class DungeonMapBuilder extends MapBuilder {
 
                     const newPos: EntityPoint = EntityPoint.fromVec(closestTransporter)
                     Vec2.sub(newPos, this.puzzleSel.size)
-                    Vec2.add(newPos, puzzle.room.initialPos.to(EntityPoint))
 
                     puzzle.room.room.door = {
                         name,
@@ -277,6 +273,13 @@ export class DungeonMapBuilder extends MapBuilder {
             })
             this.addRoom(battle.room.room)
         }
+
+        this.trimRoomPositions(new MapRect(3, 10, 4, 4))
+        assert(this.trimOffset)
+        const trimOffsetEntity: EntityPoint = this.trimOffset.to(EntityPoint)
+        blitzkrieg.util.setSelPos(puzzle.usel.sel, trimOffsetEntity.x, trimOffsetEntity.y)
+        Vec2.add(puzzle.start.pos, trimOffsetEntity)
+        Vec2.add(puzzle.end.pos, trimOffsetEntity)
     }
 
     calculateBattleTunnel(dir: Dir): boolean {
@@ -326,8 +329,8 @@ export class DungeonMapBuilder extends MapBuilder {
     async placePuzzleRoom(rpv: RoomPlaceVars): Promise<RoomPlaceVars> {
         const puzzle: PuzzleData = this.puzzle
 
-        assert(puzzle.usel); assert(puzzle.room.room);     assert(puzzle.end); assert(puzzle.map);
-        assert(this.path);   assert(puzzle.room.room.door)
+        assert(puzzle.usel); assert(puzzle.room.room);      assert(puzzle.end); assert(puzzle.map);
+        assert(this.path);   assert(puzzle.room.room.door); assert(this.trimOffset)
 
         if (puzzle.completion == 'getTo' && puzzle.type == 'add walls') {
             assert(puzzle.usel.solveConditionUnique)
@@ -339,7 +342,7 @@ export class DungeonMapBuilder extends MapBuilder {
         }
 
         if (dnggen.debug.pastePuzzle) {
-            const pastePos: EntityPoint = puzzle.room.initialPos.to(EntityPoint)
+            const pastePos: EntityPoint = this.trimOffset.to(EntityPoint)
             const map: sc.MapModel.Map = await blitzkrieg.selectionCopyManager
                 .copySelToMap(ig.copy(rpv.map), ig.copy(puzzle.map), this.puzzleSel, pastePos.x, pastePos.y, this.path, {
                     disableEntities: false,
