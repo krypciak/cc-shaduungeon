@@ -1,8 +1,10 @@
 import { godlikeStats, Blitzkrieg, assert } from './util.js'
 import { DungeonBuilder } from './dungeon-builder.js'
+import { VimLogic } from '../node_modules/cc-vim/src/logic.js'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
+declare const vim: VimLogic
 
 const ngOptionName = 'dnggen'
 const ngOptionDisplayName = 'Generate Dungeon'
@@ -62,9 +64,13 @@ function addInjects() {
     // })
 }
 
-async function startDnggenGame(titleGuiInstance: sc.TitleScreenButtonGui) {
+async function startDnggenGame(titleGuiInstance?: sc.TitleScreenButtonGui) {
     ig.bgm.clear('MEDIUM_OUT');
-    ig.interact.removeEntry(titleGuiInstance.buttonInteract)
+    if (titleGuiInstance) {
+        ig.interact.removeEntry(titleGuiInstance.buttonInteract)
+    } else {
+        ig.interact.entries.forEach((e) => ig.interact.removeEntry(e))
+    }
     ig.game.start(sc.START_MODE.NEW_GAME_PLUS, 1)
     ig.game.setPaused(false);
 
@@ -133,6 +139,15 @@ export default class DngGen {
 
         addInjects()
 
+        // https://github.com/krypciak/cc-vim
+        if (vim) {
+            const isInGenMap = (ingame: boolean) => ingame && ig.game.mapName.startsWith('rouge')
+            vim.addAlias('rouge', 'generate-dungeon', 'Generate dungeon', 'global', () => {
+                vim.executeString('title-screen')
+                startDnggenGame()
+            })
+            vim.addAlias('rouge', 'skip-battle', 'Skips the battle', isInGenMap, () => { ig.vars.set('map.battle1done', true) })
+        }
         this.loaded = true
     }
 

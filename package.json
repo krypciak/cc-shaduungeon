@@ -12,6 +12,7 @@
         "@types/node": "^20.4.4",
         "@typescript-eslint/eslint-plugin": "^6.2.0",
         "@typescript-eslint/parser": "^6.2.0",
+        "cc-vim": "github:krypciak/cc-vim",
         "esbuild": "^0.18.15",
         "prettier": "3.0.0",
         "typescript": "^5.1.6",
