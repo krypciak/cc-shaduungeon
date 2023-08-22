@@ -151,7 +151,7 @@ export default class DngGen {
         this.loaded = true
     }
 
-    async main() {
+    async poststart() {
         assert(blitzkrieg, blitzkriegMissingMsg)
         assert(blitzkrieg.loaded, blitzkriegMissingMsg)
 
