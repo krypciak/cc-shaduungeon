@@ -1,4 +1,4 @@
-import { EntityRect } from './pos'
+import { EntityRect } from './pos.js'
 
 export interface Blitzkrieg {
     puzzleSelections: Selections

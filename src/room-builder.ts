@@ -4,8 +4,8 @@ import DngGen from './plugin.js'
 import { RoomTheme, RoomThemeConfig } from './themes.js'
 import { Blitzkrieg, Selection } from './util/blitzkrieg.js'
 import { CCMap, Coll, MapLayer } from './util/map.js'
-import assert from 'assert'
 import { Point, Rect, Dir, DirUtil, MapPoint, MapRect, EntityRect, EntityPoint } from './util/pos.js'
+import { assert } from './util/misc.js'
 
 const tilesize: number = 16
 declare const blitzkrieg: Blitzkrieg

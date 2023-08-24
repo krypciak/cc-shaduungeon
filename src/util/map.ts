@@ -1,4 +1,4 @@
-import { Dir } from "./pos"
+import { Dir } from './pos.js'
 
 const tilesize: number = 16
 

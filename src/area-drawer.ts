@@ -1,6 +1,6 @@
-import { ABStackEntry } from "./area-builder"
-import { Stack } from "./util/misc"
-import { AreaPoint, AreaRect, Dir, DirUtil, MapPoint, MapRect, Point, Rect } from "./util/pos"
+import { ABStackEntry } from './area-builder.js'
+import { Stack } from './util/misc.js'
+import { AreaPoint, AreaRect, Dir, DirUtil, MapPoint, MapRect, Point, Rect } from './util/pos.js'
 
 const canvasIndex = 0
 

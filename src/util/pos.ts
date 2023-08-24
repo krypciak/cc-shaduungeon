@@ -1,4 +1,4 @@
-import { Selection } from "./blitzkrieg"
+import { Selection } from './blitzkrieg.js'
 
 const tilesize: number = 16
 
