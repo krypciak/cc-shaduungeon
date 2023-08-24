@@ -1,9 +1,9 @@
-import { Blitzkrieg, Selection, SelectionMapEntry } from './util/blitzkrieg.js'
-import { Stack, assert } from './util/misc.js'
-import { AreaPoint, Dir, DirUtil } from './util/pos.js'
-import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from './area-builder.js'
+import { Blitzkrieg, Selection, SelectionMapEntry } from '../util/blitzkrieg.js'
+import { Stack, assert } from '../util/misc.js'
+import { AreaPoint, Dir, DirUtil } from '../util/pos.js'
+import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from '../area-builder.js'
 import { DungeonMapBuilder } from './dungeon-room.js'
-import DngGen from './plugin.js'
+import DngGen from '../plugin.js'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen

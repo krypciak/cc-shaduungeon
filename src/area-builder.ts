@@ -1,12 +1,12 @@
 import { AreaPoint, AreaRect, Dir, DirUtil, EntityPoint, MapPoint, MapRect, Point, doRectsOverlap, doesRectArrayOverlapRectArray } from './util/pos.js'
-import { DungeonMapBuilder } from './dungeon-room.js'
+import { DungeonMapBuilder } from './room/dungeon-room.js'
 import { Stamp } from './util/map.js'
 import { allLangs, assert } from './util/misc.js'
 import { Blitzkrieg } from './util/blitzkrieg.js'
 import DngGen from './plugin.js'
-import { DungeonBuilder } from './dungeon-builder.js'
+import { DungeonBuilder } from './room/dungeon-builder.js'
 import { MapDoor } from './entity-spawn.js'
-import { Room } from './room-builder.js'
+import { Room } from './room/room.js'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen

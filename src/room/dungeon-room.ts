@@ -1,11 +1,12 @@
-import { Dir, DirUtil, Rect, MapPoint, EntityPoint, MapRect, EntityRect, setToClosestSelSide } from './util/pos.js'
-import { assert } from './util/misc.js'
-import { Blitzkrieg, Selection } from './util/blitzkrieg.js'
-import { MapEnemyCounter, MapEventTrigger, MapFloorSwitch, MapGlowingLine, MapHiddenBlock, MapTouchTrigger, MapTransporter, MapWall } from './entity-spawn.js'
-import { MapBuilder, Room, RoomPlaceVars, getPosOnRectSide } from './room-builder.js'
+import { Dir, DirUtil, Rect, MapPoint, EntityPoint, MapRect, EntityRect, setToClosestSelSide } from '../util/pos.js'
+import { assert } from '../util/misc.js'
+import { Blitzkrieg, Selection } from '../util/blitzkrieg.js'
+import { MapEnemyCounter, MapEventTrigger, MapFloorSwitch, MapGlowingLine, MapHiddenBlock, MapTouchTrigger, MapTransporter, MapWall } from '../entity-spawn.js'
+import { MapBuilder, RoomPlaceVars } from './map-builder.js'
 import { RoomTheme } from './themes.js'
-import { AreaInfo } from './area-builder.js'
-import DngGen from './plugin.js'
+import { AreaInfo } from '../area-builder.js'
+import DngGen from '../plugin.js'
+import { Room, getPosOnRectSide } from './room.js'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
