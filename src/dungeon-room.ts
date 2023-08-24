@@ -1,7 +1,10 @@
-import { Dir, DirUtil, Selection, EntityRect, Blitzkrieg, Rect, MapPoint, EntityPoint, assert, MapRect, setToClosestSelSide } from './util.js'
-import { MapBuilder, Room, RoomPlaceVars, getPosOnRectSide, getRoomThemeFromArea } from './room-builder.js'
-import { AreaInfo } from './area-builder.js'
+import { Dir, DirUtil, Rect, MapPoint, EntityPoint, MapRect, EntityRect, setToClosestSelSide } from './util/pos'
+import { assert } from './util/misc'
+import { Blitzkrieg, Selection } from './util/blitzkrieg'
 import { MapEnemyCounter, MapEventTrigger, MapFloorSwitch, MapGlowingLine, MapHiddenBlock, MapTouchTrigger, MapTransporter, MapWall } from './entity-spawn.js'
+import { MapBuilder, Room, RoomPlaceVars, getPosOnRectSide } from './room-builder.js'
+import { RoomTheme } from './themes.js'
+import { AreaInfo } from './area-builder.js'
 import DngGen from './plugin.js'
 
 declare const blitzkrieg: Blitzkrieg
@@ -328,7 +331,7 @@ export class DungeonMapBuilder extends MapBuilder {
     }
 
     obtainTheme() {
-        this.theme = getRoomThemeFromArea(this.puzzle.map!.attributes.area)
+        this.theme = RoomTheme.getFromArea(this.puzzle.map!.attributes.area)
     }
 
     async placePuzzleRoom(rpv: RoomPlaceVars): Promise<RoomPlaceVars> {

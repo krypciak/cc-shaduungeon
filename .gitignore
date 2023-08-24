@@ -2,6 +2,7 @@ package-lock.json
 old
 old.txt
 plugin.js
+src/util/old.txt
 assets/data/maps/rouge/gen/*
 assets/data/maps/rouge/fun*
 assets/data/maps/rouge/room-1.json

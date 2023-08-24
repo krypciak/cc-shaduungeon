@@ -1,5 +1,6 @@
-// import DngGen from './plugin.js'
-import { Selection, SelectionMapEntry, Blitzkrieg, Dir, DirUtil, assert, AreaPoint, Stack, AreaRect } from './util.js'
+import { Blitzkrieg, Selection, SelectionMapEntry } from './util/blitzkrieg.js'
+import { Stack, assert } from './util/misc.js'
+import { AreaPoint, Dir, DirUtil } from './util/pos.js'
 import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from './area-builder.js'
 import { DungeonMapBuilder } from './dungeon-room.js'
 import DngGen from './plugin.js'
@@ -133,6 +134,7 @@ export class DungeonBuilder {
         dnggen.areaDrawer.copyToClipboard()
         return
 
+        /*
         areaBuilder.addToDatabase()
         areaBuilder.finalizeBuild()
         areaBuilder.saveToFile()
@@ -151,5 +153,6 @@ export class DungeonBuilder {
                 size: {x: 0, y: 0}
             }))
         }
+        */
     }
 }

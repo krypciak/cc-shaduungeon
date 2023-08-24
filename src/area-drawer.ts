@@ -1,5 +1,6 @@
-import { AreaPoint, AreaRect, Dir, DirUtil, EntityPoint, EntityRect, MapPoint, MapRect, Point, Rect, Stack } from "./util"
 import { ABStackEntry } from "./area-builder"
+import { Stack } from "./util/misc"
+import { AreaPoint, AreaRect, Dir, DirUtil, MapPoint, MapRect, Point, Rect } from "./util/pos"
 
 const canvasIndex = 0
 

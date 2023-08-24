@@ -1,7 +1,8 @@
-import { godlikeStats, Blitzkrieg, assert } from './util.js'
+import { godlikeStats, assert } from './util/misc.js'
 import { DungeonBuilder } from './dungeon-builder.js'
 import { VimLogic } from '../node_modules/cc-vim/src/logic.js'
 import { AreaDrawer } from './area-drawer.js'
+import { Blitzkrieg } from './util/blitzkrieg.js'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen

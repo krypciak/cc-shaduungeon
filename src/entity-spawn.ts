@@ -1,4 +1,4 @@
-import { Dir, DirUtil, EntityPoint, EntityRect, Point } from './util.js'
+import { Dir, DirUtil, EntityPoint, EntityRect, Point } from './util/pos'
 
 let mapId: number = 1000
 
