@@ -1,5 +1,29 @@
 const tilesize: number = 16
 
+export class Stack<T> {
+    array: T[] = []
+
+    constructor(array: T[] = []) {
+        this.array = array
+    }
+
+    push(element: T) {
+        this.array.push(element)
+    }
+    pop(): T {
+        return this.array.splice(this.array.length - 1, 1)[0]
+    }
+    peek(): T {
+        return this.array.last()
+    }
+    shift(): T | undefined {
+        return this.array.shift()
+    }
+    length(): number {
+        return this.array.length
+    }
+}
+
 export enum CollisionTile {
     Empty,
     Floor, // green
@@ -191,15 +215,6 @@ export class DirUtil {
     static isVertical(dir: Dir): boolean {
         return dir == Dir.NORTH || dir == Dir.SOUTH
     }
-
-    static moveInDirection(pos: Vec2, dir: Dir) {
-        switch (dir) {
-            case Dir.NORTH: pos.y -= 1; break
-            case Dir.EAST: pos.x += 1; break
-            case Dir.SOUTH: pos.y += 1; break
-            case Dir.WEST: pos.x -= 1; break
-        }
-    }
 }
 
 type bareRect = { x: number; y: number; width: number; height: number }
@@ -240,6 +255,38 @@ export class Rect {
         return Rect.fromTwoPoints(pos, size)
     }
 
+    setPosToSide(pos: Point, dir: Dir) {
+        switch (dir) {
+            case Dir.NORTH: pos.y = this.y; break
+            case Dir.EAST: pos.x = this.x2(); break
+            case Dir.SOUTH: pos.y = this.y2(); break
+            case Dir.WEST: pos.x = this.x; break
+        }
+    }
+
+    setToClosestRectSide(pos: Vec2): { distance: number, dir: Dir, pos: Vec2 }  {
+        let smallestDist: number = 10000
+        let smallestDir: Dir = Dir.NORTH
+        let smallestPos: Vec2 = new Point(0, 0)
+        for (let dir = 0; dir < 4; dir++) {
+            const p: Vec2 = this.getSide(dir)
+            if (DirUtil.isVertical(dir)) {
+                p.x = pos.x
+            } else {
+                p.y = pos.y
+            }
+            const dist = Vec2.distance(pos, p)
+            if (dist < smallestDist) {
+                smallestDist = dist
+                smallestDir = dir
+                smallestPos = p
+            }
+        }
+        pos.x = smallestPos.x
+        pos.y = smallestPos.y
+        return { distance: smallestDist, dir: smallestDir, pos: smallestPos }
+    }
+
     middlePoint<T extends Point>(type: new (x: number, y: number) => T): T {
         return new type(this.x + this.width/2, this.y + this.height/2)
     }
@@ -265,6 +312,7 @@ export class Rect {
             height: this.height
         }
     }
+
     static fromTwoPoints(pos: Point, size: Point): Rect {
         return new Rect(pos.x, pos.y, size.x, size.y)
     }
@@ -338,6 +386,15 @@ export class Point {
             y: this.y,
         }
     }
+
+    static moveInDirection(pos: Vec2, dir: Dir) {
+        switch (dir) {
+            case Dir.NORTH: pos.y -= 1; break
+            case Dir.EAST: pos.x += 1; break
+            case Dir.SOUTH: pos.y += 1; break
+            case Dir.WEST: pos.x -= 1; break
+        }
+    }
 }
 
 export class EntityPoint extends Point {
@@ -377,6 +434,9 @@ export class AreaPoint extends Point {
     copy(): AreaPoint {
         return new AreaPoint(this.x, this.y)
     }
+    static fromTwoPoints(pos: AreaPoint, size: AreaPoint): AreaRect {
+        return new AreaRect(pos.x, pos.y, size.x, size.y)
+    }
 }
 
 
@@ -397,19 +457,6 @@ export class Stamp {
             stamp.addToMenu()
         }
     }
-
-    /*
-    static getPosBehind(posOrig: Vec2, dir: Dir, dist: number): Vec2 {
-        const pos = ig.copy(posOrig)
-        switch (dir) {
-            case Dir.NORTH: pos.y += dist; break
-            case Dir.EAST: pos.x -= dist; break
-            case Dir.SOUTH: pos.y -= dist; break
-            case Dir.WEST: pos.x += dist; break
-        }
-        return pos
-    }
-    */
 
     static new(area: string, pos: Vec2, level: number, type: Dir | keyof typeof sc.MAP_STAMPS): Stamp {
         if (typeof type === 'number') {
@@ -447,20 +494,28 @@ export function doRectsOverlap<T extends Rect>(rect1: T, rect2: T): boolean {
   )
 }
 
-export function doRectsOverlapGrid(array: number[][], rects: Rect[]) {
-    for (const rect of rects) {
-        if (doesRectOverlapGrid(array, rect)) { return true }
+export function doesRectArrayOverlapRectArray<T extends Rect>(arr1: T[], arr2: T[]): boolean {
+    for (let i1 = arr1.length - 1; i1 >= 0; i1--) {
+        for (let i2 = arr2.length - 1; i2 >= 0; i2--) {
+            if (doRectsOverlap(arr1[i1], arr2[i2])) {
+                return true
+            }
+        }
     }
     return false
 }
 
-export function doesRectOverlapGrid(array: number[][], rect: Rect) {
-    for (let y = rect.y; y < rect.y2(); y++) {
-        for (let x = rect.x; x < rect.x2(); x++) {
-            if (array[y][x] != 0) { return true }
+export function setToClosestSelSide(pos: Vec2, sel: Selection): { distance: number, dir: Dir, pos: Vec2 } {
+    let minObj: { distance: number, dir: Dir, pos: Vec2 } = { distance: 10000, dir: 0, pos: new Point(0, 0) }
+    for (let rect of sel.bb) {
+        const obj = Rect.new(EntityRect, rect).setToClosestRectSide({ x: pos.x, y: pos.y })
+        if (obj.distance < minObj.distance) {
+            minObj = obj
         }
     }
-    return false
+    pos.x = minObj.pos.x
+    pos.y = minObj.pos.y
+    return minObj
 }
 
 export function assert(arg: any, msg: string = ''): asserts arg {
@@ -480,7 +535,6 @@ export function godlikeStats() {
 }
 
 // blizkrieg stuff
-
 export interface Blitzkrieg {
     puzzleSelections: Selections
     puzzleSelectionManager: PuzzleSelectionManager
@@ -495,8 +549,6 @@ export interface Blitzkrieg {
 
 interface B$Util {
     generateUniqueID(): number
-    setToClosestRectSide(pos: Vec2, rect: Rect): { side: Dir, distance: number }
-    setToClosestSelSide(pos: Vec2, sel: Selection): Dir
     getMapObject(mapName: string): Promise<sc.MapModel.Map>
     parseArrayAt2d(arr1: number[][], arr2: number[][], x: number, y: number): void
     emptyArray2d(width: number, height: number): number[][]
@@ -523,20 +575,12 @@ interface PuzzleSelectionManager {
     getPuzzleSolveCondition(puzzleSel: Selection): string
 }
 
-interface B$Stack<T> {
-    push(element: T): void
-    pop(): T
-    peek(): T
-    shift(): T
-    length(): number
-}
-
 interface Selections {
     name: string
     selIndexes: number[]
     selHashMap: { [key: string]: SelectionMapEntry }
     mapSels: SelectionMapEntry
-    inSelStack: B$Stack<Selection>
+    inSelStack: Stack<Selection>
     jsonfiles: string[]
 
     setSelHashMapEntry(mapName: string, entry: SelectionMapEntry): void

@@ -1,4 +1,4 @@
-import { Dir, DirUtil, Selection, EntityRect, Blitzkrieg, Rect, MapPoint, EntityPoint, assert, MapRect } from './util.js'
+import { Dir, DirUtil, Selection, EntityRect, Blitzkrieg, Rect, MapPoint, EntityPoint, assert, MapRect, setToClosestSelSide } from './util.js'
 import { MapBuilder, Room, RoomPlaceVars, getPosOnRectSide, getRoomThemeFromArea } from './room-builder.js'
 import { AreaInfo } from './area-builder.js'
 import { MapEnemyCounter, MapEventTrigger, MapFloorSwitch, MapGlowingLine, MapHiddenBlock, MapTouchTrigger, MapTransporter, MapWall } from './entity-spawn.js'
@@ -133,7 +133,7 @@ export class DungeonMapBuilder extends MapBuilder {
     calculatePositions() {
         const puzzle: PuzzleData = this.puzzle
         const battle: BattleData = this.battle
-        assert(puzzle.map);
+        assert(puzzle.map)
 
         if (true) {
             const id = blitzkrieg.util.generateUniqueID()
@@ -181,16 +181,16 @@ export class DungeonMapBuilder extends MapBuilder {
         }
         if (true) {
             const pos: Vec3  & { level: number } = ig.copy(puzzle.usel.sel.data.startPos)
-            const dir: Dir = puzzle.type == 'whole room' ?
-                blitzkrieg.util.setToClosestSelSide(pos, puzzle.usel.sel) :
-                blitzkrieg.util.setToClosestRectSide(pos, puzzle.usel.sel.size).side
+            const dir: Dir = (puzzle.type == 'whole room' ?
+                setToClosestSelSide(pos, puzzle.usel.sel) :
+                Rect.new(EntityRect, puzzle.usel.sel.size).setToClosestRectSide(pos)).dir
             puzzle.start = { pos, dir }
         }
         if (true) {
             const pos: Vec3  & { level: number } = ig.copy(puzzle.usel.sel.data.endPos)
-            const dir: Dir = puzzle.type == 'whole room' ?
-                blitzkrieg.util.setToClosestSelSide(pos, puzzle.usel.sel) :
-                blitzkrieg.util.setToClosestRectSide(pos, puzzle.usel.sel.size).side
+            const dir: Dir = (puzzle.type == 'whole room' ?
+                setToClosestSelSide(pos, puzzle.usel.sel) :
+                Rect.new(EntityRect, puzzle.usel.sel.size).setToClosestRectSide(pos)).dir
 
             puzzle.end = { pos, dir }
         }
@@ -222,6 +222,7 @@ export class DungeonMapBuilder extends MapBuilder {
                         dir: DirUtil.flip(DirUtil.convertToDir(closestTransporter.settings.dir)),
                         entity: closestTransporter
                     }
+                    puzzle.end.dir = puzzle.room.room.door.dir
                 } else {
                     puzzle.room.room.setDoor(name, puzzle.end.dir, EntityPoint.fromVec(puzzle.end.pos))
                 }
@@ -256,7 +257,7 @@ export class DungeonMapBuilder extends MapBuilder {
                 switch (puzzle.start.dir) {
                     case Dir.NORTH: pos.y = puzzle.start.pos.y - puzzleTunnelSize.y - size.y - tilesize; break
                     case Dir.EAST:  pos.x = puzzle.start.pos.x + puzzleTunnelSize.y + tilesize; break
-                    case Dir.SOUTH: pos.y = puzzle.start.pos.y + puzzleTunnelSize.y - tilesize; break
+                    case Dir.SOUTH: pos.y = puzzle.start.pos.y + puzzleTunnelSize.y + tilesize; break
                     case Dir.WEST:  pos.x = puzzle.start.pos.x - puzzleTunnelSize.y - size.x + tilesize; break
                 }
             } else {
@@ -289,6 +290,10 @@ export class DungeonMapBuilder extends MapBuilder {
         assert(battle.room.room, 'calculateBattleTunnel() battle.room.room is not set')
         assert(puzzle.start)
 
+        // make sure the tunnel isnt duplicated
+        if (battle.tunnel.room) {
+            this.rooms.splice(battle.tunnel.room.index!)
+        }
         if (dir == DirUtil.flip(puzzle.start.dir)) {
             return false
         }

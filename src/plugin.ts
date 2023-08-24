@@ -1,6 +1,7 @@
 import { godlikeStats, Blitzkrieg, assert } from './util.js'
 import { DungeonBuilder } from './dungeon-builder.js'
 import { VimLogic } from '../node_modules/cc-vim/src/logic.js'
+import { AreaDrawer } from './area-drawer.js'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
@@ -64,21 +65,21 @@ function addInjects() {
     // })
 }
 
-async function startDnggenGame(titleGuiInstance?: sc.TitleScreenButtonGui) {
-    ig.bgm.clear('MEDIUM_OUT');
-    if (titleGuiInstance) {
-        ig.interact.removeEntry(titleGuiInstance.buttonInteract)
-    } else {
-        ig.interact.entries.forEach((e) => ig.interact.removeEntry(e))
-    }
-    ig.game.start(sc.START_MODE.NEW_GAME_PLUS, 1)
-    ig.game.setPaused(false);
+async function startDnggenGame(titleGuiInstance?: sc.TitleScreenButtonGui, roomTp: number = -1) {
+    // ig.bgm.clear('MEDIUM_OUT');
+    // if (titleGuiInstance) {
+    //     ig.interact.removeEntry(titleGuiInstance.buttonInteract)
+    // } else {
+    //     ig.interact.entries.forEach((e) => ig.interact.removeEntry(e))
+    // }
+    // ig.game.start(sc.START_MODE.NEW_GAME_PLUS, 1)
+    // ig.game.setPaused(false);
 
-    sc.newgame.active = true
-    sc.newgame.options[ngOptionName] = true
-    dnggen.dungeonBuilder.build()
+    // sc.newgame.active = true
+    // sc.newgame.options[ngOptionName] = true
+    dnggen.dungeonBuilder.build(roomTp)
 
-    godlikeStats()
+    // godlikeStats()
 }
 
 async function registerStyles() {
@@ -104,11 +105,12 @@ export default class DngGen {
     battleFileIndex: number = -1
     loaded: boolean = false
     dungeonBuilder!: DungeonBuilder
+    areaDrawer!: AreaDrawer
 
     // all should be true
     debug = {
         pastePuzzle: true,
-        decorateBattleRoom: true,
+        decorateBattleRoom: false,
         trimAreas: true,
         collisionlessMapArrange: true,
         disableDebugStamps: false,
@@ -142,13 +144,18 @@ export default class DngGen {
         // https://github.com/krypciak/cc-vim
         if (vim) {
             const isInGenMap = (ingame: boolean) => ingame && ig.game.mapName.startsWith('rouge')
-            vim.addAlias('rouge', 'generate-dungeon', 'Generate dungeon', 'global', () => {
+            vim.addAlias('rouge', 'generate-dungeon', 'Generate dungeon', 'global', (roomTp: string= '-1') => {
                 vim.executeString('title-screen')
-                startDnggenGame()
-            })
+                startDnggenGame(undefined, parseInt(roomTp))
+            }, [{
+                    type: 'number', description: 'room to teleport to'
+            }])
             vim.addAlias('rouge', 'skip-battle', 'Skips the battle', isInGenMap, () => { ig.vars.set('map.battle1done', true) })
         }
         this.loaded = true
+
+        this.areaDrawer = new AreaDrawer()
+        // startDnggenGame()
     }
 
     async poststart() {
