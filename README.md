@@ -15,7 +15,7 @@ Don't get too excited lol
 
 ## Building
 ```bash
-git clone https://github.com/krypciak/cc-rouge
+git clone https://github.com/krypciak/cc-shaduungeon
 cd cc-rouge
 npm install
 npm run start
