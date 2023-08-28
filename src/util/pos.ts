@@ -1,4 +1,4 @@
-import { Selection } from './blitzkrieg.js'
+import { Selection } from './blitzkrieg'
 
 const tilesize: number = 16
 
@@ -7,6 +7,15 @@ export enum Dir {
     EAST,
     SOUTH,
     WEST,
+}
+
+export enum Dir3d {
+    NORTH,
+    EAST,
+    SOUTH,
+    WEST,
+    UP,
+    DOWN,
 }
 
 export class DirUtil {
@@ -31,12 +40,30 @@ export class DirUtil {
     static isVertical(dir: Dir): boolean {
         return dir == Dir.NORTH || dir == Dir.SOUTH
     }
+
+    static dirToDir3d(dir: Dir): Dir3d {
+        return dir as unknown as Dir3d
+    }
+
+    static dir3dToDir(dir3d: Dir3d): Dir {
+        if (! DirUtil.dir3dIsDir(dir3d)) { throw new Error('Invalid dir3d to dir conversion') }
+        return dir3d as unknown as Dir
+    }
+
+    static dir3dIsDir(dir3d: Dir3d): boolean {
+        return dir3d != Dir3d.UP && dir3d != Dir3d.DOWN
+    }
 }
+
+export type PosDir<T extends Point> = { pos: T, dir: Dir }
+export type PosDir3d<T extends Point> = { pos: T, dir: Dir3d }
 
 export type bareRect = { x: number; y: number; width: number; height: number }
 
 export class Rect {
     static multiplier: number
+    static ins: Rect
+    static pointIns: Point
 
     constructor(
         public x: number,

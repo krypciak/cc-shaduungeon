@@ -1,4 +1,7 @@
-import { Dir } from './pos.js'
+import { RoomPlaceVars } from '../room/map-builder'
+import { RoomTheme } from '../room/themes'
+import { assert } from './misc'
+import { Dir, MapPoint } from './pos'
 
 const tilesize: number = 16
 
@@ -65,6 +68,56 @@ export class CCMap implements sc.MapModel.Map {
         public layer: MapLayer[]) { }
 
     toJSON() { return this as sc.MapModel.Map }
+
+    static getEmpty(size: MapPoint, levelCount: number, theme: RoomTheme, mapName: string, areaName: string): RoomPlaceVars  {
+        const { x: width, y: height } = size
+        const layers: MapLayer[] = []
+        const levels: { height: number }[] = []
+
+        let background: number[][] | undefined, shadow: number[][] | undefined, colls: number[][][] = [], navs: number[][][] = []
+
+        for (let level = 0; level < levelCount; level++) {
+            levels.push({ height: level * tilesize*2 })
+
+            const backgroundLayer = new MapLayer(width, height, 'NEW_BACKGROUND', 'Background', theme.config.tileset, level)
+            backgroundLayer.fill(level == 0 ? theme.config.blackTile : 0)
+            if (level == 0) { background = backgroundLayer.data }
+            layers.push(backgroundLayer)
+
+            if (level == 0 && theme.config.addShadows) {
+                const shadowLayer = new MapLayer(width, height, 'NEW_SHADOW', 'Background', theme.config.shadowTileset!, level)
+                shadowLayer.fill(0)
+                shadow = shadowLayer.data
+                layers.push(shadowLayer)
+            }
+            const collisionLayer = new MapLayer(width, height, 'NEW_COLLISION', 'Collision', 'media/map/collisiontiles-16x16.png', level)
+            collisionLayer.fill(Coll.Wall)
+            colls.push(collisionLayer.data)
+            layers.push(collisionLayer)
+
+            const navigationLayer = new MapLayer(width, height, 'NEW_NAVIGATION', 'Navigation', 'media/map/pathmap-tiles.png', level)
+            navigationLayer.fill(0)
+            navs.push(navigationLayer.data)
+            layers.push(navigationLayer)
+        }
+
+
+        const lightLayer = new MapLayer(width, height, 'NEW_LIGHT', 'Light', 'media/map/lightmap-tiles.png', 'last')
+        lightLayer.fill(0)
+        const light: number[][] = lightLayer.data
+        layers.push(lightLayer)
+
+        assert(background)
+
+        const map: CCMap = new CCMap(mapName, levels, width, height, 0, theme.getMapAttributes(areaName), [], layers)
+        return {
+            map,
+            background, shadow, light, colls, navs,
+            entities: map.entities,
+            theme, tc: theme.config,
+            masterLevel: 0
+        }
+    }
 }
 
 export class Stamp {

@@ -1,12 +1,12 @@
-import { Dir, DirUtil, Rect, MapPoint, EntityPoint, MapRect, EntityRect, setToClosestSelSide } from '../util/pos.js'
-import { assert } from '../util/misc.js'
-import { Blitzkrieg, Selection } from '../util/blitzkrieg.js'
-import { MapEnemyCounter, MapEventTrigger, MapFloorSwitch, MapGlowingLine, MapHiddenBlock, MapTouchTrigger, MapTransporter, MapWall } from '../entity-spawn.js'
-import { MapBuilder, RoomPlaceVars } from './map-builder.js'
-import { RoomTheme } from './themes.js'
-import { AreaInfo } from '../area-builder.js'
-import DngGen from '../plugin.js'
-import { Room, getPosOnRectSide } from './room.js'
+import { Dir, DirUtil, Rect, MapPoint, EntityPoint, MapRect, EntityRect, setToClosestSelSide } from '../util/pos'
+import { assert } from '../util/misc'
+import { Blitzkrieg, Selection } from '../util/blitzkrieg'
+import { MapEnemyCounter, MapEventTrigger, MapFloorSwitch, MapGlowingLine, MapHiddenBlock, MapTouchTrigger, MapTransporter, MapWall } from '../entity-spawn'
+import { MapBuilder, RoomPlaceVars } from './map-builder'
+import { RoomTheme } from './themes'
+import { AreaInfo } from '../area-builder'
+import DngGen from '../plugin'
+import { Room, getPosOnRectSide } from './room'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
@@ -421,36 +421,4 @@ export class DungeonMapBuilder extends MapBuilder {
             ))
         }
     }
-}
-
-
-const mapNameToMapDisplayName: Map<string, string> = new Map<string, string>()
-
-export async function getMapDisplayName(map: sc.MapModel.Map): Promise<string> {
-    return new Promise<string>(async (resolve) => {
-        const mapName = map.name.split('.').join('/')
-        if (mapNameToMapDisplayName.has(mapName)) {
-            resolve(mapNameToMapDisplayName.get(mapName) ?? 'maploadingerror')
-            return
-        }
-        const areaName: string = map.attributes.area
-        const area: sc.AreaLoadable = await loadArea(areaName)
-
-        for (const floor of area.data.floors) {
-            for (const map of floor.maps) {
-                const displayName = map.name.en_US!
-                mapNameToMapDisplayName.set(map.path.split('.').join('/'), displayName)
-            }
-        }
-        resolve(getMapDisplayName(map))
-    })
-}
-
-async function loadArea(areaName: string): Promise<sc.AreaLoadable> {
-    return new Promise((resolve) => {
-        const area: sc.AreaLoadable = new sc.AreaLoadable(areaName)
-        area.load(() => {
-            resolve(area)
-        })
-    })
 }

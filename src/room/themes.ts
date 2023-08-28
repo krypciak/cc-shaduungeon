@@ -1,4 +1,4 @@
-import { Tileset } from '../util/map.js'
+import { Tileset } from '../util/map'
 
 export type RoomThemeConfig = {
     bgm: string,

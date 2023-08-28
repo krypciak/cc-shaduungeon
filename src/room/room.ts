@@ -1,21 +1,21 @@
-import { MapDoor, MapTransporter } from '../entity-spawn.js'
-import { Blitzkrieg, Selection } from '../util/blitzkrieg.js'
-import { Coll } from '../util/map.js'
-import { Point, Rect, Dir, DirUtil, MapPoint, MapRect, EntityRect, EntityPoint } from '../util/pos.js'
-import { assert } from '../util/misc.js'
-import { RoomPlaceVars } from './map-builder.js'
+import { MapDoorLike, MapTransporter } from '../entity-spawn'
+import { Blitzkrieg, Selection } from '../util/blitzkrieg'
+import { Coll } from '../util/map'
+import { Point, Rect, Dir, DirUtil, MapPoint, MapRect, EntityRect, EntityPoint, Dir3d, PosDir } from '../util/pos'
+import { assert } from '../util/misc'
+import { RoomPlaceVars } from './map-builder'
+import { TunnelRoom } from './tunnel-room'
 
 const tilesize: number = 16
 declare const blitzkrieg: Blitzkrieg
 
-export function getPosOnRectSide<T extends Point>
-    (init: new (x: number, y: number) => T, dir: Dir, rect: Rect, prefPos?: T): T {
+export function getPosOnRectSide<T extends Point>(init: new (x: number, y: number) => T, dir: Dir, rect: Rect, prefPos?: T): T {
     const pos: T = new init(0, 0)
     switch (dir) {
-        case Dir.NORTH: pos.y = rect.y - 16;  break
-        case Dir.EAST:  pos.x = rect.x2() + 16; break
-        case Dir.SOUTH: pos.y = rect.y2() + 16; break
-        case Dir.WEST: pos.x = rect.x - 16; break
+        case Dir.NORTH: pos.y = rect.y - tilesize;  break
+        case Dir.EAST:  pos.x = rect.x2() + tilesize; break
+        case Dir.SOUTH: pos.y = rect.y2() + tilesize; break
+        case Dir.WEST: pos.x = rect.x - tilesize; break
     }
     if (DirUtil.isVertical(dir)) {
         pos.x = prefPos ? prefPos.x : (rect.x + (rect.x2() - rect.x)/2)
@@ -26,21 +26,94 @@ export function getPosOnRectSide<T extends Point>
     return pos
 }
 
+export namespace Tpr {
+    export function get(name: string, dir: Dir3d, pos: EntityPoint, entityType: MapTransporter.Types, condition?: string): Tpr {
+        return { name, dir, pos, entityType, condition }
+    }
+    export function getReference(name: string, dir: Dir3d, pos: EntityPoint, mtpr: MapTransporter): Tpr {
+        return { name, dir, pos, entityType: mtpr.type as MapTransporter.Types, entity: mtpr }
+    }
+}
+
+export interface Tpr {
+    name: string
+    entityType: MapTransporter.Types
+    pos: EntityPoint
+    dir: Dir3d
+    condition?: string
+    /* this is only set to a reference to a MapTransporter in the puzzle room (if puzzle type is 'whole room') */
+    entity?: MapTransporter
+    /* set after place */
+    destMap?: string
+    destMarker?: string
+}
+export interface TprDoorLike extends Tpr {
+    entityType: MapDoorLike.Types
+    entity?: MapDoorLike
+}
+
+// IO: in-out
+export interface RoomIO {
+    getTpr(): Tpr
+}
+
+export class RoomIOTpr implements RoomIO {
+    constructor(public tpr: Tpr) {}
+
+    getTpr(): Tpr { return this.tpr }
+}
+export class RoomIODoorLike extends RoomIOTpr {
+    private constructor(tpr: TprDoorLike) {
+        super(tpr)
+    }
+    static fromRoom(type: MapDoorLike.Types, room: Room, name: string, dir: Dir, prefPos?: EntityPoint): RoomIODoorLike {
+        return new RoomIODoorLike(room.getDoorLikeTpr(type, name, dir, prefPos))
+    }
+    static fromReference(name: string, dir: Dir, pos: EntityPoint, doorLike: MapDoorLike): RoomIODoorLike {
+        return new RoomIODoorLike(Tpr.getReference(name, DirUtil.dirToDir3d(dir), pos, doorLike) as TprDoorLike)
+
+    }
+}
+
+export class RoomIOTunnel implements RoomIO {
+    protected constructor(public tunnel: TunnelRoom) {}
+
+    getTpr(): Tpr { throw new Error('invalid call on RoomIOTunnel') }
+}
+export class RoomIOTunnelOpen extends RoomIOTunnel {
+    constructor(parentRoom: Room, dir: Dir, size: MapPoint, exitDir: Dir, setPos: EntityPoint, preffedPos: boolean) {
+        super(new TunnelRoom(parentRoom, dir, size, exitDir, setPos, preffedPos))
+    }
+    getTpr(): Tpr { throw new Error('invalid call on RoomIOTunnelOpen: these dont have tprs') }
+}
+export class RoomIOTunnelClosed extends RoomIOTunnel {
+    constructor(parentRoom: Room, dir: Dir, size: MapPoint, setPos: EntityPoint, preffedPos: boolean) {
+        super(new TunnelRoom(parentRoom, dir, size, null, setPos, preffedPos))
+    }
+    getTpr(): Tpr {
+        return this.tunnel.primaryEntarence.getTpr()
+    }
+}
+
 export class Room {
     baseRect: MapRect
     floorRect: MapRect
     private addWalls: boolean
-    door?: { name: string, dir: Dir, pos: EntityPoint, condition?: string, entity?: MapTransporter }
     index?: number
+    sel?: Selection
+    ios: RoomIO[] = []
+    primaryEntarence!: RoomIO
+    primaryExit?: RoomIO
 
     constructor(
         public name: string,
-        rect: EntityRect,
+        rect: Rect,
         public wallSides: boolean[],
         public additionalSpace: number,
         public addNavMap: boolean,
-        public placeOrder: Room.PlaceOrder,
-        public placeEvent?: (rpv: RoomPlaceVars) => Promise<RoomPlaceVars | undefined>,
+        public placeOrder: RoomPlaceOrder,
+        public type: RoomType,
+        public deadEnd: boolean = false
     ) {
         this.baseRect = rect.to(MapRect)
         this.floorRect = MapRect.fromxy2(
@@ -59,41 +132,52 @@ export class Room {
     offsetBy(offset: MapPoint) {
         Vec2.add(this.baseRect, offset)
         Vec2.add(this.floorRect, offset)
-        if (this.door) {
-            const entityOffset: EntityPoint = offset.to(EntityPoint)
-            Vec2.add(this.door.pos, entityOffset)
+        const entityOffset: EntityPoint = offset.to(EntityPoint)
+
+        if (this.sel) {
+            const newPos: EntityPoint = EntityPoint.fromVec(this.sel.size)
+            Vec2.add(newPos, entityOffset)
+            blitzkrieg.util.setSelPos(this.sel, newPos.x, newPos.y)
         }
+        this.ios.forEach(io => {
+            if (io instanceof RoomIOTpr) {
+                Vec2.add(io.tpr.pos, entityOffset)
+                if (io.tpr.entity) {
+                    Vec2.add(io.tpr.entity, entityOffset)
+                }
+            }
+        })
     }
 
-    async place(rpv: RoomPlaceVars): Promise<RoomPlaceVars | undefined> {
-        if (this.placeOrder == Room.PlaceOrder.NoDraw) { return }
-        this.placeRoom(rpv, this.addNavMap)
-
-        if (this.placeEvent) {
-            return await this.placeEvent(rpv)
-        }
-    }
-
-    setDoor(name: string, dir: Dir, prefPos?: EntityPoint) {
+    getDoorLikeTpr(type: MapDoorLike.Types, name: string, dir: Dir, prefPos?: EntityPoint): TprDoorLike {
         const doorPos: EntityPoint = getPosOnRectSide(EntityPoint, dir, this.floorRect.to(EntityRect), prefPos)
 
-        if (DirUtil.isVertical(dir)) { doorPos.x -= 16 } else { doorPos.y -= 16 }
-        if (dir == Dir.SOUTH) { doorPos.y -= 16 }
-        if (dir == Dir.EAST) { doorPos.x -= 16 }
+        if (DirUtil.isVertical(dir)) { doorPos.x -= tilesize } else { doorPos.y -= tilesize }
+        if (dir == Dir.SOUTH) { doorPos.y -= tilesize }
+        if (dir == Dir.EAST) { doorPos.x -= tilesize }
 
-        this.door = { name, dir, pos: doorPos }
+        return Tpr.get(name, DirUtil.dirToDir3d(dir), doorPos, type) as TprDoorLike
     }
 
-    placeDoor(rpv: RoomPlaceVars, marker: string, destMap: string, destMarker: string) {
-        assert(this.door)
-        if (this.door.entity) {
-            this.door.entity.settings.name = marker
-            this.door.entity.settings.map = destMap 
-            this.door.entity.settings.marker = destMarker
-        } else {
-            const door = MapDoor.new(this.door.pos, rpv.masterLevel, this.door.dir, marker, destMap, destMarker, this.door.condition)
-            rpv.entities.push(door)
-        }
+    pushAllRooms(arr: Room[]) {
+        arr.push(this)
+        this.ios.forEach(io => { if (io instanceof RoomIOTunnel) { arr.push(io.tunnel) } })
+    }
+
+    getPosDirFromRoomIO(io: RoomIO): PosDir<MapPoint> | null {
+        const tpr = io.getTpr()
+        if (! DirUtil.dir3dIsDir(tpr.dir)) { return null }
+        const pos: MapPoint = tpr.pos.to(MapPoint)
+        const dir = DirUtil.dir3dToDir(tpr.dir)
+        this.floorRect.setPosToSide(pos, dir)
+        return { dir, pos }
+    }
+
+    // place functions
+    
+    async place(rpv: RoomPlaceVars): Promise<RoomPlaceVars | undefined> {
+        if (this.placeOrder == RoomPlaceOrder.NoPlace) { return }
+        this.placeRoom(rpv, this.addNavMap)
     }
 
     placeRoom(rpv: RoomPlaceVars, addNavMap: boolean) {
@@ -353,11 +437,12 @@ export class Room {
         return rect
     }
 }
-
-export namespace Room {
-    export enum PlaceOrder {
-        NoDraw,
-        Room,
-        Tunnel,
-    }
+export enum RoomPlaceOrder {
+    NoPlace,
+    Room,
+    Tunnel,
+}
+export enum RoomType {
+    Room,
+    Tunnel,
 }

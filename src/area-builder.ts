@@ -1,12 +1,11 @@
-import { AreaPoint, AreaRect, Dir, DirUtil, EntityPoint, MapPoint, MapRect, Point, doRectsOverlap, doesRectArrayOverlapRectArray } from './util/pos.js'
-import { DungeonMapBuilder } from './room/dungeon-room.js'
-import { Stamp } from './util/map.js'
-import { allLangs, assert } from './util/misc.js'
-import { Blitzkrieg } from './util/blitzkrieg.js'
-import DngGen from './plugin.js'
-import { DungeonBuilder } from './room/dungeon-builder.js'
-import { MapDoor } from './entity-spawn.js'
-import { Room } from './room/room.js'
+import { AreaPoint, AreaRect, Dir, DirUtil, EntityPoint, MapPoint, MapRect, Point, PosDir, doRectsOverlap, doesRectArrayOverlapRectArray } from './util/pos'
+import { Stamp } from './util/map'
+import { allLangs, assert } from './util/misc'
+import { Blitzkrieg } from './util/blitzkrieg'
+import DngGen from './plugin'
+import { MapDoor } from './entity-spawn'
+import { Room, RoomIO, Tpr } from './room/room'
+import { MapBuilder } from './room/map-builder'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
@@ -21,7 +20,7 @@ export class AreaInfo {
 }
 
 
-export type IndexedBuilder = DungeonMapBuilder & { index: number }
+export type IndexedBuilder = MapBuilder & { index: number }
 export interface ABStackEntry {
     builder?: IndexedBuilder
     exit: AreaPoint
@@ -30,8 +29,6 @@ export interface ABStackEntry {
 }
 
 export class AreaBuilder {
-    initialSize: AreaPoint = new AreaPoint(600, 600)
-
     size!: AreaPoint
     chestCount!: number
     connections!: sc.AreaLoadable.Connection[]
@@ -52,7 +49,7 @@ export class AreaBuilder {
     constructor(public areaInfo: AreaInfo) { }
 
     beginBuild() {
-        this.size = ig.copy(this.initialSize)
+        this.size = new AreaPoint(-1, -1)
         this.chestCount = 0
         this.connections = []
         this.landmarks = []
@@ -73,7 +70,7 @@ export class AreaBuilder {
                 Math.ceil(rect.width / AreaRect.div),
                 Math.ceil(rect.height / AreaRect.div))
         } else {
-            assert(room.door)
+            // assert(room.door)
             const mul = 4
             const newRect: AreaRect = new MapRect(
                 rect.x,
@@ -85,7 +82,7 @@ export class AreaBuilder {
 
             for (let i = 0; i < 3; i++) {
                 if (doRectsOverlap(newRect, overlapRect)) {
-                    Point.moveInDirection(newRect, room.door.dir)
+                    // Point.moveInDirection(newRect, room.door.dir)
                 } else {
                     return newRect
                 }
@@ -94,15 +91,24 @@ export class AreaBuilder {
         }
     }
 
-    static tryGetAreaRects(mapBuilder: DungeonMapBuilder, lastExit: AreaPoint, stackEntries: ABStackEntry[]):
+    static tryGetAreaRects(builder: MapBuilder, lastExit: AreaPoint, stackEntries: ABStackEntry[]):
         { exit: AreaPoint, rects: AreaRect[] } | undefined {
 
-        assert(mapBuilder.puzzle.room.room);   assert(mapBuilder.puzzle.room.room.door)
-        assert(mapBuilder.puzzle.tunnel.room); assert(mapBuilder.battle.room.room)
-        assert(mapBuilder.battle.tunnel.room); assert(mapBuilder.battle.tunnel.room.door)
+        assert(builder.entarenceRoom);
+        assert(builder.exitRoom); assert(builder.exitRoom.primaryExit)
+        
+        let entPosDir: PosDir<MapPoint> | null = builder.entarenceOnWall
+        const exitPosDir: PosDir<MapPoint> | null = builder.exitOnWall
 
-        const ent: AreaPoint = mapBuilder.battle.tunnel.room.door.pos.to(AreaPoint)
-        const exit: AreaPoint = mapBuilder.puzzle.room.room.door.pos.to(AreaPoint)
+        if (entPosDir == null) {
+            entPosDir = { dir: Dir.SOUTH, pos: new MapPoint(0, 0) }
+        }
+        if (exitPosDir == null || builder.exitRoom.deadEnd) {
+            throw new Error('dead end not supported')
+        }
+
+        const exit: AreaPoint = exitPosDir.pos.to(AreaPoint)
+        const ent: AreaPoint = entPosDir.pos.to(AreaPoint)
 
         const offset: AreaPoint = new AreaPoint(lastExit.x - ent.x, lastExit.y - ent.y)
         
@@ -111,12 +117,17 @@ export class AreaBuilder {
 
         const rects: AreaRect[] = []
 
-        const exitRect = this.roomToAreaRect(mapBuilder.puzzle.room.room, offset)
+        builder.rooms.forEach(r => {
+            rects.push(this.roomToAreaRect(r, offset))
+        })
+        /*
+        const exitRect = this.roomToAreaRect(builder.puzzle.room.room, offset)
         rects.push(exitRect)
-        rects.push(this.roomToAreaRect(mapBuilder.puzzle.tunnel.room, offset))
-        const battleAreaRect: AreaRect = this.roomToAreaRect(mapBuilder.battle.room.room, offset)
+        rects.push(this.roomToAreaRect(builder.puzzle.tunnel.room, offset))
+        const battleAreaRect: AreaRect = this.roomToAreaRect(builder.battle.room.room, offset)
         rects.push(battleAreaRect)
-        rects.push(this.roomToAreaRect(mapBuilder.battle.tunnel.room, offset, battleAreaRect))
+        rects.push(this.roomToAreaRect(builder.battle.tunnel.room, offset, battleAreaRect))
+        */
 
         if (dnggen.debug.collisionlessMapArrange) {
             for (let i = stackEntries.length - 1; i >= 0; i--) {
@@ -126,18 +137,17 @@ export class AreaBuilder {
                 }
             }
         }
-        const exitDir: Dir = mapBuilder.puzzle.room.room.door.dir
-        exitRect.setPosToSide(exit, exitDir)
-        Point.moveInDirection(exit, exitDir)
+        builder.exitRoom.floorRect.setPosToSide(exit, exitPosDir.dir)
+        Point.moveInDirection(exit, exitPosDir.dir)
 
         return {
             rects,
             exit,
         }
-        //this.lastExit = await this.placeMap(mapBuilder, offset.to(EntityPoint), rects, exit, mapBuilder.puzzle.room.room.door.dir)
+        //this.lastExit = await this.placeMap(builder, offset.to(EntityPoint), rects, exit, builder.puzzle.room.room.door.dir)
     }
 
-
+    /*
     async placeStartingMap(): Promise<Dir> {
         this.mapIndex++
         const path: string = DungeonBuilder.initialMap.path
@@ -397,4 +407,5 @@ export class AreaBuilder {
         assert(this.builtArea, 'called saveToFile() before finalizing build') 
         require('fs').writeFileSync(dnggen.dir + 'assets/data/areas/' + this.areaInfo.name + '.json', JSON.stringify(this.builtArea))
     }
+    */
 }

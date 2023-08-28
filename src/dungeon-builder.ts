@@ -1,9 +1,11 @@
-import { Blitzkrieg, Selection, SelectionMapEntry } from '../util/blitzkrieg.js'
-import { Stack, assert } from '../util/misc.js'
-import { AreaPoint, Dir, DirUtil } from '../util/pos.js'
-import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from '../area-builder.js'
-import { DungeonMapBuilder } from './dungeon-room.js'
-import DngGen from '../plugin.js'
+import { Blitzkrieg, Selection, SelectionMapEntry } from './util/blitzkrieg'
+import { Stack, assert } from './util/misc'
+import { AreaPoint, Dir, DirUtil, MapPoint } from './util/pos'
+import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from './area-builder'
+import { BattlePuzzleMapBuilder } from './room/dungeon-map-builder'
+import DngGen from './plugin'
+import { MapBuilder } from './room/map-builder'
+import { Tpr } from './room/room'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
@@ -33,7 +35,7 @@ export class DungeonBuilder {
             }
         }
     }
-    
+
     async build(roomTp: number) {
         await this.preloadPuzzleList()
 
@@ -60,10 +62,10 @@ export class DungeonBuilder {
 
         for (let builderIndex = builders.length, i = 0; i < puzzles.length; builderIndex++, i++) {
             const sel = puzzles[builderIndex]
-            const builder: IndexedBuilder = new DungeonMapBuilder(areaInfo, sel) as IndexedBuilder
+            const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
+            const builder: IndexedBuilder = new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap) as MapBuilder as IndexedBuilder
+            builder.setOnWallPositions()
             builder.index = builderIndex
-            await builder.loadPuzzleMap()
-            builder.calculatePositions()
             builders.push(builder)
         }
 
@@ -94,18 +96,23 @@ export class DungeonBuilder {
             if (! lastEntry) {
                 lastEntry = fallbackEntry
             }
-            if (lastEntry && ! builder.calculateBattleTunnel(lastEntry.exitDir)) { return }
+            if (lastEntry && ! builder.prepareToArrange(lastEntry.exitDir)) { return }
+
+            assert(builder.exitRoom.primaryExit)
 
             const obj = AreaBuilder.tryGetAreaRects(builder, lastEntry.exit, stack.array)
-            if (! obj) { /* map overlaps */ return
-            }
-            assert(builder.puzzle); assert(builder.puzzle.end)
+            if (! obj) { /* map overlaps */ return }
+        
+            // areabuilder uses tpr pos insetad of edge p
+            assert(builder.exitOnWall)
+            const exit = builder.exitOnWall
+
             // shallow copy
             stack = new Stack(stack.array)
             stack.push({
                 builder, 
                 exit: obj.exit,
-                exitDir: DirUtil.flip(builder.puzzle.end.dir),
+                exitDir: DirUtil.flip(exit.dir),
                 rects: obj.rects,
             })
             // shallow copy

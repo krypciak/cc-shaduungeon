@@ -1,20 +1,22 @@
-import { Dir, DirUtil, EntityPoint, EntityRect, Point } from './util/pos.js'
+import { Dir, DirUtil, EntityPoint, EntityRect, Point } from './util/pos'
 
 let mapId: number = 1000
 
 export interface MapEntity extends sc.MapModel.MapEntity { }
 
 export namespace MapTransporter {
+    export type Types = MapDoorLike.Types | 'TeleportField'
+
     export function check(e: MapEntity): e is MapTransporter {
         return 'map' in e.settings && 'marker' in e.settings && 'dir' in e.settings
     }
 }
 
-// Door, Teleport Ground itd.
 export interface MapTransporter extends MapEntity {
+    type: MapTransporter.Types
     settings: {
-        name: string
-        mapId: number
+        name?: string
+        mapId?: number
         map: string
         dir: keyof typeof Dir
         marker: string
@@ -23,12 +25,25 @@ export interface MapTransporter extends MapEntity {
     }
 }
 
+export namespace MapDoorLike {
+    export type Types = 'Door' | 'TeleportGround'
+
+    export function check(e: MapEntity): e is MapDoorLike {
+        return e.type == 'Door' || e.type == 'TeleportGround'
+        /* i could also put MapTransporter.check in here but they should have these types no matter what */
+    }
+}
+
+export interface MapDoorLike extends MapTransporter {
+    type: MapDoorLike.Types
+}
+
 interface DoorSettings extends ig.ENTITY.Door.Settings {
     dir: keyof typeof Dir
 }
 
-export class MapDoor implements MapTransporter {
-    type: string = 'Door'
+export class MapDoor implements MapDoorLike {
+    type: 'Door' = 'Door'
     constructor(
         public x: number, 
         public y: number, 
@@ -41,7 +56,7 @@ export class MapDoor implements MapTransporter {
         return new MapDoor(pos.x, pos.y, level, {
             name: marker,
             dir: DirUtil.convertToString(DirUtil.flip(dir)),
-            condition: condition ?? '',
+            condition: (condition ?? ''),
             map: destMap,
             marker: destMarker,
             hideCondition: '',
@@ -54,7 +69,7 @@ export class MapDoor implements MapTransporter {
 }
 
 export class MapElementPole implements MapEntity {
-    type: string = 'ElementPole'
+    type: 'ElementPole' = 'ElementPole'
 
     constructor(
         public x: number, 
@@ -72,7 +87,7 @@ export class MapElementPole implements MapEntity {
 }
 
 export class MapGlowingLine implements MapEntity {
-    type: string = 'GlowingLine'
+    type: 'GlowingLine' = 'GlowingLine'
     constructor(
         public x: number, 
         public y: number, 
@@ -114,7 +129,7 @@ export class MapGlowingLine implements MapEntity {
 }
 
 class MapScalableProp implements MapEntity {
-    type: string = 'ScalableProp'
+    type: 'ScalableProp' = 'ScalableProp'
     constructor(
         public x: number, 
         public y: number, 
@@ -147,7 +162,7 @@ export class MapWall implements MapEntity {
         public x: number, 
         public y: number, 
         public level: number, 
-        public type: string,
+        public type: 'WallVertical' | 'WallHorizontal',
         public settings: ig.ENTITY.WallBase.Settings) {
 
         if (this.type != 'WallVertical' && this.type != 'WallHorizontal') {
@@ -172,7 +187,7 @@ export class MapWall implements MapEntity {
             size: { x: rect.width, y: rect.height },
             wallZHeight: 32,
         }
-        const barrierType: string = rect.width == 8 ? 'WallVertical' : 'WallHorizontal'
+        const barrierType: 'WallVertical' | 'WallHorizontal' = rect.width == 8 ? 'WallVertical' : 'WallHorizontal'
         if (barrierType == 'WallVertical') {
             const newSettings: any = settings
             newSettings.topEnd = 'STOP'
@@ -190,7 +205,7 @@ export class MapWall implements MapEntity {
 }
 
 export class MapHiddenBlock implements MapEntity {
-    type: string = 'HiddenBlock'
+    type: 'HiddenBlock' = 'HiddenBlock'
 
     constructor(
         public x: number, 
@@ -304,7 +319,7 @@ export class MapTouchTrigger implements MapEntity {
 }
 
 export class MapFloorSwitch implements MapEntity {
-    type: string = 'FloorSwitch'
+    type: 'FloorSwitch' = 'FloorSwitch'
 
     constructor(
         public x: number, 
@@ -324,7 +339,7 @@ export class MapFloorSwitch implements MapEntity {
 }
 
 export class MapWaterBubblePanel implements MapEntity {
-    type: string = 'WaterBubblePanel'
+    type: 'WaterBubblePanel' = 'WaterBubblePanel'
 
     constructor(
         public x: number, 
@@ -342,7 +357,7 @@ export class MapWaterBubblePanel implements MapEntity {
 }
 
 export class MapWaveTeleport implements MapEntity {
-    type: string = 'WaveTeleport'
+    type: 'WaveTeleport' = 'WaveTeleport'
 
     constructor(
         public x: number, 
@@ -359,7 +374,7 @@ export class MapWaveTeleport implements MapEntity {
 }
 
 export class MapBallChanger implements MapEntity {
-    type: string = 'BallChanger'
+    type: 'BallChanger' = 'BallChanger'
 
     constructor(
         public x: number, 
@@ -409,7 +424,7 @@ export class MapBallChanger implements MapEntity {
 }
 
 export class MapCompressor implements MapEntity {
-    type: string = 'Compressor'
+    type: 'Compressor' = 'Compressor'
 
     constructor(
         public x: number, 
@@ -425,7 +440,7 @@ export class MapCompressor implements MapEntity {
 }
 
 export class MapAntiCompressor implements MapEntity {
-    type: string = 'AntiCompressor'
+    type: 'AntiCompressor' = 'AntiCompressor'
 
     constructor(
         public x: number, 
@@ -442,7 +457,7 @@ export class MapAntiCompressor implements MapEntity {
 }
 
 export class MapMagnet implements MapEntity {
-    type: string = 'Magnet'
+    type: 'Magnet' = 'Magnet'
 
     constructor(
         public x: number, 
@@ -459,7 +474,7 @@ export class MapMagnet implements MapEntity {
 }
 
 export class MapTeslaCoil implements MapEntity {
-    type: string = 'TeslaCoil'
+    type: 'TeslaCoil' = 'TeslaCoil'
 
     constructor(
         public x: number, 
@@ -476,7 +491,7 @@ export class MapTeslaCoil implements MapEntity {
 }
 
 export class MapEnemySpawner implements MapEntity {
-    type: string = 'EnemySpawner'
+    type: 'EnemySpawner' = 'EnemySpawner'
 
     constructor(
         public x: number, 
@@ -493,7 +508,7 @@ export class MapEnemySpawner implements MapEntity {
 }
 
 export class MapMarker implements MapEntity {
-    type: string = 'Marker'
+    type: 'Marker' = 'Marker'
 
     constructor(
         public x: number, 
@@ -510,7 +525,7 @@ export class MapMarker implements MapEntity {
 }
 
 export class MapEventTrigger implements MapEntity {
-    type: string = 'EventTrigger'
+    type: 'EventTrigger' = 'EventTrigger'
 
     constructor(
         public x: number, 
