@@ -1,7 +1,27 @@
 import { Dir, DirUtil, EntityPoint, EntityRect, MapPoint, MapRect } from '../util/pos'
-import { Room, RoomIODoorLike, RoomPlaceOrder, RoomType, getPosOnRectSide } from './room'
+import { Room, RoomIO, RoomIODoorLike, RoomPlaceOrder, RoomType, Tpr, getPosOnRectSide } from './room'
 
 const tilesize: number = 16
+
+export class RoomIOTunnel implements RoomIO {
+    protected constructor(public tunnel: TunnelRoom) {}
+
+    getTpr(): Tpr { throw new Error('invalid call on RoomIOTunnel') }
+}
+export class RoomIOTunnelOpen extends RoomIOTunnel {
+    constructor(parentRoom: Room, dir: Dir, size: MapPoint, exitDir: Dir, setPos: EntityPoint, preffedPos: boolean) {
+        super(new TunnelRoom(parentRoom, dir, size, exitDir, setPos, preffedPos))
+    }
+    getTpr(): Tpr { throw new Error('invalid call on RoomIOTunnelOpen: these dont have tprs') }
+}
+export class RoomIOTunnelClosed extends RoomIOTunnel {
+    constructor(parentRoom: Room, dir: Dir, size: MapPoint, setPos: EntityPoint, preffedPos: boolean) {
+        super(new TunnelRoom(parentRoom, dir, size, null, setPos, preffedPos))
+    }
+    getTpr(): Tpr {
+        return this.tunnel.primaryEntarence.getTpr()
+    }
+}
 
 export class TunnelRoom extends Room {
     primaryExit?: RoomIODoorLike

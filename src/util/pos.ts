@@ -280,6 +280,9 @@ export class AreaPoint extends Point {
     static fromTwoPoints(pos: AreaPoint, size: AreaPoint): AreaRect {
         return new AreaRect(pos.x, pos.y, size.x, size.y)
     }
+    static fromVec(pos: Vec2): AreaPoint {
+        return new AreaPoint(pos.x, pos.y)
+    }
 }
 
 export function doRectsOverlap<T extends Rect>(rect1: T, rect2: T): boolean {

@@ -1,11 +1,12 @@
 import { AreaInfo } from '../area-builder'
 import { Selection } from '../util/blitzkrieg'
-import { assert } from '../util/misc'
+import { assert, assertBool } from '../util/misc'
 import { Dir, DirUtil, MapPoint } from '../util/pos'
 import { BattleRoom } from './battle-room'
 import { MapBuilder } from './map-builder'
 import { PuzzleRoom } from './puzzle-room'
-import { Room, RoomIOTunnelClosed } from './room'
+import { Room } from './room'
+import { RoomIOTunnelClosed, RoomIOTunnelOpen } from './tunnel-room'
 
 export const basePath: string = 'rouge/gen'
 export const exitMarker: string = 'puzzleExit'
@@ -58,23 +59,25 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
         this.exitRoom = this.puzzleRoom
 
         const battleSize: MapPoint = new MapPoint(9, 9)
-        const battlePos: MapPoint = this.puzzleRoom.entarenceTunnel!.getRoomPosThatConnectsToTheMiddle(battleSize)
+        assertBool(this.puzzleRoom.primaryEntarence instanceof RoomIOTunnelOpen)
+        const battlePos: MapPoint = this.puzzleRoom.primaryEntarence.tunnel.getRoomPosThatConnectsToTheMiddle(battleSize)
 
-        this.battleRoom = new BattleRoom(battlePos, battleSize, 2, battleStartCondition, battleDoneCondition, false)
+        this.battleRoom = new BattleRoom(battlePos, battleSize, 2, battleStartCondition, battleDoneCondition)
         this.entarenceRoom = this.battleRoom
     }
 
     prepareToArrange(dir: Dir): boolean {
-        assert(this.puzzleRoom.entarenceTunnel)
-        if (dir == DirUtil.flip(this.puzzleRoom.entarenceTunnel.dir)) {
+        assertBool(this.puzzleRoom.primaryEntarence instanceof RoomIOTunnelOpen)
+        if (dir == DirUtil.flip(this.puzzleRoom.primaryEntarence.tunnel.dir)) {
             return false
         }
-        /* make sure the tunnel isn't duplicated */
+        /* make sure the tunnel isn't duplicated */ /*
         if (this.battleRoom.primaryEntarence) {
-            if (! (this.battleRoom.primaryEntarence instanceof RoomIOTunnelClosed)) { throw new Error('how') }
+            assertBool(this.battleRoom.primaryEntarence instanceof RoomIOTunnelClosed)
             assert(this.battleRoom.primaryEntarence.tunnel.index)
             this.rooms.splice(this.battleRoom.primaryEntarence.tunnel.index)
         }
+        */
 
         const tunnelSize: MapPoint = new MapPoint(5, 3)
         this.battleRoom.setEntarenceTunnelClosed(dir, tunnelSize)

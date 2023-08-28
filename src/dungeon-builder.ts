@@ -1,11 +1,10 @@
 import { Blitzkrieg, Selection, SelectionMapEntry } from './util/blitzkrieg'
 import { Stack, assert } from './util/misc'
-import { AreaPoint, Dir, DirUtil, MapPoint } from './util/pos'
+import { AreaPoint, Dir, DirUtil } from './util/pos'
 import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from './area-builder'
-import { BattlePuzzleMapBuilder } from './room/dungeon-map-builder'
+import { BattlePuzzleMapBuilder, PuzzleMapBuilder } from './room/dungeon-map-builder'
 import DngGen from './plugin'
 import { MapBuilder } from './room/map-builder'
-import { Tpr } from './room/room'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
@@ -50,7 +49,7 @@ export class DungeonBuilder {
         console.log('puzzles:', puzzles)
 
         const areaInfo: AreaInfo = new AreaInfo('gendng', 'Generated Dungeon', 'generic description', 'DUNGEON', { x: 150, y: 70})
-        const areaBuilder: AreaBuilder = new AreaBuilder(areaInfo)
+        // const areaBuilder: AreaBuilder = new AreaBuilder(areaInfo)
         // areaBuilder.beginBuild()
 
         // const fileWritePromises: Promise<void>[] = []
@@ -63,7 +62,8 @@ export class DungeonBuilder {
         for (let builderIndex = builders.length, i = 0; i < puzzles.length; builderIndex++, i++) {
             const sel = puzzles[builderIndex]
             const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
-            const builder: IndexedBuilder = new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap) as MapBuilder as IndexedBuilder
+            // const builder: IndexedBuilder = new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap) as MapBuilder as IndexedBuilder
+            const builder: IndexedBuilder = new PuzzleMapBuilder(areaInfo, sel, puzzleMap, true, '') as MapBuilder as IndexedBuilder
             builder.setOnWallPositions()
             builder.index = builderIndex
             builders.push(builder)
@@ -96,7 +96,7 @@ export class DungeonBuilder {
             if (! lastEntry) {
                 lastEntry = fallbackEntry
             }
-            if (lastEntry && ! builder.prepareToArrange(lastEntry.exitDir)) { return }
+            if (! builder.prepareToArrange(lastEntry.exitDir)) { return }
 
             assert(builder.exitRoom.primaryExit)
 
@@ -130,6 +130,7 @@ export class DungeonBuilder {
             return recursiveTryPlaceMaps(stack, availableBuilders)
         }
 
+        debugger
         let obj: RecReturn = recursiveTryPlaceMaps(new Stack(), new Set(builders))
         if (! obj) {
             console.log('didnt hit target. highest achived:', highestRecReturn?.stack.length())

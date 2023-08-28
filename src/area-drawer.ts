@@ -157,6 +157,12 @@ export class CCCanvas {
         ctx.fill()
     }
 
+    drawText(pos: Point, str: string) {
+        const ctx = this.canvas.getContext('2d')!
+        ctx.font = "30px Arial"
+        ctx.fillText(str, pos.x, pos.y)
+    }
+
     copyToClipboard() {
         const dataURL = this.canvas.toDataURL('image/png');
         (this.external ? this.window!.navigator : navigator).clipboard.writeText(dataURL).then(() => {
@@ -219,10 +225,15 @@ export class AreaDrawer extends CCCanvas {
             drawLater.push(() => {
                 this.setColor(color)
                 this.drawArrow(exitCopy.to(MapPoint), DirUtil.flip(obj.exitDir))
+
+                if (obj.builder) {
+                    const index = obj.builder.index
+                    const pos = AreaPoint.fromVec(obj.rects[0]).to(MapPoint)
+                    Vec2.addC(pos, 3)
+                    this.drawText(pos, index.toString())
+                }
             })
         }
         for (const func of drawLater) { func() }
-
-
     }
 }

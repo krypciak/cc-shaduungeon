@@ -44,6 +44,12 @@ export function assert(arg: any, msg: string = ''): asserts arg {
     }
 }
 
+export function assertBool(arg: boolean, msg: string = ''): asserts arg {
+    if (! arg) {
+        throw new Error(`Assertion failed: ${msg}`)
+    }
+}
+
 export function godlikeStats() {
     sc.model.player.setSpLevel(4)
     sc.model.player.setLevel(99)

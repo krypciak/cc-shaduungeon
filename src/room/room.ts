@@ -4,7 +4,7 @@ import { Coll } from '../util/map'
 import { Point, Rect, Dir, DirUtil, MapPoint, MapRect, EntityRect, EntityPoint, Dir3d, PosDir } from '../util/pos'
 import { assert } from '../util/misc'
 import { RoomPlaceVars } from './map-builder'
-import { TunnelRoom } from './tunnel-room'
+import type { RoomIOTunnel } from './tunnel-room'
 
 const tilesize: number = 16
 declare const blitzkrieg: Blitzkrieg
@@ -75,26 +75,6 @@ export class RoomIODoorLike extends RoomIOTpr {
     }
 }
 
-export class RoomIOTunnel implements RoomIO {
-    protected constructor(public tunnel: TunnelRoom) {}
-
-    getTpr(): Tpr { throw new Error('invalid call on RoomIOTunnel') }
-}
-export class RoomIOTunnelOpen extends RoomIOTunnel {
-    constructor(parentRoom: Room, dir: Dir, size: MapPoint, exitDir: Dir, setPos: EntityPoint, preffedPos: boolean) {
-        super(new TunnelRoom(parentRoom, dir, size, exitDir, setPos, preffedPos))
-    }
-    getTpr(): Tpr { throw new Error('invalid call on RoomIOTunnelOpen: these dont have tprs') }
-}
-export class RoomIOTunnelClosed extends RoomIOTunnel {
-    constructor(parentRoom: Room, dir: Dir, size: MapPoint, setPos: EntityPoint, preffedPos: boolean) {
-        super(new TunnelRoom(parentRoom, dir, size, null, setPos, preffedPos))
-    }
-    getTpr(): Tpr {
-        return this.tunnel.primaryEntarence.getTpr()
-    }
-}
-
 export class Room {
     baseRect: MapRect
     floorRect: MapRect
@@ -112,8 +92,7 @@ export class Room {
         public additionalSpace: number,
         public addNavMap: boolean,
         public placeOrder: RoomPlaceOrder,
-        public type: RoomType,
-        public deadEnd: boolean = false
+        public type: RoomType
     ) {
         this.baseRect = rect.to(MapRect)
         this.floorRect = MapRect.fromxy2(
@@ -161,7 +140,10 @@ export class Room {
 
     pushAllRooms(arr: Room[]) {
         arr.push(this)
-        this.ios.forEach(io => { if (io instanceof RoomIOTunnel) { arr.push(io.tunnel) } })
+        this.ios.forEach(io => {
+            // @ts-expect-error
+            if (io.tunnel) { arr.push(io.tunnel) }
+        })
     }
 
     getPosDirFromRoomIO(io: RoomIO): PosDir<MapPoint> | null {
@@ -437,6 +419,7 @@ export class Room {
         return rect
     }
 }
+
 export enum RoomPlaceOrder {
     NoPlace,
     Room,

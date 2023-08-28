@@ -1,9 +1,9 @@
 import { Dir, MapPoint, EntityRect, Rect, setToClosestSelSide, EntityPoint, DirUtil } from '../util/pos'
 import { Blitzkrieg, Selection } from '../util/blitzkrieg'
-import { Room, RoomIO, RoomIODoorLike, RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen, RoomPlaceOrder, RoomType } from './room'
+import { Room, RoomIO, RoomIODoorLike, RoomPlaceOrder, RoomType } from './room'
 import { assert } from '../util/misc'
 import { MapDoorLike } from '../entity-spawn'
-import { TunnelRoom } from './tunnel-room'
+import { RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen } from './tunnel-room'
 
 declare const blitzkrieg: Blitzkrieg
 
@@ -42,7 +42,6 @@ interface PuzzleData {
 
 export class PuzzleRoom extends Room {
     puzzle: PuzzleData
-    entarenceTunnel?: TunnelRoom
     primaryExit!: RoomIODoorLike
     primaryEntarence!: RoomIO
 
@@ -72,7 +71,6 @@ export class PuzzleRoom extends Room {
             sel: puzzleSel,
         }
         assert(puzzle.sel); assert(puzzle.roomSpacing); assert(puzzle.map);
-        let deadEnd: boolean = false
         /* extract data from original puzzle selection */ {
         const id = blitzkrieg.util.generateUniqueID()
         const sel = blitzkrieg.selectionCopyManager
@@ -92,7 +90,6 @@ export class PuzzleRoom extends Room {
                 }
             case PuzzleCompletionType.Item:
                 solveCondition = undefined
-                deadEnd = true
         }
         if (solveCondition) {
             solveConditionUnique = solveCondition
@@ -116,7 +113,7 @@ export class PuzzleRoom extends Room {
             throw new Error('not implemented')
         }
         /* end */
-        super('puzzle', puzzle.usel.sel.size, wallSides, spacing, true, RoomPlaceOrder.Room, RoomType.Room, deadEnd)
+        super('puzzle', puzzle.usel.sel.size, wallSides, spacing, true, RoomPlaceOrder.Room, RoomType.Room)
 
         /* set start pos */ {
         const pos: Vec3  & { level: number } = ig.copy(puzzle.usel.sel.data.startPos)
@@ -188,7 +185,7 @@ export class PuzzleRoom extends Room {
     }
 
     setEntarenceTunnel(closedTunnel: boolean, openSize: MapPoint, closedSize: MapPoint) {
-        if (this.entarenceTunnel) { throw new Error('cannot add entarence tunnel twice') }
+        if (this.primaryEntarence) { throw new Error('cannot add entarence io twice') }
         const puzzle = this.puzzle
         /* create entarence io */
         const setPos = EntityPoint.fromVec(puzzle.start.pos)

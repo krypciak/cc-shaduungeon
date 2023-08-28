@@ -103,7 +103,7 @@ export class AreaBuilder {
         if (entPosDir == null) {
             entPosDir = { dir: Dir.SOUTH, pos: new MapPoint(0, 0) }
         }
-        if (exitPosDir == null || builder.exitRoom.deadEnd) {
+        if (exitPosDir == null) {
             throw new Error('dead end not supported')
         }
 

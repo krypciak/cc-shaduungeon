@@ -1,7 +1,7 @@
 import { Blitzkrieg } from '../util/blitzkrieg'
 import { Dir, DirUtil, EntityPoint, MapPoint, MapRect } from '../util/pos'
-import { Room, RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen, RoomPlaceOrder, RoomType } from './room'
-import { TunnelRoom } from './tunnel-room'
+import { Room, RoomPlaceOrder, RoomType } from './room'
+import { RoomIOTunnelClosed, RoomIOTunnelOpen, TunnelRoom } from './tunnel-room'
 
 declare const blitzkrieg: Blitzkrieg
 
@@ -9,9 +9,8 @@ export class BattleRoom extends Room {
     constructor(pos: MapPoint, size: MapPoint, spacing: number,
         public startCondition: string,
         public doneCondition: string,
-        deadEnd: boolean, 
     ) {
-        super('battle', MapRect.fromTwoPoints(pos, size), [true, true, true, true], spacing, true, RoomPlaceOrder.Room, RoomType.Room, deadEnd)
+        super('battle', MapRect.fromTwoPoints(pos, size), [true, true, true, true], spacing, true, RoomPlaceOrder.Room, RoomType.Room)
     }
 
     setEntarenceTunnelClosed(dir: Dir, size: MapPoint) {
