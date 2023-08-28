@@ -6,6 +6,7 @@ import { BattleRoom } from './battle-room'
 import { MapBuilder } from './map-builder'
 import { PuzzleRoom } from './puzzle-room'
 import { Room } from './room'
+import { SimpleRoom } from './simple-room'
 import { RoomIOTunnelClosed, RoomIOTunnelOpen } from './tunnel-room'
 
 export const basePath: string = 'rouge/gen'
@@ -84,4 +85,25 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
         return true
     }
 
+}
+
+
+export class SimpleMapBuilder extends MapBuilder {
+    simpleRoom: SimpleRoom
+
+    entarenceRoom: SimpleRoom
+    exitRoom: SimpleRoom
+
+    constructor(areaInfo: AreaInfo, public entDir: Dir, public exitDir: Dir) {
+        super(3, areaInfo)
+        this.simpleRoom = new SimpleRoom(new MapPoint(0, 0), new MapPoint(32, 32), 0, entDir, exitDir)
+        this.simpleRoom.pushAllRooms(this.rooms)
+        this.entarenceRoom = this.simpleRoom
+        this.exitRoom = this.simpleRoom
+        this.setOnWallPositions()
+    }
+
+    prepareToArrange(dir: Dir): boolean {
+        return this.entDir == DirUtil.flip(dir);
+    }
 }

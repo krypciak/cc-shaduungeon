@@ -2,7 +2,7 @@ import { Blitzkrieg, Selection, SelectionMapEntry } from './util/blitzkrieg'
 import { Stack, assert } from './util/misc'
 import { AreaPoint, Dir, DirUtil } from './util/pos'
 import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from './area-builder'
-import { BattlePuzzleMapBuilder, PuzzleMapBuilder } from './room/dungeon-map-builder'
+import { BattlePuzzleMapBuilder, PuzzleMapBuilder, SimpleMapBuilder } from './room/dungeon-map-builder'
 import DngGen from './plugin'
 import { MapBuilder } from './room/map-builder'
 
@@ -59,22 +59,32 @@ export class DungeonBuilder {
         const builders: IndexedBuilder[] = []
         // add starting map as a builder?
 
-        for (let builderIndex = builders.length, i = 0; i < puzzles.length; builderIndex++, i++) {
-            const sel = puzzles[builderIndex]
-            const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
-            // const builder: IndexedBuilder = new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap) as MapBuilder as IndexedBuilder
-            const builder: IndexedBuilder = new PuzzleMapBuilder(areaInfo, sel, puzzleMap, true, '') as MapBuilder as IndexedBuilder
-            builder.setOnWallPositions()
-            builder.index = builderIndex
-            builders.push(builder)
-        }
+        // for (let builderIndex = builders.length, i = 0; i < puzzles.length; builderIndex++, i++) {
+        //     const sel = puzzles[builderIndex]
+        //     const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
+        //     // const builder: IndexedBuilder = new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap) as MapBuilder as IndexedBuilder
+        //     const builder: IndexedBuilder = new PuzzleMapBuilder(areaInfo, sel, puzzleMap, true, '') as MapBuilder as IndexedBuilder
+        //     builder.setOnWallPositions()
+        //     builder.index = builderIndex
+        //     builders.push(builder)
+        // }
 
-        
+        for (let i = 0; i < 100; i++) {
+            let ent = Math.floor(Math.random() * 4)
+            const exit = Math.floor(Math.random() * 4)
+            if (ent == exit) { ent++; if (ent >= 4) { ent = 0 } }
+            builders.push(IndexedBuilder.create(new SimpleMapBuilder(areaInfo, ent, exit), builders.length))
+
+        }
+        /*
+        builders.push(IndexedBuilder.create(new SimpleMapBuilder(areaInfo, Dir.SOUTH, Dir.NORTH), builders.length))
+        builders.push(IndexedBuilder.create(new SimpleMapBuilder(areaInfo, Dir.SOUTH, Dir.EAST), builders.length))
+        builders.push(IndexedBuilder.create(new SimpleMapBuilder(areaInfo, Dir.WEST, Dir.EAST), builders.length))
+        */
         type RecReturn = undefined | { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> }
 
         let highestRecReturn: { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> } = { stack: new Stack(), leftBuilders: new Set() }
-        const countTarget: number = 1000
-
+        const countTarget: number = Math.min(builders.length, 50)
         
         function recursiveTryPlaceMaps(stack: Stack<ABStackEntry>, availableBuilders: Set<IndexedBuilder>): RecReturn {
             for (const possibleBuilder of availableBuilders) {
@@ -112,7 +122,7 @@ export class DungeonBuilder {
             stack.push({
                 builder, 
                 exit: obj.exit,
-                exitDir: DirUtil.flip(exit.dir),
+                exitDir: exit.dir,
                 rects: obj.rects,
             })
             // shallow copy
@@ -130,13 +140,13 @@ export class DungeonBuilder {
             return recursiveTryPlaceMaps(stack, availableBuilders)
         }
 
-        debugger
         let obj: RecReturn = recursiveTryPlaceMaps(new Stack(), new Set(builders))
         if (! obj) {
             console.log('didnt hit target. highest achived:', highestRecReturn?.stack.length())
             obj = highestRecReturn
         }
         console.log('leftovers:', obj.leftBuilders)
+        console.log(obj.stack)
 
         dnggen.areaDrawer.drawArea(obj.stack)
         dnggen.areaDrawer.copyToClipboard()

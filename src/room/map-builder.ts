@@ -93,7 +93,7 @@ export abstract class MapBuilder {
 
     setOnWallPositions() {
         assert(this.exitRoom.primaryExit); assert(this.exitRoom.primaryEntarence)
-        this.entarenceOnWall = this.exitRoom.getPosDirFromRoomIO(this.exitRoom.primaryExit)
+        this.entarenceOnWall = this.entarenceRoom.getPosDirFromRoomIO(this.entarenceRoom.primaryEntarence)
         this.exitOnWall = this.exitRoom.getPosDirFromRoomIO(this.exitRoom.primaryExit)
     }
 

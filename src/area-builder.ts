@@ -20,6 +20,13 @@ export class AreaInfo {
 }
 
 
+export namespace IndexedBuilder {
+    export function create(builder: MapBuilder, index: number): IndexedBuilder {
+        const b = builder as IndexedBuilder
+        b.index = index
+        return b
+    }
+}
 export type IndexedBuilder = MapBuilder & { index: number }
 export interface ABStackEntry {
     builder?: IndexedBuilder
@@ -116,7 +123,7 @@ export class AreaBuilder {
         exit.y += offset.y
 
         const rects: AreaRect[] = []
-
+        
         builder.rooms.forEach(r => {
             rects.push(this.roomToAreaRect(r, offset))
         })
@@ -137,8 +144,8 @@ export class AreaBuilder {
                 }
             }
         }
-        builder.exitRoom.floorRect.setPosToSide(exit, exitPosDir.dir)
-        Point.moveInDirection(exit, exitPosDir.dir)
+        // builder.exitRoom.floorRect.setPosToSide(exit, exitPosDir.dir)
+        // Point.moveInDirection(exit, exitPosDir.dir)
 
         return {
             rects,

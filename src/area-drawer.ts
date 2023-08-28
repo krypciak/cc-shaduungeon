@@ -10,7 +10,6 @@ export class CCCanvas {
     canvas!: HTMLCanvasElement
     ctx!: CanvasRenderingContext2D
     scale: number = 1
-    offset: Point = new Point(0, 0)
     visible: boolean = false
     color!: string
 
@@ -119,8 +118,8 @@ export class CCCanvas {
         ctx.imageSmoothingEnabled = false
         ctx.lineWidth = this.scale
         ctx.strokeRect(
-            (rect.x+this.offset.x)*this.scale,
-            (rect.y+this.offset.y)*this.scale,
+            rect.x*this.scale,
+            rect.y*this.scale,
             rect.width*this.scale,
             rect.height*this.scale)
     }
@@ -129,7 +128,6 @@ export class CCCanvas {
         const ctx = this.canvas.getContext('2d')!
         ctx.beginPath()
         pos = new Point(pos.x, pos.y)
-        Vec2.add(pos, this.offset)
         Vec2.mulF(pos, this.scale, pos)
         ctx.moveTo(pos.x, pos.y)
 
@@ -159,8 +157,8 @@ export class CCCanvas {
 
     drawText(pos: Point, str: string) {
         const ctx = this.canvas.getContext('2d')!
-        ctx.font = "30px Arial"
-        ctx.fillText(str, pos.x, pos.y)
+        ctx.font = `${5*this.scale}px Arial`
+        ctx.fillText(str, pos.x * this.scale, pos.y * this.scale)
     }
 
     copyToClipboard() {
@@ -211,6 +209,7 @@ export class AreaDrawer extends CCCanvas {
 
         const drawLater: (() => void)[] = []
         this.clear()
+        let i = 0
         for (const obj of stack.array) {
             this.nextColor()
             for (const rect of obj.rects) {
@@ -222,17 +221,21 @@ export class AreaDrawer extends CCCanvas {
             const exitCopy = obj.exit.copy()
             Vec2.sub(exitCopy, minPos)
             const color = this.color
+            const icopy = i
             drawLater.push(() => {
                 this.setColor(color)
-                this.drawArrow(exitCopy.to(MapPoint), DirUtil.flip(obj.exitDir))
+                this.drawArrow(exitCopy.to(MapPoint), obj.exitDir)
+
+                const pos = AreaPoint.fromVec(obj.rects[0]); Vec2.sub(pos, minPos); Vec2.addC(pos, 0.4, 1)
+                this.drawText(pos.to(MapPoint), icopy.toString())
 
                 if (obj.builder) {
                     const index = obj.builder.index
-                    const pos = AreaPoint.fromVec(obj.rects[0]).to(MapPoint)
-                    Vec2.addC(pos, 3)
-                    this.drawText(pos, index.toString())
+                    const pos = AreaPoint.fromVec(obj.rects[0]); Vec2.sub(pos, minPos); Vec2.addC(pos, 2.2, 1)
+                    this.drawText(pos.to(MapPoint), index.toString())
                 }
             })
+            i++
         }
         for (const func of drawLater) { func() }
     }

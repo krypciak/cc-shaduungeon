@@ -2,7 +2,7 @@ export class Stack<T> {
     array: T[] = []
 
     constructor(array: T[] = []) {
-        this.array = array
+        this.array = [...array]
     }
 
     push(element: T) {
