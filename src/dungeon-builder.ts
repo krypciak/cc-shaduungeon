@@ -1,10 +1,9 @@
 import { Blitzkrieg, Selection, SelectionMapEntry } from './util/blitzkrieg'
 import { Stack, assert } from './util/misc'
-import { AreaPoint, Dir, DirUtil } from './util/pos'
+import { AreaPoint, Dir } from './util/pos'
 import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from './area-builder'
-import { BattlePuzzleMapBuilder, PuzzleMapBuilder, SimpleMapBuilder } from './room/dungeon-map-builder'
 import DngGen from './plugin'
-import { MapBuilder } from './room/map-builder'
+import { SimpleMapBuilder, SimpleSingleTunnelMapBuilder } from './room/simple-map-builder'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
@@ -59,28 +58,18 @@ export class DungeonBuilder {
         const builders: IndexedBuilder[] = []
         // add starting map as a builder?
 
-        // for (let builderIndex = builders.length, i = 0; i < puzzles.length; builderIndex++, i++) {
-        //     const sel = puzzles[builderIndex]
-        //     const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
-        //     // const builder: IndexedBuilder = new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap) as MapBuilder as IndexedBuilder
-        //     const builder: IndexedBuilder = new PuzzleMapBuilder(areaInfo, sel, puzzleMap, true, '') as MapBuilder as IndexedBuilder
-        //     builder.setOnWallPositions()
-        //     builder.index = builderIndex
-        //     builders.push(builder)
-        // }
-
-        for (let i = 0; i < 100; i++) {
-            let ent = Math.floor(Math.random() * 4)
-            const exit = Math.floor(Math.random() * 4)
-            if (ent == exit) { ent++; if (ent >= 4) { ent = 0 } }
-            builders.push(IndexedBuilder.create(new SimpleMapBuilder(areaInfo, ent, exit), builders.length))
-
-        }
         /*
-        builders.push(IndexedBuilder.create(new SimpleMapBuilder(areaInfo, Dir.SOUTH, Dir.NORTH), builders.length))
-        builders.push(IndexedBuilder.create(new SimpleMapBuilder(areaInfo, Dir.SOUTH, Dir.EAST), builders.length))
-        builders.push(IndexedBuilder.create(new SimpleMapBuilder(areaInfo, Dir.WEST, Dir.EAST), builders.length))
+        for (let builderIndex = builders.length, i = 0; i < puzzles.length; builderIndex++, i++) {
+            const sel = puzzles[builderIndex]
+            const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
+            const builder: IndexedBuilder = IndexedBuilder.create(new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap), builderIndex)
+            // const builder: IndexedBuilder = IndexedBuilder.create(new PuzzleMapBuilder(areaInfo, sel, puzzleMap, true, ''), builderIndex)
+            builders.push(builder)
+        }
         */
+
+        SimpleMapBuilder.addRandom(builders, areaInfo, 100, [SimpleMapBuilder, SimpleSingleTunnelMapBuilder])
+
         type RecReturn = undefined | { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> }
 
         let highestRecReturn: { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> } = { stack: new Stack(), leftBuilders: new Set() }

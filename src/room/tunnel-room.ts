@@ -1,4 +1,5 @@
-import { Dir, DirUtil, EntityPoint, EntityRect, MapPoint, MapRect } from '../util/pos'
+import { assert } from '../util/misc'
+import { Dir, DirUtil, EntityPoint, EntityRect, MapPoint, MapRect, PosDir } from '../util/pos'
 import { Room, RoomIO, RoomIODoorLike, RoomPlaceOrder, RoomType, Tpr, getPosOnRectSide } from './room'
 
 const tilesize: number = 16
@@ -19,8 +20,21 @@ export class RoomIOTunnelClosed extends RoomIOTunnel {
         super(new TunnelRoom(parentRoom, dir, size, null, setPos, preffedPos))
     }
     getTpr(): Tpr {
-        return this.tunnel.primaryEntarence.getTpr()
+        assert(this.tunnel.primaryExit)
+        return this.tunnel.primaryExit.getTpr()
     }
+}
+
+export function getPosDirFromRoomIO(baseRoom: Room, io: RoomIO): PosDir<MapPoint> | null {
+    const tpr = io.getTpr()
+    if (! DirUtil.dir3dIsDir(tpr.dir)) { return null }
+
+    const pos: MapPoint = tpr.pos.to(MapPoint)
+    const dir = DirUtil.dir3dToDir(tpr.dir)
+
+    const room: Room = io instanceof RoomIOTunnel ? io.tunnel : baseRoom
+    room.floorRect.setPosToSide(pos, dir)
+    return { dir, pos }
 }
 
 export class TunnelRoom extends Room {
@@ -61,7 +75,7 @@ export class TunnelRoom extends Room {
         super('tunnel-' + dir + '-' + parentRoom.name, rect, wallSides, 0, false, RoomPlaceOrder.Tunnel, RoomType.Tunnel)
 
         if (exitDir == null) {
-            this.primaryExit = RoomIODoorLike.fromRoom('Door', this, this.name + '-exitdoor', DirUtil.flip(dir))
+            this.primaryExit = RoomIODoorLike.fromRoom('Door', this, this.name + '-exitdoor', dir)
             this.ios.push(this.primaryExit)
         }
     }

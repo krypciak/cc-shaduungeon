@@ -1,6 +1,6 @@
 import { ABStackEntry } from './area-builder'
 import { Stack } from './util/misc'
-import { AreaPoint, AreaRect, Dir, DirUtil, MapPoint, MapRect, Point, Rect } from './util/pos'
+import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, Point, Rect } from './util/pos'
 
 const canvasIndex = 0
 
@@ -101,7 +101,10 @@ export class CCCanvas {
         this.visible = true
     }
     
-    clear() {
+    clear(newPos: Point = new Point(this.canvas.width / this.scale, this.canvas.height / this.scale)) {
+        this.canvas.width = newPos.x * this.scale
+        this.canvas.height = newPos.y * this.scale
+        console.log(newPos, this.canvas.width, this.canvas.height)
         this.setColor('white')
         const ctx = this.canvas.getContext('2d')!
         ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
@@ -109,8 +112,9 @@ export class CCCanvas {
 
     setColor(color: string) {
         this.color = color
-        this.canvas.getContext('2d')!.fillStyle = color
-        this.canvas.getContext('2d')!.strokeStyle = color
+        const ctx = this.canvas.getContext('2d')!
+        ctx.fillStyle = color
+        ctx.strokeStyle = color
     }
 
     drawRect(rect: Rect) {
@@ -197,18 +201,23 @@ export class AreaDrawer extends CCCanvas {
     async drawArea(stack: Stack<ABStackEntry>) {
         this.show()
         this.colorIndex = 0
-        const minPos: AreaPoint = new AreaPoint(10000, 10000)
+        const minPos: AreaPoint = new AreaPoint(100000, 100000)
+        const maxPos: AreaPoint = new AreaPoint(-100000, -100000)
         for (const obj of stack.array) {
             for (const rect of obj.rects) {
                 if (rect.x < minPos.x) { minPos.x = rect.x }
                 if (rect.y < minPos.y) { minPos.y = rect.y }
+                if (rect.x2() > maxPos.x) { maxPos.x = rect.x2() }
+                if (rect.y2() > maxPos.y) { maxPos.y = rect.y2() }
             }
         }
-        minPos.x -= 5
-        minPos.y -= 5
+        // Vec2.subC(minPos, 5)
+        const newSize: AreaPoint = maxPos.copy()
+        Vec2.sub(newSize, minPos)
+        // Vec2.addC(newSize, 5)
 
         const drawLater: (() => void)[] = []
-        this.clear()
+        this.clear(newSize.to(MapPoint))
         let i = 0
         for (const obj of stack.array) {
             this.nextColor()

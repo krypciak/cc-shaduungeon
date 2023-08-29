@@ -6,6 +6,7 @@ import { CCMap, MapLayer } from '../util/map'
 import { Dir, MapPoint, MapRect, PosDir, } from '../util/pos'
 import { assert } from '../util/misc'
 import { Room } from './room'
+import { getPosDirFromRoomIO } from './tunnel-room'
 
 declare const dnggen: DngGen
 
@@ -93,8 +94,8 @@ export abstract class MapBuilder {
 
     setOnWallPositions() {
         assert(this.exitRoom.primaryExit); assert(this.exitRoom.primaryEntarence)
-        this.entarenceOnWall = this.entarenceRoom.getPosDirFromRoomIO(this.entarenceRoom.primaryEntarence)
-        this.exitOnWall = this.exitRoom.getPosDirFromRoomIO(this.exitRoom.primaryExit)
+        this.entarenceOnWall = getPosDirFromRoomIO(this.entarenceRoom, this.entarenceRoom.primaryEntarence)
+        this.exitOnWall = getPosDirFromRoomIO(this.exitRoom, this.exitRoom.primaryExit)
     }
 
     abstract prepareToArrange(dir: Dir): boolean

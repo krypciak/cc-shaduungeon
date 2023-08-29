@@ -1,13 +1,12 @@
 import { AreaInfo } from '../area-builder'
 import { Selection } from '../util/blitzkrieg'
-import { assert, assertBool } from '../util/misc'
+import { assertBool } from '../util/misc'
 import { Dir, DirUtil, MapPoint } from '../util/pos'
 import { BattleRoom } from './battle-room'
 import { MapBuilder } from './map-builder'
 import { PuzzleRoom } from './puzzle-room'
 import { Room } from './room'
-import { SimpleRoom } from './simple-room'
-import { RoomIOTunnelClosed, RoomIOTunnelOpen } from './tunnel-room'
+import { RoomIOTunnelOpen } from './tunnel-room'
 
 export const basePath: string = 'rouge/gen'
 export const exitMarker: string = 'puzzleExit'
@@ -28,6 +27,7 @@ export class PuzzleMapBuilder extends MapBuilder {
         puzzleMap: sc.MapModel.Map,
         closedTunnel: boolean,
         entarenceCondition: string,
+        finalize: boolean = true,
     ) {
         super(3, areaInfo)
         this.puzzleRoom = new PuzzleRoom(puzzleSel, puzzleMap, entarenceCondition)
@@ -36,6 +36,10 @@ export class PuzzleMapBuilder extends MapBuilder {
 
         this.entarenceRoom = this.puzzleRoom
         this.exitRoom = this.puzzleRoom
+
+        if (finalize) {
+            this.setOnWallPositions()
+        }
     }
 
     prepareToArrange(_: Dir): boolean { return true; }
@@ -56,10 +60,10 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
         const battleDoneCondition: string = 'map.battle1battleDone'
         const puzzleEntarenceCondition: string = battleStartCondition + ' && !' + battleDoneCondition
 
-        super(areaInfo, puzzleSel, puzzleMap, false, puzzleEntarenceCondition)
+        super(areaInfo, puzzleSel, puzzleMap, false, puzzleEntarenceCondition, false)
         this.exitRoom = this.puzzleRoom
 
-        const battleSize: MapPoint = new MapPoint(9, 9)
+        const battleSize: MapPoint = new MapPoint(16, 16)
         assertBool(this.puzzleRoom.primaryEntarence instanceof RoomIOTunnelOpen)
         const battlePos: MapPoint = this.puzzleRoom.primaryEntarence.tunnel.getRoomPosThatConnectsToTheMiddle(battleSize)
 
@@ -82,28 +86,9 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
 
         const tunnelSize: MapPoint = new MapPoint(5, 3)
         this.battleRoom.setEntarenceTunnelClosed(dir, tunnelSize)
+        this.setOnWallPositions()
         return true
     }
 
 }
 
-
-export class SimpleMapBuilder extends MapBuilder {
-    simpleRoom: SimpleRoom
-
-    entarenceRoom: SimpleRoom
-    exitRoom: SimpleRoom
-
-    constructor(areaInfo: AreaInfo, public entDir: Dir, public exitDir: Dir) {
-        super(3, areaInfo)
-        this.simpleRoom = new SimpleRoom(new MapPoint(0, 0), new MapPoint(32, 32), 0, entDir, exitDir)
-        this.simpleRoom.pushAllRooms(this.rooms)
-        this.entarenceRoom = this.simpleRoom
-        this.exitRoom = this.simpleRoom
-        this.setOnWallPositions()
-    }
-
-    prepareToArrange(dir: Dir): boolean {
-        return this.entDir == DirUtil.flip(dir);
-    }
-}

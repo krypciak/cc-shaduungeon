@@ -4,7 +4,7 @@ import { Coll } from '../util/map'
 import { Point, Rect, Dir, DirUtil, MapPoint, MapRect, EntityRect, EntityPoint, Dir3d, PosDir } from '../util/pos'
 import { assert } from '../util/misc'
 import { RoomPlaceVars } from './map-builder'
-import type { RoomIOTunnel } from './tunnel-room'
+import { RoomIOTunnel, TunnelRoom } from './tunnel-room'
 
 const tilesize: number = 16
 declare const blitzkrieg: Blitzkrieg
@@ -144,15 +144,6 @@ export class Room {
             // @ts-expect-error
             if (io.tunnel) { arr.push(io.tunnel) }
         })
-    }
-
-    getPosDirFromRoomIO(io: RoomIO): PosDir<MapPoint> | null {
-        const tpr = io.getTpr()
-        if (! DirUtil.dir3dIsDir(tpr.dir)) { return null }
-        const pos: MapPoint = tpr.pos.to(MapPoint)
-        const dir = DirUtil.dir3dToDir(tpr.dir)
-        this.floorRect.setPosToSide(pos, dir)
-        return { dir, pos }
     }
 
     // place functions
