@@ -19,6 +19,6 @@ git clone https://github.com/krypciak/cc-shaduungeon
 cd cc-shaduungeon
 npm install
 npm run start
-# this should return no errors or very few
+# this should return no errors (hopefully)
 npx tsc
 ```
