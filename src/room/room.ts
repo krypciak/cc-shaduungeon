@@ -91,8 +91,8 @@ export class Room {
         public wallSides: boolean[],
         public additionalSpace: number,
         public addNavMap: boolean,
-        public placeOrder: RoomPlaceOrder,
-        public type: RoomType
+        public placeOrder: RoomPlaceOrder = RoomPlaceOrder.Room,
+        public type: RoomType = RoomType.Room,
     ) {
         this.baseRect = rect.to(MapRect)
         this.floorRect = MapRect.fromxy2(

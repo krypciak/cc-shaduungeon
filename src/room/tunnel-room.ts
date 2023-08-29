@@ -10,12 +10,14 @@ export class RoomIOTunnel implements RoomIO {
     getTpr(): Tpr { throw new Error('invalid call on RoomIOTunnel') }
 }
 export class RoomIOTunnelOpen extends RoomIOTunnel {
+    private _open = true
     constructor(parentRoom: Room, dir: Dir, size: MapPoint, exitDir: Dir, setPos: EntityPoint, preffedPos: boolean) {
         super(new TunnelRoom(parentRoom, dir, size, exitDir, setPos, preffedPos))
     }
     getTpr(): Tpr { throw new Error('invalid call on RoomIOTunnelOpen: these dont have tprs') }
 }
 export class RoomIOTunnelClosed extends RoomIOTunnel {
+    private _closed = true
     constructor(parentRoom: Room, dir: Dir, size: MapPoint, setPos: EntityPoint, preffedPos: boolean) {
         super(new TunnelRoom(parentRoom, dir, size, null, setPos, preffedPos))
     }
@@ -91,8 +93,10 @@ export class TunnelRoom extends Room {
         /* calculate the room pos */
         if (DirUtil.isVertical(exitDir)) {
             exitWallRect.x -= roomSize.x/2
+            if (exitDir == Dir.NORTH) { exitWallRect.y -= roomSize.y }
         } else {
             exitWallRect.y -= roomSize.y/2
+            if (exitDir == Dir.WEST) { exitWallRect.x -= roomSize.x }
         }
         return MapPoint.fromVec(exitWallRect)
     }

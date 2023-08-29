@@ -33,6 +33,7 @@ export interface ABStackEntry {
     exit: AreaPoint
     exitDir: Dir
     rects: AreaRect[]
+    rooms: Room[]
 }
 
 export class AreaBuilder {
@@ -99,7 +100,7 @@ export class AreaBuilder {
     }
 
     static tryGetAreaRects(builder: MapBuilder, lastExit: AreaPoint, stackEntries: ABStackEntry[]):
-        { exit: AreaPoint, rects: AreaRect[] } | undefined {
+        { exit: AreaPoint, rects: AreaRect[], rooms: Room[] } | undefined {
 
         assert(builder.entarenceRoom);
         assert(builder.exitRoom); assert(builder.exitRoom.primaryExit)
@@ -150,6 +151,7 @@ export class AreaBuilder {
         return {
             rects,
             exit,
+            rooms: builder.rooms,
         }
         //this.lastExit = await this.placeMap(builder, offset.to(EntityPoint), rects, exit, builder.puzzle.room.room.door.dir)
     }

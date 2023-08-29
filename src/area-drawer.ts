@@ -1,4 +1,6 @@
 import { ABStackEntry } from './area-builder'
+import { Room } from './room/room'
+import { TunnelRoom } from './room/tunnel-room'
 import { Stack } from './util/misc'
 import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, Point, Rect } from './util/pos'
 
@@ -104,7 +106,6 @@ export class CCCanvas {
     clear(newPos: Point = new Point(this.canvas.width / this.scale, this.canvas.height / this.scale)) {
         this.canvas.width = newPos.x * this.scale
         this.canvas.height = newPos.y * this.scale
-        console.log(newPos, this.canvas.width, this.canvas.height)
         this.setColor('white')
         const ctx = this.canvas.getContext('2d')!
         ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
@@ -117,15 +118,27 @@ export class CCCanvas {
         ctx.strokeStyle = color
     }
 
-    drawRect(rect: Rect) {
+    drawRect(rect: Rect, bgColor?: string) {
         const ctx = this.canvas.getContext('2d')!
         ctx.imageSmoothingEnabled = false
         ctx.lineWidth = this.scale
-        ctx.strokeRect(
+        const r: Rect = new Rect(
             rect.x*this.scale,
             rect.y*this.scale,
             rect.width*this.scale,
-            rect.height*this.scale)
+            rect.height*this.scale,
+        )
+        ctx.strokeRect(r.x, r.y, r.width, r.height)
+
+        if (bgColor) {
+            Vec2.addC(r, ctx.lineWidth/2)
+            r.width -= ctx.lineWidth
+            r.height -= ctx.lineWidth
+            const colorBackup = this.color
+            this.setColor(bgColor)
+            ctx.fillRect(r.x, r.y, r.width, r.height)
+            this.setColor(colorBackup)
+        }
     }
     
     drawArrow(pos: Point, dir: Dir) {
@@ -178,7 +191,7 @@ export class CCCanvas {
 
 
 export class AreaDrawer extends CCCanvas {
-    static colorList: string[] = [ 'black', 'blue', 'purple', 'pink', 'brown', ]
+    static colorList: string[] = [ 'black', 'blue', ]
     colorIndex: number = 0
     scale: number = 6
     
@@ -194,8 +207,19 @@ export class AreaDrawer extends CCCanvas {
         this.setColor(AreaDrawer.colorList[this.colorIndex])
     }
 
-    drawRect(rect: Rect) {
-        super.drawRect(rect.to(MapRect))
+    drawRect(rect: Rect, bgColor?: string) {
+        super.drawRect(rect.to(MapRect), bgColor)
+    }
+
+    static getBgColorFromRoom(room: Room): string {
+        if (room instanceof TunnelRoom) {
+            if (room.exitDir) {
+                return '#00ff0066'
+            } else {
+                return '#ff000066'
+            }
+        }
+        return '#00000000'
     }
 
     async drawArea(stack: Stack<ABStackEntry>) {
@@ -211,21 +235,22 @@ export class AreaDrawer extends CCCanvas {
                 if (rect.y2() > maxPos.y) { maxPos.y = rect.y2() }
             }
         }
-        // Vec2.subC(minPos, 5)
+        Vec2.subC(minPos, 2)
         const newSize: AreaPoint = maxPos.copy()
         Vec2.sub(newSize, minPos)
-        // Vec2.addC(newSize, 5)
+        Vec2.addC(newSize, 2)
 
         const drawLater: (() => void)[] = []
         this.clear(newSize.to(MapPoint))
         let i = 0
         for (const obj of stack.array) {
             this.nextColor()
-            for (const rect of obj.rects) {
+            for (let i = 0; i < obj.rects.length; i++) {
+                const rect = obj.rects[i]
                 // copy the rect
                 const drawRect = rect.to(AreaRect)
                 Vec2.sub(drawRect, minPos)
-                this.drawRect(drawRect)
+                this.drawRect(drawRect, AreaDrawer.getBgColorFromRoom(obj.rooms[i]))
             }
             const exitCopy = obj.exit.copy()
             Vec2.sub(exitCopy, minPos)

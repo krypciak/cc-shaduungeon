@@ -3,7 +3,7 @@ import { Stack, assert } from './util/misc'
 import { AreaPoint, Dir } from './util/pos'
 import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from './area-builder'
 import DngGen from './plugin'
-import { SimpleMapBuilder, SimpleSingleTunnelMapBuilder } from './room/simple-map-builder'
+import { SimpleDoubleRoomMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder } from './room/simple-map-builder'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
@@ -68,7 +68,9 @@ export class DungeonBuilder {
         }
         */
 
-        SimpleMapBuilder.addRandom(builders, areaInfo, 100, [SimpleMapBuilder, SimpleSingleTunnelMapBuilder])
+        SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleDoubleRoomMapBuilder])
+        // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleDoubleRoomMapBuilder])
+        // SimpleDoubleRoomMapBuilder.addPreset(builders, areaInfo)
 
         type RecReturn = undefined | { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> }
 
@@ -86,6 +88,7 @@ export class DungeonBuilder {
             exit: new AreaPoint(0, 0),
             exitDir: Dir.NORTH,
             rects: [],
+            rooms: [],
         }
 
         function recursiveTryPlaceMap(builder: IndexedBuilder, stack: Stack<ABStackEntry>,
@@ -113,6 +116,7 @@ export class DungeonBuilder {
                 exit: obj.exit,
                 exitDir: exit.dir,
                 rects: obj.rects,
+                rooms: obj.rooms,
             })
             // shallow copy
             availableBuilders = new Set(availableBuilders)
