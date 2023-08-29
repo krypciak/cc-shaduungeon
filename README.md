@@ -16,7 +16,7 @@ Don't get too excited lol
 ## Building
 ```bash
 git clone https://github.com/krypciak/cc-shaduungeon
-cd cc-rouge
+cd cc-shaduungeon
 npm install
 npm run start
 # this should return no errors or very few
