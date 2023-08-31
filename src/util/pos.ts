@@ -134,6 +134,13 @@ export class Rect {
         return new type(this.x + this.width/2, this.y + this.height/2)
     }
 
+    extend(num: number) {
+        this.x -= num
+        this.y -= num
+        this.width += num*2
+        this.height += num*2
+    }
+
     to<T extends typeof Rect>(ins: T): InstanceType<T> {
         const multi = ins.multiplier / 
             // @ts-expect-error

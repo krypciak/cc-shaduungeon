@@ -13,8 +13,8 @@ export const exitMarker: string = 'puzzleExit'
 export const entarenceMarker: string = 'battleEntarence'
 
 export class PuzzleMapBuilder extends MapBuilder {
-    static closedTunnelSize = new MapPoint(8, 16)
-    static openTunnelSize = new MapPoint(8, 24)
+    static closedTunnelSize = new MapPoint(8, 8)
+    static openTunnelSize = new MapPoint(8, 16)
 
     entarenceRoom: Room
     exitRoom: PuzzleRoom
@@ -66,7 +66,7 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
         assertBool(this.puzzleRoom.primaryEntarence instanceof RoomIOTunnelOpen)
         const battlePos: MapPoint = this.puzzleRoom.primaryEntarence.tunnel.getRoomPosThatConnectsToTheMiddle(battleSize)
 
-        this.battleRoom = this.entarenceRoom = new BattleRoom(battlePos, battleSize, 2, battleStartCondition, battleDoneCondition)
+        this.battleRoom = this.entarenceRoom = new BattleRoom(battlePos, battleSize, battleStartCondition, battleDoneCondition)
     }
 
     prepareToArrange(dir: Dir): boolean {

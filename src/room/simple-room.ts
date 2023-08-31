@@ -6,9 +6,9 @@ export class SimpleRoom extends Room {
     primaryEntarence: RoomIODoorLike
     primaryExit: RoomIODoorLike
 
-    constructor(pos: MapPoint, size: MapPoint, spacing: number, entDir: Dir, exitDir: Dir) {
+    constructor(pos: MapPoint, size: MapPoint, entDir: Dir, exitDir: Dir) {
         if (entDir == exitDir) { throw new Error('exit and ent dir cannot be the same') }
-        super('simpleroom', MapRect.fromTwoPoints(pos, size), [true, true, true, true], spacing, true)
+        super('simpleroom', MapRect.fromTwoPoints(pos, size), [true, true, true, true], true)
 
         this.primaryEntarence = RoomIODoorLike.fromRoom('Door', this, 'simple-ent', entDir)
         this.primaryExit = RoomIODoorLike.fromRoom('Door', this, 'simple-exit', exitDir)
@@ -19,9 +19,9 @@ export class SimpleTunnelRoom extends Room {
     primaryEntarence: RoomIOTunnelClosed
     primaryExit: RoomIODoorLike
 
-    constructor(pos: MapPoint, size: MapPoint, spacing: number, entDir: Dir, exitDir: Dir) {
+    constructor(pos: MapPoint, size: MapPoint, entDir: Dir, exitDir: Dir) {
         if (entDir == exitDir) { throw new Error('exit and ent dir cannot be the same') }
-        super('simpletunnelroom', MapRect.fromTwoPoints(pos, size), [true, true, true, true], spacing, true)
+        super('simpletunnelroom', MapRect.fromTwoPoints(pos, size), [true, true, true, true], true)
 
         const tunnelSize: MapPoint = new MapPoint(8, 8)
         this.primaryEntarence = new RoomIOTunnelClosed(this, entDir, tunnelSize, this.floorRect.middlePoint(MapPoint).to(EntityPoint), true)
@@ -34,9 +34,9 @@ export class SimpleDoubleTunnelRoom extends Room {
     primaryEntarence: RoomIOTunnelClosed
     primaryExit: RoomIOTunnelClosed
 
-    constructor(pos: MapPoint, size: MapPoint, spacing: number, entDir: Dir, exitDir: Dir) {
+    constructor(pos: MapPoint, size: MapPoint, entDir: Dir, exitDir: Dir) {
         if (entDir == exitDir) { throw new Error('exit and ent dir cannot be the same') }
-        super('simpledoubletunnelroom', MapRect.fromTwoPoints(pos, size), [true, true, true, true], spacing, true)
+        super('simpledoubletunnelroom', MapRect.fromTwoPoints(pos, size), [true, true, true, true], true)
 
         const tunnelSize: MapPoint = new MapPoint(8, 8)
         this.primaryEntarence = new RoomIOTunnelClosed(this, entDir, tunnelSize, this.floorRect.middlePoint(MapPoint).to(EntityPoint), true)
@@ -48,9 +48,9 @@ export class SimpleOpenTunnelRoom extends Room {
     primaryEntarence: RoomIOTunnelOpen
     primaryExit: RoomIOTunnelClosed
     
-    constructor(pos: MapPoint, size: MapPoint, spacing: number, entDir: Dir, exitDir: Dir) {
+    constructor(pos: MapPoint, size: MapPoint, entDir: Dir, exitDir: Dir) {
         if (entDir == exitDir) { throw new Error('exit and ent dir cannot be the same') }
-        super('simpleopentunnelroom', MapRect.fromTwoPoints(pos, size), [true, true, true, true], spacing, true)
+        super('simpleopentunnelroom', MapRect.fromTwoPoints(pos, size), [true, true, true, true], true)
 
         this.primaryEntarence = new RoomIOTunnelOpen(this, entDir, new MapPoint(4, 16), DirUtil.flip(entDir), this.floorRect.middlePoint(MapPoint).to(EntityPoint), true)
         this.primaryExit = new RoomIOTunnelClosed(this, exitDir, new MapPoint(4, 8), this.floorRect.middlePoint(MapPoint).to(EntityPoint), true)

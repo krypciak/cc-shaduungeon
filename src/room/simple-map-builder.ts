@@ -14,7 +14,7 @@ export class SimpleRoomMapBuilder extends MapBuilder {
 
     constructor(areaInfo: AreaInfo, public entDir: Dir, public exitDir: Dir) {
         super(3, areaInfo)
-        this.simpleRoom = new SimpleRoom(new MapPoint(0, 0), new MapPoint(32, 32), 0, entDir, exitDir)
+        this.simpleRoom = new SimpleRoom(new MapPoint(0, 0), new MapPoint(32, 32), entDir, exitDir)
         this.simpleRoom.pushAllRooms(this.rooms)
         this.entarenceRoom = this.simpleRoom
         this.exitRoom = this.simpleRoom
@@ -57,7 +57,7 @@ export class SimpleSingleTunnelMapBuilder extends MapBuilder {
 
     constructor(areaInfo: AreaInfo, public entDir: Dir, public exitDir: Dir) {
         super(3, areaInfo)
-        this.simpleRoom = new SimpleTunnelRoom(new MapPoint(0, 0), new MapPoint(32, 32), 0, entDir, exitDir)
+        this.simpleRoom = new SimpleTunnelRoom(new MapPoint(0, 0), new MapPoint(32, 32), entDir, exitDir)
         this.simpleRoom.pushAllRooms(this.rooms)
         this.entarenceRoom = this.simpleRoom
         this.exitRoom = this.simpleRoom
@@ -83,7 +83,7 @@ export class SimpleDoubleTunnelMapBuilder extends MapBuilder {
 
     constructor(areaInfo: AreaInfo, public entDir: Dir, public exitDir: Dir) {
         super(3, areaInfo)
-        this.simpleRoom = new SimpleDoubleTunnelRoom(new MapPoint(0, 0), new MapPoint(32, 32), 0, entDir, exitDir)
+        this.simpleRoom = new SimpleDoubleTunnelRoom(new MapPoint(0, 0), new MapPoint(32, 32), entDir, exitDir)
         this.simpleRoom.pushAllRooms(this.rooms)
         this.entarenceRoom = this.simpleRoom
         this.exitRoom = this.simpleRoom
@@ -101,11 +101,11 @@ export class SimpleDoubleRoomMapBuilder extends MapBuilder {
 
     constructor(areaInfo: AreaInfo, public entDir: Dir, public exitDir: Dir) {
         super(3, areaInfo)
-        this.exitRoom = new SimpleOpenTunnelRoom(new MapPoint(0, 0), new MapPoint(32, 32), 0, entDir, exitDir)
+        this.exitRoom = new SimpleOpenTunnelRoom(new MapPoint(0, 0), new MapPoint(32, 32), entDir, exitDir)
 
         const entarenceRoomSize: MapPoint = new MapPoint(22.5, 22.5)
         const pos: MapPoint = this.exitRoom.primaryEntarence.tunnel.getRoomPosThatConnectsToTheMiddle(entarenceRoomSize)
-        this.entarenceRoom = new Room('simple', MapRect.fromTwoPoints(pos, entarenceRoomSize), [true, true, true, true], 0, true)
+        this.entarenceRoom = new Room('simple', MapRect.fromTwoPoints(pos, entarenceRoomSize), [true, true, true, true], true)
         this.exitRoom.pushAllRooms(this.rooms)
     }
 

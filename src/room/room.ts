@@ -75,7 +75,6 @@ export class RoomIODoorLike extends RoomIOTpr {
 }
 
 export class Room {
-    baseRect: MapRect
     floorRect: MapRect
     private addWalls: boolean
     index?: number
@@ -88,19 +87,11 @@ export class Room {
         public name: string,
         rect: Rect,
         public wallSides: boolean[],
-        public additionalSpace: number,
-        public addNavMap: boolean,
+        public addNavMap: boolean = true,
         public placeOrder: RoomPlaceOrder = RoomPlaceOrder.Room,
         public type: RoomType = RoomType.Room,
     ) {
-        this.baseRect = rect.to(MapRect)
-        this.floorRect = MapRect.fromxy2(
-            this.baseRect.x - this.additionalSpace,
-            this.baseRect.y - this.additionalSpace,
-            this.baseRect.x2() + this.additionalSpace,
-            this.baseRect.y2() + this.additionalSpace,
-        )
-
+        this.floorRect = rect.to(MapRect)
         this.addWalls = false
         for (const addSide of this.wallSides) {
             if (addSide) { this.addWalls = true; break }
@@ -108,7 +99,6 @@ export class Room {
     }
 
     offsetBy(offset: MapPoint) {
-        Vec2.add(this.baseRect, offset)
         Vec2.add(this.floorRect, offset)
         const entityOffset: EntityPoint = offset.to(EntityPoint)
 

@@ -76,7 +76,7 @@ export class TunnelRoom extends Room {
         if (exitDir !== null) {
             wallSides[DirUtil.flip(exitDir)] = false
         }
-        super('tunnel-' + dir + '-' + parentRoom.name, rect, wallSides, 0, false, RoomPlaceOrder.Tunnel, RoomType.Tunnel)
+        super('tunnel-' + dir + '-' + parentRoom.name, rect, wallSides, false, RoomPlaceOrder.Tunnel, RoomType.Tunnel)
 
         if (exitDir == null) {
             this.primaryExit = RoomIODoorLike.fromRoom('Door', this, this.name + '-exitdoor', dir)

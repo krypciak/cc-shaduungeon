@@ -1,4 +1,4 @@
-import { Dir, MapPoint, EntityRect, Rect, setToClosestSelSide, EntityPoint, DirUtil } from '../util/pos'
+import { Dir, MapPoint, EntityRect, Rect, setToClosestSelSide, EntityPoint, DirUtil, MapRect } from '../util/pos'
 import { Blitzkrieg, Selection } from '../util/blitzkrieg'
 import { Room, RoomIO, RoomIODoorLike, RoomPlaceOrder, RoomType } from './room'
 import { assert } from '../util/misc'
@@ -22,7 +22,6 @@ interface PuzzleData {
     roomType: PuzzleRoomType
     completion: PuzzleCompletionType
     map: sc.MapModel.Map
-    roomSpacing: number
     sel: Selection
     usel: {
         id: number
@@ -67,10 +66,9 @@ export class PuzzleRoom extends Room {
             roomType,
             completion: completionType,
             map: puzzleMap,
-            roomSpacing: 3,
             sel: puzzleSel,
         }
-        assert(puzzle.sel); assert(puzzle.roomSpacing); assert(puzzle.map);
+        assert(puzzle.sel); assert(puzzle.map);
         /* extract data from original puzzle selection */ {
         const id = blitzkrieg.util.generateUniqueID()
         const sel = blitzkrieg.selectionCopyManager
@@ -95,38 +93,35 @@ export class PuzzleRoom extends Room {
             solveConditionUnique = solveCondition
             if (solveCondition && solveCondition.includes('_destroyed')) { solveConditionUnique += '_' + id }
         }
+        sel.size = Rect.new(EntityRect, sel.size)
         puzzle.usel = { id, sel, solveCondition, solveConditionUnique }
-
-        puzzle.usel.sel.size = Rect.new(EntityRect, puzzle.usel.sel.size)
         } /* end */
 
         /* prepare for super() call */
-        let spacing: number, placeOrder = RoomPlaceOrder.Room, wallSides: boolean[]
+        let wallSides: boolean[], roomRect: MapRect
         if (puzzle.roomType == PuzzleRoomType.WholeRoom) {
-            spacing = puzzle.roomSpacing
-            placeOrder = RoomPlaceOrder.Room
             wallSides = [false, false, false, false]
+            roomRect = puzzle.usel.sel.size.to(MapRect)
         } else if (puzzle.roomType == PuzzleRoomType.AddWalls) {
-            spacing = 3
             wallSides = [true, true, true, true]
-        } else {
-            throw new Error('not implemented')
-        }
+            roomRect = puzzle.usel.sel.size.to(MapRect)
+            roomRect.extend(3)
+        } else { throw new Error('not implemented') }
         /* end */
-        super('puzzle', puzzle.usel.sel.size, wallSides, spacing, true, RoomPlaceOrder.Room, RoomType.Room)
+        super('puzzle', roomRect, wallSides)
 
         /* set start pos */ {
         const pos: Vec3  & { level: number } = ig.copy(puzzle.usel.sel.data.startPos)
         const dir: Dir = (puzzle.roomType == PuzzleRoomType.WholeRoom ?
             setToClosestSelSide(pos, puzzle.usel.sel) :
-            Rect.new(EntityRect, puzzle.usel.sel.size).setToClosestRectSide(pos)).dir
+            Rect.new(EntityRect, this.floorRect).setToClosestRectSide(pos)).dir
         puzzle.start = { pos, dir }
         } /* end */
         /* set end pos */ {
         const pos: Vec3  & { level: number } = ig.copy(puzzle.usel.sel.data.endPos)
         const dir: Dir = (puzzle.roomType == PuzzleRoomType.WholeRoom ?
             setToClosestSelSide(pos, puzzle.usel.sel) :
-            Rect.new(EntityRect, puzzle.usel.sel.size).setToClosestRectSide(pos)).dir
+            Rect.new(EntityRect, this.floorRect).setToClosestRectSide(pos)).dir
 
         puzzle.end = { pos, dir }
         } /* end */
@@ -172,7 +167,7 @@ export class PuzzleRoom extends Room {
         this.sel = puzzle.sel
 
         /* at this point all variables in PuzzleData are satisfied */
-        assert(puzzle.roomType); assert(puzzle.completion); assert(puzzle.map); assert(puzzle.roomSpacing); assert(puzzle.usel)
+        assert(puzzle.roomType); assert(puzzle.completion); assert(puzzle.map); assert(puzzle.usel)
         assert(puzzle.end); assert(puzzle.start)
         this.puzzle = puzzle as PuzzleData
     }
