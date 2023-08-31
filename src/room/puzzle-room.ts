@@ -184,7 +184,7 @@ export class PuzzleRoom extends Room {
         const puzzle = this.puzzle
         /* create entarence io */
         const setPos = EntityPoint.fromVec(puzzle.start.pos)
-        const preffedPos: boolean = true || puzzle.roomType == PuzzleRoomType.AddWalls
+        const preffedPos: boolean = puzzle.roomType == PuzzleRoomType.AddWalls
         const dir = puzzle.start.dir
         const entIO: RoomIOTunnel = closedTunnel ? 
             new RoomIOTunnelClosed(this, dir, size, setPos, preffedPos) :
