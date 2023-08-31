@@ -73,10 +73,15 @@ export class AreaBuilder {
         const rect: MapRect = room.floorRect
         if (! overlapRect) {
             return new AreaRect(
-                Math.floor(rect.x / AreaRect.div + offset.x),
-                Math.floor(rect.y / AreaRect.div + offset.y),
-                Math.ceil(rect.width / AreaRect.div),
-                Math.ceil(rect.height / AreaRect.div))
+                rect.x / AreaRect.div + offset.x,
+                rect.y / AreaRect.div + offset.y,
+                rect.width / AreaRect.div,
+                rect.height / AreaRect.div)
+            // return new AreaRect(
+            //     Math.floor(rect.x / AreaRect.div + offset.x),
+            //     Math.floor(rect.y / AreaRect.div + offset.y),
+            //     Math.ceil(rect.width / AreaRect.div),
+            //     Math.ceil(rect.height / AreaRect.div))
         } else {
             // assert(room.door)
             const mul = 4

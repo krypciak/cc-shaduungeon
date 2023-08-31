@@ -1,10 +1,9 @@
 import { MapDoorLike, MapTransporter } from '../entity-spawn'
 import { Blitzkrieg, Selection } from '../util/blitzkrieg'
 import { Coll } from '../util/map'
-import { Point, Rect, Dir, DirUtil, MapPoint, MapRect, EntityRect, EntityPoint, Dir3d, PosDir } from '../util/pos'
+import { Point, Rect, Dir, DirUtil, MapPoint, MapRect, EntityRect, EntityPoint, Dir3d } from '../util/pos'
 import { assert } from '../util/misc'
 import { RoomPlaceVars } from './map-builder'
-import { RoomIOTunnel, TunnelRoom } from './tunnel-room'
 
 const tilesize: number = 16
 declare const blitzkrieg: Blitzkrieg

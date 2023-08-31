@@ -1,20 +1,20 @@
 import { AreaInfo } from '../area-builder'
 import { Selection } from '../util/blitzkrieg'
 import { assertBool } from '../util/misc'
-import { Dir, DirUtil, MapPoint } from '../util/pos'
+import { Dir, DirUtil, EntityPoint, MapPoint } from '../util/pos'
 import { BattleRoom } from './battle-room'
 import { MapBuilder } from './map-builder'
 import { PuzzleRoom } from './puzzle-room'
 import { Room } from './room'
-import { RoomIOTunnelOpen } from './tunnel-room'
+import { RoomIOTunnelClosed, RoomIOTunnelOpen } from './tunnel-room'
 
 export const basePath: string = 'rouge/gen'
 export const exitMarker: string = 'puzzleExit'
 export const entarenceMarker: string = 'battleEntarence'
 
 export class PuzzleMapBuilder extends MapBuilder {
-    static closedTunnelSize = new MapPoint(5, 3)
-    static openTunnelSize = new MapPoint(5, 8)
+    static closedTunnelSize = new MapPoint(8, 16)
+    static openTunnelSize = new MapPoint(8, 24)
 
     entarenceRoom: Room
     exitRoom: PuzzleRoom
@@ -31,15 +31,13 @@ export class PuzzleMapBuilder extends MapBuilder {
     ) {
         super(3, areaInfo)
         this.puzzleRoom = new PuzzleRoom(puzzleSel, puzzleMap, entarenceCondition)
-        this.puzzleRoom.setEntarenceTunnel(closedTunnel, PuzzleMapBuilder.closedTunnelSize, PuzzleMapBuilder.openTunnelSize)
+        this.puzzleRoom.setEntarenceTunnel(closedTunnel, closedTunnel ? PuzzleMapBuilder.closedTunnelSize : PuzzleMapBuilder.openTunnelSize)
         this.puzzleRoom.pushAllRooms(this.rooms)
 
         this.entarenceRoom = this.puzzleRoom
         this.exitRoom = this.puzzleRoom
 
-        if (finalize) {
-            this.setOnWallPositions()
-        }
+        finalize && this.setOnWallPositions()
     }
 
     prepareToArrange(_: Dir): boolean { return true; }
@@ -62,30 +60,32 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
 
         super(areaInfo, puzzleSel, puzzleMap, false, puzzleEntarenceCondition, false)
         this.exitRoom = this.puzzleRoom
+        this.exitRoom.pushAllRooms(this.rooms)
 
-        const battleSize: MapPoint = new MapPoint(16, 16)
+        const battleSize: MapPoint = new MapPoint(32, 32)
         assertBool(this.puzzleRoom.primaryEntarence instanceof RoomIOTunnelOpen)
         const battlePos: MapPoint = this.puzzleRoom.primaryEntarence.tunnel.getRoomPosThatConnectsToTheMiddle(battleSize)
 
-        this.battleRoom = new BattleRoom(battlePos, battleSize, 2, battleStartCondition, battleDoneCondition)
-        this.entarenceRoom = this.battleRoom
+        this.battleRoom = this.entarenceRoom = new BattleRoom(battlePos, battleSize, 2, battleStartCondition, battleDoneCondition)
     }
 
     prepareToArrange(dir: Dir): boolean {
         assertBool(this.puzzleRoom.primaryEntarence instanceof RoomIOTunnelOpen)
-        if (dir == DirUtil.flip(this.puzzleRoom.primaryEntarence.tunnel.dir)) {
-            return false
-        }
-        /* make sure the tunnel isn't duplicated */ /*
-        if (this.battleRoom.primaryEntarence) {
-            assertBool(this.battleRoom.primaryEntarence instanceof RoomIOTunnelClosed)
-            assert(this.battleRoom.primaryEntarence.tunnel.index)
-            this.rooms.splice(this.battleRoom.primaryEntarence.tunnel.index)
-        }
-        */
+        if (dir == this.puzzleRoom.primaryEntarence.tunnel.dir) { return false }
 
-        const tunnelSize: MapPoint = new MapPoint(5, 3)
-        this.battleRoom.setEntarenceTunnelClosed(dir, tunnelSize)
+        /* make sure the tunnel isn't duplicated */
+        const primEnt = this.battleRoom.primaryEntarence
+        if (primEnt) {
+            assertBool(primEnt instanceof RoomIOTunnelClosed)
+            this.rooms.splice(this.rooms.indexOf(primEnt.tunnel))
+            this.battleRoom.ios.splice(this.battleRoom.ios.indexOf(this.battleRoom.primaryEntarence))
+        }
+
+        const tunnelSize: MapPoint = new MapPoint(8, 8)
+        this.battleRoom.primaryEntarence = new RoomIOTunnelClosed(this.battleRoom, DirUtil.flip(dir), tunnelSize,
+            this.battleRoom.floorRect.middlePoint(MapPoint).to(EntityPoint), true)
+        this.battleRoom.ios.push(this.battleRoom.primaryEntarence)
+        this.battleRoom.pushAllRooms(this.rooms)
         this.setOnWallPositions()
         return true
     }

@@ -103,7 +103,7 @@ export class SimpleDoubleRoomMapBuilder extends MapBuilder {
         super(3, areaInfo)
         this.exitRoom = new SimpleOpenTunnelRoom(new MapPoint(0, 0), new MapPoint(32, 32), 0, entDir, exitDir)
 
-        const entarenceRoomSize: MapPoint = new MapPoint(24, 24)
+        const entarenceRoomSize: MapPoint = new MapPoint(22.5, 22.5)
         const pos: MapPoint = this.exitRoom.primaryEntarence.tunnel.getRoomPosThatConnectsToTheMiddle(entarenceRoomSize)
         this.entarenceRoom = new Room('simple', MapRect.fromTwoPoints(pos, entarenceRoomSize), [true, true, true, true], 0, true)
         this.exitRoom.pushAllRooms(this.rooms)
@@ -117,7 +117,7 @@ export class SimpleDoubleRoomMapBuilder extends MapBuilder {
             this.rooms.splice(this.rooms.indexOf(primEnt.tunnel))
             this.entarenceRoom.ios.splice(this.entarenceRoom.ios.indexOf(this.entarenceRoom.primaryEntarence))
         }
-        const entTunnelSize: MapPoint = new MapPoint(8, 8)
+        const entTunnelSize: MapPoint = new MapPoint(8, 16)
         this.entarenceRoom.primaryEntarence = new RoomIOTunnelClosed(this.entarenceRoom, DirUtil.flip(dir), entTunnelSize,
             this.entarenceRoom.floorRect.middlePoint(MapPoint).to(EntityPoint), true)
         this.entarenceRoom.ios.push(this.entarenceRoom.primaryEntarence)

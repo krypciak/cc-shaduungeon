@@ -140,10 +140,14 @@ export class Rect {
             this.constructor['multiplier']
 
         return new ins(
-            Math.floor(this.x * multi),
-            Math.floor(this.y * multi),
-            Math.floor(this.width * multi),
-            Math.floor(this.height * multi),
+            // Math.floor(this.x * multi),
+            // Math.floor(this.y * multi),
+            // Math.floor(this.width * multi),
+            // Math.floor(this.height * multi),
+            this.x * multi,
+            this.y * multi,
+            this.width * multi,
+            this.height * multi,
         ) as InstanceType<T>
     }
 
@@ -218,8 +222,10 @@ export class Point {
             this.constructor['multiplier']
 
         return new ins(
-            Math.floor(this.x * multi),
-            Math.floor(this.y * multi),
+            // Math.floor(this.x * multi),
+            // Math.floor(this.y * multi),
+            this.x * multi,
+            this.y * multi,
         ) as InstanceType<T>
     }
 
@@ -230,12 +236,12 @@ export class Point {
         }
     }
 
-    static moveInDirection(pos: Vec2, dir: Dir) {
+    static moveInDirection(pos: Vec2, dir: Dir, amount: number = 1) {
         switch (dir) {
-            case Dir.NORTH: pos.y -= 1; break
-            case Dir.EAST: pos.x += 1; break
-            case Dir.SOUTH: pos.y += 1; break
-            case Dir.WEST: pos.x -= 1; break
+            case Dir.NORTH: pos.y -= amount; break
+            case Dir.EAST: pos.x += amount; break
+            case Dir.SOUTH: pos.y += amount; break
+            case Dir.WEST: pos.x -= amount; break
         }
     }
 }

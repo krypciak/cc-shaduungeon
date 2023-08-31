@@ -52,8 +52,8 @@ export class SimpleOpenTunnelRoom extends Room {
         if (entDir == exitDir) { throw new Error('exit and ent dir cannot be the same') }
         super('simpleopentunnelroom', MapRect.fromTwoPoints(pos, size), [true, true, true, true], spacing, true)
 
-        this.primaryEntarence = new RoomIOTunnelOpen(this, entDir, new MapPoint(8, 16), DirUtil.flip(entDir), this.floorRect.middlePoint(MapPoint).to(EntityPoint), true)
-        this.primaryExit = new RoomIOTunnelClosed(this, exitDir, new MapPoint(8, 8), this.floorRect.middlePoint(MapPoint).to(EntityPoint), true)
+        this.primaryEntarence = new RoomIOTunnelOpen(this, entDir, new MapPoint(4, 16), DirUtil.flip(entDir), this.floorRect.middlePoint(MapPoint).to(EntityPoint), true)
+        this.primaryExit = new RoomIOTunnelClosed(this, exitDir, new MapPoint(4, 8), this.floorRect.middlePoint(MapPoint).to(EntityPoint), true)
         this.ios.push(this.primaryEntarence, this.primaryExit)
     }
 }

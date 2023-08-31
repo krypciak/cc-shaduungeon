@@ -156,7 +156,6 @@ export default class DngGen {
         this.loaded = true
 
         this.areaDrawer = new AreaDrawer()
-        // startDnggenGame()
     }
 
     async poststart() {
@@ -165,5 +164,6 @@ export default class DngGen {
 
         registerStyles()
         updateLangLabels()
+        startDnggenGame()
     }
 }

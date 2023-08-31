@@ -4,6 +4,7 @@ import { AreaPoint, Dir } from './util/pos'
 import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from './area-builder'
 import DngGen from './plugin'
 import { SimpleDoubleRoomMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder } from './room/simple-map-builder'
+import { BattlePuzzleMapBuilder } from './room/dungeon-map-builder'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
@@ -58,7 +59,7 @@ export class DungeonBuilder {
         const builders: IndexedBuilder[] = []
         // add starting map as a builder?
 
-        /*
+        if (false) {
         for (let builderIndex = builders.length, i = 0; i < puzzles.length; builderIndex++, i++) {
             const sel = puzzles[builderIndex]
             const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
@@ -66,16 +67,19 @@ export class DungeonBuilder {
             // const builder: IndexedBuilder = IndexedBuilder.create(new PuzzleMapBuilder(areaInfo, sel, puzzleMap, true, ''), builderIndex)
             builders.push(builder)
         }
-        */
+        }
 
         SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleDoubleRoomMapBuilder])
         // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleDoubleRoomMapBuilder])
+
         // SimpleDoubleRoomMapBuilder.addPreset(builders, areaInfo)
 
         type RecReturn = undefined | { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> }
 
         let highestRecReturn: { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> } = { stack: new Stack(), leftBuilders: new Set() }
-        const countTarget: number = Math.min(builders.length, 50)
+        const countTarget: number = 
+            // Math.min(builders.length, 3)
+            builders.length / 2
         
         function recursiveTryPlaceMaps(stack: Stack<ABStackEntry>, availableBuilders: Set<IndexedBuilder>): RecReturn {
             for (const possibleBuilder of availableBuilders) {

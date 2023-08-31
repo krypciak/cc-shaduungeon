@@ -1,8 +1,6 @@
 import { assert } from '../util/misc'
 import { Dir, DirUtil, EntityPoint, EntityRect, MapPoint, MapRect, PosDir } from '../util/pos'
-import { Room, RoomIO, RoomIODoorLike, RoomPlaceOrder, RoomType, Tpr, getPosOnRectSide } from './room'
-
-const tilesize: number = 16
+import { Room, RoomIO, RoomIODoorLike, RoomPlaceOrder, RoomType, Tpr } from './room'
 
 export class RoomIOTunnel implements RoomIO {
     protected constructor(public tunnel: TunnelRoom) {}
@@ -50,24 +48,28 @@ export class TunnelRoom extends Room {
         setPos: EntityPoint,
         preffedPos: boolean,
     ) {
-        const pos: EntityPoint = preffedPos ? getPosOnRectSide(EntityPoint, dir, parentRoom.floorRect.to(EntityRect), setPos) : setPos
+        const pos: EntityPoint = setPos.copy()
+        preffedPos && parentRoom.floorRect.to(EntityRect).setPosToSide(pos, dir)
+
         const rect: EntityRect = EntityRect.fromTwoPoints(pos, size.to(EntityPoint))
         if (! DirUtil.isVertical(dir)) {
             [rect.width, rect.height] = [rect.height, rect.width]
         }
         switch (dir) {
             case Dir.NORTH:
-                rect.x += -rect.width/2
-                rect.y += -rect.height + tilesize; break
+                rect.x -= rect.width/2
+                rect.y -= rect.height
+                break
             case Dir.EAST:
-                rect.x += -tilesize
-                rect.y += -rect.height/2; break
+                rect.y -= rect.height/2
+                break
             case Dir.SOUTH:
-                rect.x += -rect.width/2
-                rect.y += -tilesize; break
+                rect.x -= rect.width/2
+                break
             case Dir.WEST:
-                rect.x += -rect.width + tilesize
-                rect.y += -rect.height/2; break
+                rect.x -= rect.width
+                rect.y -= rect.height/2
+                break
         }
         const wallSides: boolean[] = [true, true, true, true]
         wallSides[DirUtil.flip(dir)] = false
