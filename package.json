@@ -1,22 +1,20 @@
 {
     "name": "cc-shaduungeon",
-    "version": "1.0.0",
-    "description": "",
+    "version": "0.3.0",
+    "description": "Dungeon Generator (WIP)",
     "scripts": {
         "start": "esbuild --target=es2018 --format=esm --platform=node --bundle --sourcemap=inline --outfile=plugin.js src/plugin.ts",
         "watch": "esbuild --target=es2018 --format=esm --platform=node --bundle --sourcemap=inline --watch --outfile=plugin.js src/plugin.ts",
         "build": "esbuild --target=es2018 --format=esm --platform=node --bundle --outfile='plugin.js' 'src/plugin.ts'"
     },
-    "author": "",
-    "license": "MIT",
+    "author": "krypek",
+    "license": "GPLv3",
     "devDependencies": {
         "@types/node": "^20.4.4",
         "@typescript-eslint/eslint-plugin": "^6.2.0",
         "@typescript-eslint/parser": "^6.2.0",
         "cc-vim": "github:krypciak/cc-vim",
         "esbuild": "^0.18.15",
-        "fuse.js": "^6.6.2",
-        "prettier": "3.0.0",
         "typescript": "^5.1.6",
         "ultimate-crosscode-typedefs": "github:krypciak/ultimate-crosscode-typedefs"
     }
