@@ -119,7 +119,7 @@ export class SimpleDoubleRoomMapBuilder extends MapBuilder {
         }
         const entTunnelSize: MapPoint = new MapPoint(8, 16)
         this.entarenceRoom.primaryEntarence = new RoomIOTunnelClosed(this.entarenceRoom, DirUtil.flip(dir), entTunnelSize,
-            this.entarenceRoom.floorRect.middlePoint(MapPoint).to(EntityPoint), true)
+            this.entarenceRoom.middlePoint(MapPoint).to(EntityPoint), true)
         this.entarenceRoom.ios.push(this.entarenceRoom.primaryEntarence)
 
         this.entarenceRoom.pushAllRooms(this.rooms)

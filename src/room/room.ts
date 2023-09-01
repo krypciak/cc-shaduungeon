@@ -74,8 +74,7 @@ export class RoomIODoorLike extends RoomIOTpr {
     }
 }
 
-export class Room {
-    floorRect: MapRect
+export class Room extends MapRect {
     private addWalls: boolean
     index?: number
     sel?: Selection
@@ -91,7 +90,8 @@ export class Room {
         public placeOrder: RoomPlaceOrder = RoomPlaceOrder.Room,
         public type: RoomType = RoomType.Room,
     ) {
-        this.floorRect = rect.to(MapRect)
+        const mapRect = rect.to(MapRect)
+        super(mapRect.x, mapRect.y, mapRect.width, mapRect.height)
         this.addWalls = false
         for (const addSide of this.wallSides) {
             if (addSide) { this.addWalls = true; break }
@@ -99,7 +99,7 @@ export class Room {
     }
 
     offsetBy(offset: MapPoint) {
-        Vec2.add(this.floorRect, offset)
+        Vec2.add(this, offset)
         const entityOffset: EntityPoint = offset.to(EntityPoint)
 
         if (this.sel) {
@@ -118,7 +118,7 @@ export class Room {
     }
 
     getDoorLikeTpr(type: MapDoorLike.Types, name: string, dir: Dir, prefPos?: EntityPoint): TprDoorLike {
-        const doorPos: EntityPoint = getPosOnRectSide(EntityPoint, dir, this.floorRect.to(EntityRect), prefPos)
+        const doorPos: EntityPoint = getPosOnRectSide(EntityPoint, dir, this.to(EntityRect), prefPos)
 
         if (DirUtil.isVertical(dir)) { doorPos.x -= tilesize } else { doorPos.y -= tilesize }
         if (dir == Dir.SOUTH) { doorPos.y -= tilesize }
@@ -145,8 +145,8 @@ export class Room {
     placeRoom(rpv: RoomPlaceVars, addNavMap: boolean) {
         if (this.addWalls) {
             // draw floor
-            for (let y = this.floorRect.y; y < this.floorRect.y2(); y++) {
-                for (let x = this.floorRect.x; x < this.floorRect.x2(); x++) {
+            for (let y = this.y; y < this.y2(); y++) {
+                for (let x = this.x; x < this.x2(); x++) {
                     rpv.background[y][x] = rpv.tc.floorTile
                     if (rpv.tc.addShadows) { rpv.shadow![y][x] = 0 }
                     for (const coll of rpv.colls) { coll[y][x] = 0 }
@@ -156,56 +156,56 @@ export class Room {
             }
 
             if (this.wallSides[Dir.NORTH]) {
-                for (let x = this.floorRect.x; x < this.floorRect.x2(); x++) {
-                    this.placeWall(rpv, new MapPoint(x, this.floorRect.y), Dir.NORTH)
+                for (let x = this.x; x < this.x2(); x++) {
+                    this.placeWall(rpv, new MapPoint(x, this.y), Dir.NORTH)
                 }
             } else if (rpv.tc.addShadows) {
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomLeft!, this.floorRect.x, this.floorRect.y - 2)
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomRight!, this.floorRect.x2() - 2, this.floorRect.y - 2)
-                for (let x = this.floorRect.x + 2; x < this.floorRect.x2() - 2; x++) {
-                    for (let y = this.floorRect.y - 2; y < this.floorRect.y; y++) {
+                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomLeft!, this.x, this.y - 2)
+                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomRight!, this.x2() - 2, this.y - 2)
+                for (let x = this.x + 2; x < this.x2() - 2; x++) {
+                    for (let y = this.y - 2; y < this.y; y++) {
                         rpv.shadow![y][x] = 0
                     }
                 }
             }
 
             if (this.wallSides[Dir.EAST]) {
-                for (let y = this.floorRect.y; y < this.floorRect.y2(); y++) {
-                    this.placeWall(rpv, new MapPoint(this.floorRect.x2(), y), Dir.EAST)
+                for (let y = this.y; y < this.y2(); y++) {
+                    this.placeWall(rpv, new MapPoint(this.x2(), y), Dir.EAST)
                 }
             } else if (rpv.tc.addShadows) {
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopLeft!, this.floorRect.x2(), this.floorRect.y)
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomLeft!, this.floorRect.x2(), this.floorRect.y2() - 2)
-                for (let y = this.floorRect.y + 2; y < this.floorRect.y2() - 2; y++) {
-                    for (let x = this.floorRect.x2(); x < this.floorRect.x2() + 2; x++) {
+                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopLeft!, this.x2(), this.y)
+                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomLeft!, this.x2(), this.y2() - 2)
+                for (let y = this.y + 2; y < this.y2() - 2; y++) {
+                    for (let x = this.x2(); x < this.x2() + 2; x++) {
                         rpv.shadow![y][x] = 0
                     }
                 }
             }
 
             if (this.wallSides[Dir.SOUTH]) {
-                for (let x = this.floorRect.x; x < this.floorRect.x2(); x++) {
-                    this.placeWall(rpv, new MapPoint(x, this.floorRect.y2()), Dir.SOUTH)
+                for (let x = this.x; x < this.x2(); x++) {
+                    this.placeWall(rpv, new MapPoint(x, this.y2()), Dir.SOUTH)
                 }
             } else if (rpv.tc.addShadows) {
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopLeft!, this.floorRect.x, this.floorRect.y2())
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopRight!, this.floorRect.x2() - 2, this.floorRect.y2())
-                for (let x = this.floorRect.x + 2; x < this.floorRect.x2() - 2; x++) {
-                    for (let y = this.floorRect.y2(); y < this.floorRect.y2() + 2; y++) {
+                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopLeft!, this.x, this.y2())
+                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopRight!, this.x2() - 2, this.y2())
+                for (let x = this.x + 2; x < this.x2() - 2; x++) {
+                    for (let y = this.y2(); y < this.y2() + 2; y++) {
                         rpv.shadow![y][x] = 0
                     }
                 }
             }
             
             if (this.wallSides[Dir.WEST]) {
-                for (let y = this.floorRect.y; y < this.floorRect.y2(); y++) {
-                    this.placeWall(rpv, new MapPoint(this.floorRect.x, y), Dir.WEST)
+                for (let y = this.y; y < this.y2(); y++) {
+                    this.placeWall(rpv, new MapPoint(this.x, y), Dir.WEST)
                 }
             } else if (rpv.tc.addShadows) {
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopRight!, this.floorRect.x - 2, this.floorRect.y)
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomRight!, this.floorRect.x - 2, this.floorRect.y2() - 2)
-                for (let y = this.floorRect.y + 2; y < this.floorRect.y2() - 2; y++) {
-                    for (let x = this.floorRect.x - 2; x < this.floorRect.x; x++) {
+                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopRight!, this.x - 2, this.y)
+                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomRight!, this.x - 2, this.y2() - 2)
+                for (let y = this.y + 2; y < this.y2() - 2; y++) {
+                    for (let x = this.x - 2; x < this.x; x++) {
                         rpv.shadow![y][x] = 0
                     }
                 }
@@ -215,16 +215,16 @@ export class Room {
             if (rpv.tc.addShadows) {
                 // fix shadow corners
                 if (this.wallSides[Dir.NORTH] && this.wallSides[Dir.WEST]) {
-                    blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.cornerShadowTopLeft!, this.floorRect.x, this.floorRect.y)
+                    blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.cornerShadowTopLeft!, this.x, this.y)
                 }
                 if (this.wallSides[Dir.NORTH] && this.wallSides[Dir.EAST]) {
-                    blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.cornerShadowTopRight!, this.floorRect.x2() - 2, this.floorRect.y)
+                    blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.cornerShadowTopRight!, this.x2() - 2, this.y)
                 }
                 if (this.wallSides[Dir.SOUTH] && this.wallSides[Dir.WEST]) {
-                    blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.cornerShadowBottomLeft!, this.floorRect.x, this.floorRect.y2() - 2)
+                    blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.cornerShadowBottomLeft!, this.x, this.y2() - 2)
                 }
                 if (this.wallSides[Dir.SOUTH] && this.wallSides[Dir.EAST]) {
-                    blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.cornerShadowBottomRight!, this.floorRect.x2() - 2, this.floorRect.y2() - 2)
+                    blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.cornerShadowBottomRight!, this.x2() - 2, this.y2() - 2)
                 }
             }
         
@@ -232,10 +232,10 @@ export class Room {
             if (rpv.tc.addLight) {
                 assert(rpv.tc.lightStep); assert(rpv.tc.lightTile);
                 const distFromWall = 5
-                const lx1 = this.floorRect.x + distFromWall - 1
-                const ly1 = this.floorRect.y + distFromWall - 1
-                const lx2 = this.floorRect.x2() - distFromWall
-                const ly2 = this.floorRect.y2() - distFromWall
+                const lx1 = this.x + distFromWall - 1
+                const ly1 = this.y + distFromWall - 1
+                const lx2 = this.x2() - distFromWall
+                const ly2 = this.y2() - distFromWall
 
                 const mx = Math.floor(lx1 + (lx2 - lx1)/2)
                 const my = Math.floor(ly1 + (ly2 - ly1)/2)
@@ -389,7 +389,7 @@ export class Room {
     }
 
     getSideEntityRect(dir: Dir) {
-        const rect: EntityRect = Rect.new(MapRect, this.floorRect.getSide(dir)).to(EntityRect)
+        const rect: EntityRect = Rect.new(MapRect, this.getSide(dir)).to(EntityRect)
         if (dir == Dir.EAST) {
             rect.x -= 8
         }

@@ -106,7 +106,7 @@ export abstract class MapBuilder {
         const newSize: MapRect = new MapRect(10000, 10000, 0, 0)
 
         for (const room of this.rooms) {
-            const rect = room.floorRect
+            const rect = room
             if (rect.x < newSize.x) { newSize.x = rect.x }
             if (rect.y < newSize.y) { newSize.y = rect.y }
             if (rect.x2() > newSize.width ) { newSize.width = rect.x2() }

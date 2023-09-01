@@ -114,14 +114,14 @@ export class PuzzleRoom extends Room {
         const pos: Vec3  & { level: number } = ig.copy(puzzle.usel.sel.data.startPos)
         const dir: Dir = (puzzle.roomType == PuzzleRoomType.WholeRoom ?
             setToClosestSelSide(pos, puzzle.usel.sel) :
-            Rect.new(EntityRect, this.floorRect).setToClosestRectSide(pos)).dir
+            Rect.new(EntityRect, this).setToClosestRectSide(pos)).dir
         puzzle.start = { pos, dir }
         } /* end */
         /* set end pos */ {
         const pos: Vec3  & { level: number } = ig.copy(puzzle.usel.sel.data.endPos)
         const dir: Dir = (puzzle.roomType == PuzzleRoomType.WholeRoom ?
             setToClosestSelSide(pos, puzzle.usel.sel) :
-            Rect.new(EntityRect, this.floorRect).setToClosestRectSide(pos)).dir
+            Rect.new(EntityRect, this).setToClosestRectSide(pos)).dir
 
         puzzle.end = { pos, dir }
         } /* end */
@@ -190,7 +190,7 @@ export class PuzzleRoom extends Room {
         const preffedPos: boolean = puzzle.roomType == PuzzleRoomType.AddWalls
         if (! preffedPos) {
             const sidePos: EntityPoint = setPos.copy()
-            this.floorRect.to(EntityRect).setPosToSide(sidePos, dir)
+            this.to(EntityRect).setPosToSide(sidePos, dir)
             const distEntity: number = Vec2.distance(sidePos, setPos)
             const dist: number = distEntity / (EntityRect.multiplier / MapRect.multiplier)
             size.y += dist

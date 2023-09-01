@@ -83,7 +83,7 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
 
         const tunnelSize: MapPoint = new MapPoint(5, 4)
         this.battleRoom.primaryEntarence = new RoomIOTunnelClosed(this.battleRoom, DirUtil.flip(dir), tunnelSize,
-            this.battleRoom.floorRect.middlePoint(MapPoint).to(EntityPoint), true)
+            this.battleRoom.middlePoint(MapPoint).to(EntityPoint), true)
         this.battleRoom.ios.push(this.battleRoom.primaryEntarence)
         this.battleRoom.pushAllRooms(this.rooms)
         this.setOnWallPositions()

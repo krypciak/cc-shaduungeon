@@ -37,7 +37,7 @@ export interface ABStackEntry {
 
 export class AreaBuilder {
     static roomToAreaRect(room: Room, offset: AreaPoint, overlapRect?: AreaRect): AreaRect {
-        const rect: MapRect = room.floorRect
+        const rect: MapRect = room
         if (! overlapRect) {
             return new AreaRect(
                 rect.x / AreaRect.div + offset.x,
@@ -112,7 +112,7 @@ export class AreaBuilder {
                 }
             }
         }
-        // builder.exitRoom.floorRect.setPosToSide(exit, exitPosDir.dir)
+        // builder.exitRoom.setPosToSide(exit, exitPosDir.dir)
         // Point.moveInDirection(exit, exitPosDir.dir)
 
         return {

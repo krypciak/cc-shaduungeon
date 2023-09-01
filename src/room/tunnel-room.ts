@@ -33,7 +33,7 @@ export function getPosDirFromRoomIO(baseRoom: Room, io: RoomIO): PosDir<MapPoint
     const dir = DirUtil.dir3dToDir(tpr.dir)
 
     const room: Room = io instanceof RoomIOTunnel ? io.tunnel : baseRoom
-    room.floorRect.setPosToSide(pos, dir)
+    room.setPosToSide(pos, dir)
     return { dir, pos }
 }
 
@@ -49,7 +49,7 @@ export class TunnelRoom extends Room {
         preffedPos: boolean,
     ) {
         const pos: EntityPoint = setPos.copy()
-        preffedPos && parentRoom.floorRect.to(EntityRect).setPosToSide(pos, dir)
+        preffedPos && parentRoom.to(EntityRect).setPosToSide(pos, dir)
 
         const rect: EntityRect = EntityRect.fromTwoPoints(pos, size.to(EntityPoint))
         if (! DirUtil.isVertical(dir)) {
@@ -88,7 +88,7 @@ export class TunnelRoom extends Room {
         if (this.exitDir === null) { throw new Error('cannot call getRoomPosThatConnectsToTheMiddle() when tunnel is closed') }
 
         const exitDir = DirUtil.flip(this.exitDir)
-        const exitWallRect: MapRect = this.floorRect.getSide(exitDir, 0) as MapRect
+        const exitWallRect: MapRect = this.getSide(exitDir, 0) as MapRect
         /* get the tunnel middle point */
         exitWallRect.x += exitWallRect.width/2
         exitWallRect.y += exitWallRect.height/2

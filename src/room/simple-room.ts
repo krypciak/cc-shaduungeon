@@ -24,7 +24,7 @@ export class SimpleTunnelRoom extends Room {
         super('simpletunnelroom', MapRect.fromTwoPoints(pos, size), [true, true, true, true], true)
 
         const tunnelSize: MapPoint = new MapPoint(8, 8)
-        this.primaryEntarence = new RoomIOTunnelClosed(this, entDir, tunnelSize, this.floorRect.middlePoint(MapPoint).to(EntityPoint), true)
+        this.primaryEntarence = new RoomIOTunnelClosed(this, entDir, tunnelSize, this.middlePoint(MapPoint).to(EntityPoint), true)
             /* RoomIODoorLike.fromRoom('Door', this, 'simple-ent', entDir) */
         this.primaryExit = RoomIODoorLike.fromRoom('Door', this, 'simple-exit', exitDir)
         this.ios.push(this.primaryEntarence, this.primaryExit)
@@ -39,8 +39,8 @@ export class SimpleDoubleTunnelRoom extends Room {
         super('simpledoubletunnelroom', MapRect.fromTwoPoints(pos, size), [true, true, true, true], true)
 
         const tunnelSize: MapPoint = new MapPoint(8, 8)
-        this.primaryEntarence = new RoomIOTunnelClosed(this, entDir, tunnelSize, this.floorRect.middlePoint(MapPoint).to(EntityPoint), true)
-        this.primaryExit = new RoomIOTunnelClosed(this, exitDir, tunnelSize, this.floorRect.middlePoint(MapPoint).to(EntityPoint), true)
+        this.primaryEntarence = new RoomIOTunnelClosed(this, entDir, tunnelSize, this.middlePoint(MapPoint).to(EntityPoint), true)
+        this.primaryExit = new RoomIOTunnelClosed(this, exitDir, tunnelSize, this.middlePoint(MapPoint).to(EntityPoint), true)
         this.ios.push(this.primaryEntarence, this.primaryExit)
     }
 }
@@ -52,8 +52,8 @@ export class SimpleOpenTunnelRoom extends Room {
         if (entDir == exitDir) { throw new Error('exit and ent dir cannot be the same') }
         super('simpleopentunnelroom', MapRect.fromTwoPoints(pos, size), [true, true, true, true], true)
 
-        this.primaryEntarence = new RoomIOTunnelOpen(this, entDir, new MapPoint(4, 16), DirUtil.flip(entDir), this.floorRect.middlePoint(MapPoint).to(EntityPoint), true)
-        this.primaryExit = new RoomIOTunnelClosed(this, exitDir, new MapPoint(4, 8), this.floorRect.middlePoint(MapPoint).to(EntityPoint), true)
+        this.primaryEntarence = new RoomIOTunnelOpen(this, entDir, new MapPoint(4, 16), DirUtil.flip(entDir), this.middlePoint(MapPoint).to(EntityPoint), true)
+        this.primaryExit = new RoomIOTunnelClosed(this, exitDir, new MapPoint(4, 8), this.middlePoint(MapPoint).to(EntityPoint), true)
         this.ios.push(this.primaryEntarence, this.primaryExit)
     }
 }
