@@ -222,26 +222,12 @@ export class AreaDrawer extends CCCanvas {
         return '#00000000'
     }
 
-    async drawArea(stack: Stack<ABStackEntry>) {
+    async drawArea(stack: Stack<ABStackEntry>, size: AreaPoint) {
         this.show()
         this.colorIndex = 0
-        const minPos: AreaPoint = new AreaPoint(100000, 100000)
-        const maxPos: AreaPoint = new AreaPoint(-100000, -100000)
-        for (const obj of stack.array) {
-            for (const rect of obj.rects) {
-                if (rect.x < minPos.x) { minPos.x = rect.x }
-                if (rect.y < minPos.y) { minPos.y = rect.y }
-                if (rect.x2() > maxPos.x) { maxPos.x = rect.x2() }
-                if (rect.y2() > maxPos.y) { maxPos.y = rect.y2() }
-            }
-        }
-        Vec2.subC(minPos, 2)
-        const newSize: AreaPoint = maxPos.copy()
-        Vec2.sub(newSize, minPos)
-        Vec2.addC(newSize, 2)
 
         const drawLater: (() => void)[] = []
-        this.clear(newSize.to(MapPoint))
+        this.clear(size.to(MapPoint))
         let i = 0
         for (const obj of stack.array) {
             this.nextColor()
@@ -249,23 +235,21 @@ export class AreaDrawer extends CCCanvas {
                 const rect = obj.rects[i]
                 // copy the rect
                 const drawRect = rect.to(AreaRect)
-                Vec2.sub(drawRect, minPos)
                 this.drawRect(drawRect, AreaDrawer.getBgColorFromRoom(obj.rooms[i]))
             }
             const exitCopy = obj.exit.copy()
-            Vec2.sub(exitCopy, minPos)
             const color = this.color
             const icopy = i
             drawLater.push(() => {
                 this.setColor(color)
                 this.drawArrow(exitCopy.to(MapPoint), obj.exitDir)
 
-                const pos = AreaPoint.fromVec(obj.rects[0]); Vec2.sub(pos, minPos); Vec2.addC(pos, 0.4, 1)
+                const pos = AreaPoint.fromVec(obj.rects[0]); Vec2.addC(pos, 0.4, 1)
                 this.drawText(pos.to(MapPoint), icopy.toString())
 
                 if (obj.builder) {
                     const index = obj.builder.index
-                    const pos = AreaPoint.fromVec(obj.rects[0]); Vec2.sub(pos, minPos); Vec2.addC(pos, 2.2, 1)
+                    const pos = AreaPoint.fromVec(obj.rects[0]); Vec2.addC(pos, 2.2, 1)
                     this.drawText(pos.to(MapPoint), index.toString())
                 }
             })

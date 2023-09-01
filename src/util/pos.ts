@@ -236,6 +236,10 @@ export class Point {
         ) as InstanceType<T>
     }
 
+    copy(): Point {
+        return new Point(this.x, this.y)
+    }
+
     toJSON() {
         return {
             x: this.x,

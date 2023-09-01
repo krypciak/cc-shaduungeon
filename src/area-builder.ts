@@ -1,10 +1,9 @@
-import { AreaPoint, AreaRect, Dir, DirUtil, EntityPoint, MapPoint, MapRect, Point, PosDir, doRectsOverlap, doesRectArrayOverlapRectArray } from './util/pos'
+import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, PosDir, doRectsOverlap, doesRectArrayOverlapRectArray } from './util/pos'
 import { Stamp } from './util/map'
-import { allLangs, assert } from './util/misc'
+import { Stack, assert } from './util/misc'
 import { Blitzkrieg } from './util/blitzkrieg'
 import DngGen from './plugin'
-import { MapDoor } from './entity-spawn'
-import { Room, RoomIO, Tpr } from './room/room'
+import { Room } from './room/room'
 import { MapBuilder } from './room/map-builder'
 
 declare const blitzkrieg: Blitzkrieg
@@ -37,38 +36,6 @@ export interface ABStackEntry {
 }
 
 export class AreaBuilder {
-    size!: AreaPoint
-    chestCount!: number
-    connections!: sc.AreaLoadable.Connection[]
-    landmarks!: sc.AreaLoadable.Landmark[]
-    maps!: sc.AreaLoadable.Map[]
-    tiles!: number[][]
-
-    mapIndex!: number
-    genIndex!: number
-    lastExit!: AreaPoint
-    stamps!: Stamp[]
-
-    builtArea?: sc.AreaLoadable.Data
-
-    mapConnectionSize: number = 1
-
-
-    constructor(public areaInfo: AreaInfo) { }
-
-    beginBuild() {
-        this.size = new AreaPoint(-1, -1)
-        this.chestCount = 0
-        this.connections = []
-        this.landmarks = []
-        this.stamps = []
-        this.tiles = blitzkrieg.util.emptyArray2d(this.size.x, this.size.y)
-        this.maps = []
-        this.mapIndex = -1
-        this.genIndex = -1
-        this.lastExit = new AreaPoint(this.size.x/2, this.size.y/2)
-    }
-
     static roomToAreaRect(room: Room, offset: AreaPoint, overlapRect?: AreaRect): AreaRect {
         const rect: MapRect = room.floorRect
         if (! overlapRect) {
@@ -77,11 +44,6 @@ export class AreaBuilder {
                 rect.y / AreaRect.div + offset.y,
                 rect.width / AreaRect.div,
                 rect.height / AreaRect.div)
-            // return new AreaRect(
-            //     Math.floor(rect.x / AreaRect.div + offset.x),
-            //     Math.floor(rect.y / AreaRect.div + offset.y),
-            //     Math.ceil(rect.width / AreaRect.div),
-            //     Math.ceil(rect.height / AreaRect.div))
         } else {
             // assert(room.door)
             const mul = 4
@@ -161,43 +123,69 @@ export class AreaBuilder {
         //this.lastExit = await this.placeMap(builder, offset.to(EntityPoint), rects, exit, builder.puzzle.room.room.door.dir)
     }
 
-    /*
-    async placeStartingMap(): Promise<Dir> {
-        this.mapIndex++
-        const path: string = DungeonBuilder.initialMap.path
-        this.addMapToList(path, 'Start')
-        
-        const map: sc.MapModel.Map = await blitzkrieg.util.getMapObject(path)
+    size!: AreaPoint
+    chestCount!: number
+    connections!: sc.AreaLoadable.Connection[]
+    landmarks!: sc.AreaLoadable.Landmark[]
+    maps!: sc.AreaLoadable.Map[]
+    tiles!: number[][]
 
-        let doorEntity: MapDoor | undefined
-        for (const entity of map.entities) {
-            if (entity.type == 'Door') {
-                doorEntity = entity as MapDoor
-                break
+    mapIndex!: number
+    genIndex!: number
+    lastExit!: AreaPoint
+    stamps!: Stamp[]
+
+    builtArea?: sc.AreaLoadable.Data
+
+    mapConnectionSize: number = 1
+
+    static trimBuilderStack(arr: ABStackEntry[], additionalSpace: number = 2): { offset: AreaPoint; size: AreaPoint } {
+        const minPos: AreaPoint = new AreaPoint(100000, 100000)
+        const maxPos: AreaPoint = new AreaPoint(-100000, -100000)
+        for (const entry of arr) {
+            for (const rect of entry.rects) {
+                if (rect.x < minPos.x) { minPos.x = rect.x }
+                if (rect.y < minPos.y) { minPos.y = rect.y }
+                if (rect.x2() > maxPos.x) { maxPos.x = rect.x2() }
+                if (rect.y2() > maxPos.y) { maxPos.y = rect.y2() }
             }
         }
-        assert(doorEntity)
+        Vec2.subC(minPos, additionalSpace)
+        const newSize: AreaPoint = maxPos.copy()
+        Vec2.sub(newSize, minPos)
+        Vec2.addC(newSize, additionalSpace)
 
-        const { nextPath, nextMarker } = this.getNextPrevRoomNames()
-        doorEntity.settings.map = nextPath
-        doorEntity.settings.marker = nextMarker
-        doorEntity.settings.name = DungeonBuilder.initialMap.exitMarker
-        const dir: Dir = DirUtil.flip(DirUtil.convertToDir(doorEntity.settings.dir!))
-
-        const doorPoint: AreaPoint = EntityPoint.fromVec(doorEntity).to(AreaPoint)
-        const offset: AreaPoint = new AreaPoint(this.lastExit.x - doorPoint.x, this.lastExit.y - doorPoint.y)
-        Vec2.add(doorPoint, offset)
-
-        const rects: AreaRect[] = [ AreaRect.fromTwoPoints(offset, new MapPoint(map.mapWidth, map.mapHeight).to(AreaPoint)) ]
-        this.placeMapTiles(rects)
-
-        this.lastExit = this.findClosestFreeTile(doorPoint, dir)
-
-        if (! dnggen.debug.dontDiscoverAllMaps) { ig.vars.storage.maps[path] = {} }
-
-        return DirUtil.flip(dir)
+        for (const entry of arr) {
+            for (const rect of entry.rects) {
+                Vec2.sub(rect, minPos)
+            }
+            Vec2.sub(entry.exit, minPos)
+        }
+        return { offset: minPos, size: newSize }
     }
 
+    constructor(
+        public areaInfo: AreaInfo, 
+        public stack: Stack<ABStackEntry>
+    ) {
+
+    }
+
+
+    build() {
+        this.size = new AreaPoint(-1, -1)
+        this.chestCount = 0
+        this.connections = []
+        this.landmarks = []
+        this.stamps = []
+        this.tiles = blitzkrieg.util.emptyArray2d(this.size.x, this.size.y)
+        this.maps = []
+        this.mapIndex = -1
+        this.genIndex = -1
+        this.lastExit = new AreaPoint(this.size.x/2, this.size.y/2)
+    }
+
+    /*
     addToDatabase() {
         const dbEntry: sc.MapModel.Area = {
             path: '',

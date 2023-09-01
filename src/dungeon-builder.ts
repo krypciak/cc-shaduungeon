@@ -1,6 +1,6 @@
 import { Blitzkrieg, Selection, SelectionMapEntry } from './util/blitzkrieg'
 import { Stack, assert } from './util/misc'
-import { AreaPoint, Dir } from './util/pos'
+import { AreaPoint, Dir, MapPoint, Rect } from './util/pos'
 import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from './area-builder'
 import DngGen from './plugin'
 import { SimpleDoubleRoomMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder } from './room/simple-map-builder'
@@ -79,7 +79,7 @@ export class DungeonBuilder {
         let highestRecReturn: { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> } = { stack: new Stack(), leftBuilders: new Set() }
         const countTarget: number = Math.min(builders.length, 
             // Math.min(builders.length, 3)
-            builders.length / 1.1
+            builders.length / 3
         )
         
         
@@ -147,7 +147,10 @@ export class DungeonBuilder {
         console.log('leftovers:', obj.leftBuilders)
         console.log(obj.stack)
 
-        dnggen.areaDrawer.drawArea(obj.stack)
+        const obj1 = AreaBuilder.trimBuilderStack(obj.stack.array)
+        const size: AreaPoint = obj1.size
+        console.log(obj.stack.array)
+        dnggen.areaDrawer.drawArea(obj.stack, size)
         dnggen.areaDrawer.copyToClipboard()
         return
 
