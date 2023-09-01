@@ -1,4 +1,4 @@
-import { AreaInfo, IndexedBuilder } from "../area-builder"
+import { AreaInfo, IndexedBuilder } from "../area/area-builder"
 import { MapBuilder } from "./map-builder"
 import { SimpleDoubleTunnelRoom, SimpleOpenTunnelRoom, SimpleRoom, SimpleTunnelRoom } from "./simple-room"
 import { Dir, DirUtil, EntityPoint, MapPoint, MapRect } from "../util/pos"

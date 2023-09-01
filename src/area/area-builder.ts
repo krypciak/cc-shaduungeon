@@ -1,10 +1,10 @@
-import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, PosDir, doRectsOverlap, doesRectArrayOverlapRectArray } from './util/pos'
-import { Stamp } from './util/map'
-import { Stack, assert } from './util/misc'
-import { Blitzkrieg } from './util/blitzkrieg'
-import DngGen from './plugin'
-import { Room } from './room/room'
-import { MapBuilder } from './room/map-builder'
+import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, PosDir, doRectsOverlap, doesRectArrayOverlapRectArray } from '../util/pos'
+import { Stamp } from '../util/map'
+import { Stack, assert } from '../util/misc'
+import { Blitzkrieg } from '../util/blitzkrieg'
+import DngGen from '../plugin'
+import { Room } from '../room/room'
+import { MapBuilder } from '../room/map-builder'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen

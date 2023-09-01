@@ -1,4 +1,4 @@
-import { AreaInfo } from '../area-builder'
+import { AreaInfo } from '../area/area-builder'
 import { Selection } from '../util/blitzkrieg'
 import { assertBool } from '../util/misc'
 import { Dir, DirUtil, EntityPoint, MapPoint } from '../util/pos'

@@ -1,7 +1,7 @@
 import { Blitzkrieg, Selection, SelectionMapEntry } from './util/blitzkrieg'
 import { Stack, assert } from './util/misc'
 import { AreaPoint, Dir, MapPoint, Rect } from './util/pos'
-import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from './area-builder'
+import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from './area/area-builder'
 import DngGen from './plugin'
 import { SimpleDoubleRoomMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder } from './room/simple-map-builder'
 import { BattlePuzzleMapBuilder } from './room/dungeon-map-builder'

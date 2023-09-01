@@ -1,5 +1,5 @@
 import { MapEntity } from '../entity-spawn'
-import { AreaInfo } from '../area-builder'
+import { AreaInfo } from '../area/area-builder'
 import DngGen from '../plugin'
 import { RoomTheme, RoomThemeConfig } from './themes'
 import { CCMap, MapLayer } from '../util/map'
