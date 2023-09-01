@@ -77,9 +77,11 @@ export class DungeonBuilder {
         type RecReturn = undefined | { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> }
 
         let highestRecReturn: { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> } = { stack: new Stack(), leftBuilders: new Set() }
-        const countTarget: number = 
+        const countTarget: number = Math.min(builders.length, 
             // Math.min(builders.length, 3)
-            builders.length / 2
+            builders.length / 1.1
+        )
+        
         
         function recursiveTryPlaceMaps(stack: Stack<ABStackEntry>, availableBuilders: Set<IndexedBuilder>): RecReturn {
             for (const possibleBuilder of availableBuilders) {

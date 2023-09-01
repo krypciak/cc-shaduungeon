@@ -179,13 +179,22 @@ export class PuzzleRoom extends Room {
         Vec2.add(this.puzzle.end.pos, entityOffset)
     }
 
-    setEntarenceTunnel(closedTunnel: boolean, size: MapPoint) {
+    setEntarenceTunnel(closedTunnel: boolean, sizeOrig: MapPoint) {
         if (this.primaryEntarence) { throw new Error('cannot add entarence io twice') }
         const puzzle = this.puzzle
         /* create entarence io */
         const setPos = EntityPoint.fromVec(puzzle.start.pos)
-        const preffedPos: boolean = puzzle.roomType == PuzzleRoomType.AddWalls
         const dir = puzzle.start.dir
+        const size: MapPoint = sizeOrig.copy()
+
+        const preffedPos: boolean = puzzle.roomType == PuzzleRoomType.AddWalls
+        if (! preffedPos) {
+            const sidePos: EntityPoint = setPos.copy()
+            this.floorRect.to(EntityRect).setPosToSide(sidePos, dir)
+            const distEntity: number = Vec2.distance(sidePos, setPos)
+            const dist: number = distEntity / (EntityRect.multiplier / MapRect.multiplier)
+            size.y += dist
+        }
         const entIO: RoomIOTunnel = closedTunnel ? 
             new RoomIOTunnelClosed(this, dir, size, setPos, preffedPos) :
             new RoomIOTunnelOpen(this, dir, size, DirUtil.flip(dir), setPos, preffedPos)
