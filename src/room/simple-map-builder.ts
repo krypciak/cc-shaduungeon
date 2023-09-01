@@ -114,8 +114,9 @@ export class SimpleDoubleRoomMapBuilder extends MapBuilder {
         const primEnt = this.entarenceRoom.primaryEntarence
         if (primEnt) {
             assertBool(primEnt instanceof RoomIOTunnelClosed)
-            this.rooms.splice(this.rooms.indexOf(primEnt.tunnel))
             this.entarenceRoom.ios.splice(this.entarenceRoom.ios.indexOf(this.entarenceRoom.primaryEntarence))
+            this.rooms.splice(this.rooms.indexOf(primEnt.tunnel))
+            this.rooms.splice(this.rooms.indexOf(this.entarenceRoom))
         }
         const entTunnelSize: MapPoint = new MapPoint(8, 16)
         this.entarenceRoom.primaryEntarence = new RoomIOTunnelClosed(this.entarenceRoom, DirUtil.flip(dir), entTunnelSize,

@@ -1,6 +1,6 @@
 import { Blitzkrieg, Selection, SelectionMapEntry } from './util/blitzkrieg'
 import { Stack, assert } from './util/misc'
-import { AreaPoint, Dir, MapPoint, Rect } from './util/pos'
+import { AreaPoint, AreaRect, Dir, MapPoint, Rect } from './util/pos'
 import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from './area/area-builder'
 import DngGen from './plugin'
 import { SimpleDoubleRoomMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder } from './room/simple-map-builder'
@@ -93,6 +93,7 @@ export class DungeonBuilder {
         const fallbackEntry = {
             exit: new AreaPoint(0, 0),
             exitDir: Dir.NORTH,
+            level: 0,
             rects: [],
             rooms: [],
         }
@@ -121,6 +122,7 @@ export class DungeonBuilder {
                 builder, 
                 exit: obj.exit,
                 exitDir: exit.dir,
+                level: 0,
                 rects: obj.rects,
                 rooms: obj.rooms,
             })
@@ -150,8 +152,22 @@ export class DungeonBuilder {
         const obj1 = AreaBuilder.trimBuilderStack(obj.stack.array)
         const size: AreaPoint = obj1.size
         console.log(obj.stack.array)
-        dnggen.areaDrawer.drawArea(obj.stack, size)
-        dnggen.areaDrawer.copyToClipboard()
+
+        const areaBuilder: AreaBuilder = new AreaBuilder(areaInfo, obj.stack, size)
+        console.log(areaBuilder.builtArea)
+        // areaBuilder.saveToFile()
+        areaBuilder.addToDatabase()
+        // dnggen.areaDrawer.drawArea(obj.stack, size)
+        // dnggen.areaDrawer.copyToClipboard()
+
+        /* obj.stack.array.forEach(e => {
+            e.rects.forEach(r => {
+                if (r.x % 1 != 0 || r.y % 1 != 0 || r.width % 1 != 0 || r.height % 1 != 0) {
+                    debugger
+                    return
+                }
+            })
+        }) */
         return
 
         /*

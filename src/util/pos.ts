@@ -158,6 +158,23 @@ export class Rect {
         ) as InstanceType<T>
     }
 
+    /* equals(rect: Rect): boolean {
+        return this.x == rect.x && this.y == rect.y
+            && this.width == rect.width && this.height == rect.height
+    } */
+
+    static getMinMaxPosFromRectArr(rects: Rect[]): { min: Point; max: Point } {
+        const min: AreaPoint = new AreaPoint(100000, 100000)
+        const max: AreaPoint = new AreaPoint(-100000, -100000)
+        for (const rect of rects) {
+            if (rect.x < min.x) { min.x = rect.x }
+            if (rect.y < min.y) { min.y = rect.y }
+            if (rect.x2() > max.x) { max.x = rect.x2() }
+            if (rect.y2() > max.y) { max.y = rect.y2() }
+        }
+        return { min, max }
+    }
+
     toJSON(): bareRect {
         return {
             x: this.x,

@@ -3,6 +3,7 @@ import { DungeonBuilder } from './dungeon-builder'
 import { VimLogic } from '../node_modules/cc-vim/src/logic'
 import { AreaDrawer } from './area/area-drawer'
 import { Blitzkrieg } from './util/blitzkrieg'
+import { overrideMapAreaContainer } from './area/custom-MapAreaContainer'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
@@ -164,6 +165,7 @@ export default class DngGen {
 
         registerStyles()
         updateLangLabels()
+        overrideMapAreaContainer()
         startDnggenGame()
     }
 }

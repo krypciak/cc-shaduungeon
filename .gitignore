@@ -9,7 +9,7 @@ assets/data/maps/rouge/room-1.json
 assets/data/maps/rouge/room-2.json
 assets/data/maps/rouge/10emptytmp.json
 assets/data/maps/rouge/300emptytmp.json
-assets/data/areas/gendng.json
+assets/data/areas/gendng.json*
 json/special-enemies.txt
 json/genBattle.json
 json/genPuzzle.json

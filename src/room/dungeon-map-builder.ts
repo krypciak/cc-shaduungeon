@@ -60,7 +60,6 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
 
         super(areaInfo, puzzleSel, puzzleMap, false, puzzleEntarenceCondition, false)
         this.exitRoom = this.puzzleRoom
-        this.exitRoom.pushAllRooms(this.rooms)
 
         const battleSize: MapPoint = new MapPoint(15, 15)
         assertBool(this.puzzleRoom.primaryEntarence instanceof RoomIOTunnelOpen)
@@ -77,8 +76,9 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
         const primEnt = this.battleRoom.primaryEntarence
         if (primEnt) {
             assertBool(primEnt instanceof RoomIOTunnelClosed)
-            this.rooms.splice(this.rooms.indexOf(primEnt.tunnel))
             this.battleRoom.ios.splice(this.battleRoom.ios.indexOf(this.battleRoom.primaryEntarence))
+            this.rooms.splice(this.rooms.indexOf(primEnt.tunnel))
+            this.rooms.splice(this.rooms.indexOf(this.battleRoom))
         }
 
         const tunnelSize: MapPoint = new MapPoint(5, 4)

@@ -213,7 +213,7 @@ export class AreaDrawer extends CCCanvas {
 
     static getBgColorFromRoom(room: Room): string {
         if (room instanceof TunnelRoom) {
-            if (room.exitDir) {
+            if (room.exitDir !== null) {
                 return '#00ff0066'
             } else {
                 return '#ff000066'
