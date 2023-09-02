@@ -1,5 +1,4 @@
 import { assert } from '../util/misc'
-import { Point } from '../util/pos'
 
 const tilesize = 8
 type GuiHookMapRoomList = ig.GuiHook & { gui: { floor: sc.AreaLoadable.Floor, room: sc.AreaRoomBounds, unlocked: boolean } }

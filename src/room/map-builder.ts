@@ -1,5 +1,5 @@
 import { MapEntity } from '../entity-spawn'
-import { AreaInfo } from '../area/area-builder'
+import { AreaInfo, IndexedBuilder } from '../area/area-builder'
 import DngGen from '../plugin'
 import { RoomTheme, RoomThemeConfig } from './themes'
 import { CCMap, MapLayer } from '../util/map'
@@ -61,6 +61,33 @@ export interface RoomPlaceVars {
 }
 
 export abstract class MapBuilder {
+    static async placeBuilders(builders: IndexedBuilder[]): Promise<void[]> {
+        return new Promise<void[]>(async (resolve) => {
+            const promises: Promise<void>[] = []
+            for (let i = 0; i < builders.length; i++) {
+                /* workaround */
+                const b = builders[i]
+                const pb = i == 0 ? null : builders[i - 1]
+                const nb = i == builders.length - 1 ? null : builders[i + 1]
+                b.setTprVariables(
+                    pb?.path! ?? b.path!,
+                    pb?.exitRoom.primaryExit!.getTpr().name! ?? b.entarenceRoom.primaryEntarence.getTpr().name,
+                    nb?.path! ?? b.path!,
+                    nb?.entarenceRoom.primaryEntarence.getTpr().name! ?? b.exitRoom.primaryExit?.getTpr().name ?? 'fallbackExit',
+                )
+                /* workaround end */
+                promises.push(new Promise<void>((resolve) => {
+                    b.place().then(() => {
+                        b.save().then(() => {
+                            resolve()
+                        })
+                    })
+                }))
+            }
+            resolve(Promise.all(promises))
+        })
+    }
+
     /* pre place vars */
     rooms: Room[] = []
 
@@ -70,10 +97,9 @@ export abstract class MapBuilder {
     exitOnWall!: PosDir<MapPoint> | null
     entarenceOnWall!: PosDir<MapPoint> | null
 
-    /* post place vars */
+    /* place vars */
     size?: MapPoint
     trimOffset?: MapPoint
-    theme?: RoomTheme
     rpv?: RoomPlaceVars
     pathParent?: string
     name?: string
@@ -85,6 +111,7 @@ export abstract class MapBuilder {
     constructor(
         public levelCount: number,
         public areaInfo: AreaInfo,
+        public theme: RoomTheme,
     ) { }
 
     addRoom(room: Room) {
@@ -99,9 +126,22 @@ export abstract class MapBuilder {
     }
 
     abstract prepareToArrange(dir: Dir): boolean
-
-    /* post place */
     
+    abstract decideDisplayName(index: number): Promise<string>
+
+    /* place functions*/
+    
+    setTprVariables(entMap: string, entMarker: string, exitMap?: string, exitMarker?: string): void {
+        const entTpr = this.entarenceRoom.primaryEntarence.getTpr()
+        entTpr.destMap = entMap
+        entTpr.destMarker = entMarker
+        if (this.exitRoom && this.exitRoom.primaryExit) {
+            const exitTpr = this.exitRoom.primaryExit.getTpr()
+            exitTpr.destMap = exitMap!
+            exitTpr.destMarker = exitMarker!
+        }
+    }
+
     trimRoomPositions(additionalSpace: MapRect) {
         const newSize: MapRect = new MapRect(10000, 10000, 0, 0)
 
@@ -134,24 +174,38 @@ export abstract class MapBuilder {
     }
 
     async place() {
+        assert(this.path)
+
         this.trimRoomPositions(new MapRect(3, 10, 4, 4))
+        this.createEmptyMap()
         assert(this.rpv)
-        this.rooms = this.rooms.sort((a, b) => a.placeOrder- b.placeOrder)
+        this.rooms = this.rooms.sort((a, b) => a.placeOrder - b.placeOrder)
+        console.log(this.rooms)
         for (const room of this.rooms) {
             const rpv: RoomPlaceVars | undefined = await room.place(this.rpv)
             if (rpv) {
                 this.rpv = rpv
             }
         }
+
+        if (! dnggen.debug.dontDiscoverAllMaps) {
+            ig.vars.storage.maps[this.path] = {}
+        }
     }
 
     save(): Promise<void> {
+        const fs = require('fs')
+        const path = require('path')
         return new Promise((resolve, reject) => {
             assert(this.rpv)
             console.log('map: ', ig.copy(this.rpv.map))
-            const path = dnggen.dir + 'assets/data/maps/' + this.path + '.json'
+            const filePath = dnggen.dir + 'assets/data/maps/' + this.path + '.json'
+            const parentPath = path.dirname(filePath)
             const json = JSON.stringify(this.rpv.map)
-            require('fs').writeFile(path, json, (err: Error) => {
+            if (! fs.existsSync(parentPath)) {
+                fs.mkdirSync(parentPath, { recursive: true })
+            }
+            fs.writeFile(filePath, json, (err: Error) => {
                 if (err) {
                     console.error('error writing map:', err)
                     reject()

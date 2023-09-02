@@ -1,33 +1,33 @@
 import { Tileset } from '../util/map'
 
-export type RoomThemeConfig = {
-    bgm: string,
-    tileset: Tileset,
-    mapSounds: string,
-    mapStyle: string,
-    weather: string,
-    floorTile: number,
-    blackTile: number,
-    wallUp: number[],
-    wallDown: number[],
-    wallRight: number[],
-    wallLeft: number[],
-    addShadows?: boolean,
-    shadowTileset?: Tileset,
-    wallUpShadow?: number[],
-    wallDownShadow?: number[],
-    wallRightShadow?: number[],
-    wallLeftShadow?: number[],
-    cornerShadowTopRight?: number[][],
-    cornerShadowTopLeft?: number[][],
-    cornerShadowBottomRight?: number[][],
-    cornerShadowBottomLeft?: number[][],
-    edgeShadowTopRight?: number[][],
-    edgeShadowTopLeft?: number[][],
-    edgeShadowBottomRight?: number[][],
-    edgeShadowBottomLeft?: number[][],
-    addLight?: boolean,
-    lightTile?: number,
+export interface RoomThemeConfig {
+    bgm: string
+    tileset: Tileset
+    mapSounds: string
+    mapStyle: string
+    weather: string
+    floorTile: number
+    blackTile: number
+    wallUp: number[]
+    wallDown: number[]
+    wallRight: number[]
+    wallLeft: number[]
+    addShadows?: boolean
+    shadowTileset?: Tileset
+    wallUpShadow?: number[]
+    wallDownShadow?: number[]
+    wallRightShadow?: number[]
+    wallLeftShadow?: number[]
+    cornerShadowTopRight?: number[][]
+    cornerShadowTopLeft?: number[][]
+    cornerShadowBottomRight?: number[][]
+    cornerShadowBottomLeft?: number[][]
+    edgeShadowTopRight?: number[][]
+    edgeShadowTopLeft?: number[][]
+    edgeShadowBottomRight?: number[][]
+    edgeShadowBottomLeft?: number[][]
+    addLight?: boolean
+    lightTile?: number
     lightStep?: number
 }
 
@@ -47,8 +47,8 @@ export class RoomTheme {
         }
     }
 
-    static themes: Map<String, RoomTheme> = new Map([
-        ['rhombus-dng', new RoomTheme({
+    static themes: { [key: string]: RoomTheme } = {
+        'rhombus-dng': new RoomTheme({
             bgm: 'puzzle',
             mapSounds: '',
             tileset: 'media/map/rhombus-dungeon2.png',
@@ -96,8 +96,8 @@ export class RoomTheme {
             edgeShadowBottomLeft: [
                 [184, 181],
                 [213, 169]],
-        })],
-        ['cold-dng', new RoomTheme({
+        }),
+        'cold-dng': new RoomTheme({
             bgm: 'coldDungeon',
             mapSounds: 'COLD_DUNGEON',
             tileset: 'media/map/cold-dng.png',
@@ -115,13 +115,16 @@ export class RoomTheme {
             wallRight: [0, 0, 135],
             wallDown: [0, 0, 147],
             wallLeft: [135, 0, 0],
-        })],
-    ])
-    static default = (RoomTheme.themes.get('rhombus-dng') as RoomTheme)
-
+        }),
+    }
+    static default: RoomTheme = RoomTheme.themes['rhombus-dng']
 
     static getFromArea(areaName: string): RoomTheme {
-        return (RoomTheme.themes.get(areaName) ?? RoomTheme.default) as RoomTheme
+        if (areaName in RoomTheme.themes) {
+            return RoomTheme.themes[areaName]
+        } else {
+            return RoomTheme.default
+        }
     }
 }
 

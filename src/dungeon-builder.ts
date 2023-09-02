@@ -4,6 +4,8 @@ import { AreaPoint, Dir, } from './util/pos'
 import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from './area/area-builder'
 import DngGen from './plugin'
 import { BattlePuzzleMapBuilder } from './room/dungeon-map-builder'
+import { MapBuilder } from './room/map-builder'
+import { SimpleSingleTunnelMapBuilder } from './room/simple-map-builder'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
@@ -47,17 +49,17 @@ export class DungeonBuilder {
         const builders: IndexedBuilder[] = []
         // add starting map as a builder?
 
-        for (let builderIndex = builders.length, i = 0; i < puzzles.length; builderIndex++, i++) {
-            const sel = puzzles[builderIndex]
-            const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
-            const builder: IndexedBuilder = IndexedBuilder.create(new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap), builderIndex)
-            builders.push(builder)
-        }
+        // for (let builderIndex = builders.length, i = 0; i < puzzles.length; builderIndex++, i++) {
+        //     const sel = puzzles[builderIndex]
+        //     const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
+        //     const builder: IndexedBuilder = IndexedBuilder.create(new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap), builderIndex)
+        //     builders.push(builder)
+        // }
 
         // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleDoubleRoomMapBuilder])
         // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleDoubleRoomMapBuilder])
 
-        // SimpleSingleTunnelMapBuilder.addPreset(builders, areaInfo)
+        SimpleSingleTunnelMapBuilder.addPreset(builders, areaInfo)
         // SimpleDoubleRoomMapBuilder.addPreset(builders, areaInfo)
 
         type RecReturn = undefined | { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> }
@@ -135,18 +137,21 @@ export class DungeonBuilder {
 
         const obj1 = AreaBuilder.trimBuilderStack(obj.stack.array)
         const size: AreaPoint = obj1.size
-        console.log(obj.stack.array)
 
         const areaBuilder: AreaBuilder = new AreaBuilder(areaInfo, obj.stack, size)
+        await areaBuilder.build()
         console.log(areaBuilder.builtArea)
         areaBuilder.saveToFile()
         areaBuilder.addToDatabase()
 
-        dnggen.areaDrawer.drawArea(obj.stack, size)
-        dnggen.areaDrawer.copyToClipboard()
+        // dnggen.areaDrawer.drawArea(obj.stack, size)
+        // dnggen.areaDrawer.copyToClipboard()
 
-        AreaBuilder.openAreaViewerGui(areaInfo.name, obj.stack.array[0].builder!.name!, 0)
+        // AreaBuilder.openAreaViewerGui(areaInfo.name, obj.stack.array[0].builder!.name!, 0)
 
+
+        const usedBuilders: IndexedBuilder[] = obj.stack.array.map(e => e.builder!)
+        await MapBuilder.placeBuilders(usedBuilders)
 
         if (roomTp) {}
         /*

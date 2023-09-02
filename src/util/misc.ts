@@ -38,6 +38,11 @@ export function allLangs(text: string): ig.LangLabel.Data {
 }
 
 
+export function round(num: number): number {
+    if (Math.ceil(num) - num < 0.3) { return Math.ceil(num) }
+    return Math.floor(num)
+}
+
 export function assert(arg: any, msg: string = ''): asserts arg {
     if (arg != 0 && ! arg) {
         throw new Error(`Assertion failed: ${msg}`)

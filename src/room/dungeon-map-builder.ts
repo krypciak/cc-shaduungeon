@@ -1,11 +1,13 @@
 import { AreaInfo } from '../area/area-builder'
 import { Selection } from '../util/blitzkrieg'
+import { getMapDisplayName } from '../util/map'
 import { assertBool } from '../util/misc'
 import { Dir, DirUtil, EntityPoint, MapPoint } from '../util/pos'
 import { BattleRoom } from './battle-room'
 import { MapBuilder } from './map-builder'
 import { PuzzleRoom } from './puzzle-room'
 import { Room } from './room'
+import { RoomTheme } from './themes'
 import { RoomIOTunnelClosed, RoomIOTunnelOpen } from './tunnel-room'
 
 export const exitMarker: string = 'puzzleExit'
@@ -28,7 +30,7 @@ export class PuzzleMapBuilder extends MapBuilder {
         entarenceCondition: string,
         finalize: boolean = true,
     ) {
-        super(3, areaInfo)
+        super(3, areaInfo, RoomTheme.getFromArea(puzzleMap.attributes.area))
         this.puzzleRoom = new PuzzleRoom(puzzleSel, puzzleMap, entarenceCondition)
         this.puzzleRoom.setEntarenceTunnel(closedTunnel, closedTunnel ? PuzzleMapBuilder.closedTunnelSize : PuzzleMapBuilder.openTunnelSize)
         this.puzzleRoom.pushAllRooms(this.rooms)
@@ -40,6 +42,12 @@ export class PuzzleMapBuilder extends MapBuilder {
     }
 
     prepareToArrange(_: Dir): boolean { return true; }
+
+    async decideDisplayName(index: number): Promise<string> {
+        const selMapDisplayName: string = await getMapDisplayName(this.puzzleRoom.puzzle.map)
+        this.displayName = `${index.toString()} => ${this.puzzleRoom.puzzle.map.name} ${selMapDisplayName}`
+        return this.displayName
+    }
 }
 
 export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
@@ -88,6 +96,5 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
         this.setOnWallPositions()
         return true
     }
-
 }
 

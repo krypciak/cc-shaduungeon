@@ -146,27 +146,29 @@ export class AreaBuilder {
     constructor(
         public areaInfo: AreaInfo, 
         public stack: Stack<ABStackEntry>,
-        size: AreaPoint,
+        public size: AreaPoint,
     ) {
-        size = new AreaPoint(Math.ceil(size.x), Math.ceil(size.y))
+    }
+
+    async build() {
         const chestCount = 0
 
         const builtArea: sc.AreaLoadable.Data = {
             DOCTYPE: 'AREAS_MAP',
             name: allLangs(this.areaInfo.name),
-            width: size.x,
-            height: size.y,
+            width: this.size.x,
+            height: this.size.y,
             chests: chestCount,
             defaultFloor: 0,
             floors: [
-                this.generateFloor(0, 'G', size, stack.array),
+                await this.generateFloor(0, 'G', this.size, this.stack.array),
             ],
             type: 'roomList',
         }
         this.builtArea = builtArea
     }
 
-    generateFloor(level: number, name: string, size: AreaPoint, entries: ABStackEntry[]): sc.AreaLoadable.Floor {
+    async generateFloor(level: number, name: string, size: AreaPoint, entries: ABStackEntry[]): Promise<sc.AreaLoadable.Floor> {
         entries = entries.filter(e => e.level == level)
         const connections: sc.AreaLoadable.Connection[] = []
         const landmarks: sc.AreaLoadable.Landmark[] = []
@@ -192,13 +194,12 @@ export class AreaBuilder {
         }
         
         for (const entry of entries) {
-            const path = this.areaInfo.name + '/' + mapIndex
-            const displayName = 'n' + mapIndex
-            addMap(path, displayName, entry.rects)
+            const builder = entry.builder!
+            builder.path = this.areaInfo.name + '/' + builder.index
+            await builder.decideDisplayName(mapIndex)
+            assert(builder.displayName)
+            addMap(builder.path, builder.displayName, entry.rects)
             mapIndex++
-            if (! dnggen.debug.dontDiscoverAllMaps) {
-                ig.vars.storage.maps[path] = {}
-            }
         }
 
         return {

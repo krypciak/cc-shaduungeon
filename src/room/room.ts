@@ -1,8 +1,8 @@
-import { MapDoorLike, MapTransporter } from '../entity-spawn'
+import { MapDoor, MapDoorLike, MapTransporter } from '../entity-spawn'
 import { Blitzkrieg, Selection } from '../util/blitzkrieg'
 import { Coll } from '../util/map'
 import { Point, Rect, Dir, DirUtil, MapPoint, MapRect, EntityRect, EntityPoint, Dir3d } from '../util/pos'
-import { assert } from '../util/misc'
+import { assert, round } from '../util/misc'
 import { RoomPlaceVars } from './map-builder'
 
 const tilesize: number = 16
@@ -100,6 +100,9 @@ export class Room extends MapRect {
 
     offsetBy(offset: MapPoint) {
         Vec2.add(this, offset)
+        this.x = round(this.x)
+        this.y = round(this.y)
+
         const entityOffset: EntityPoint = offset.to(EntityPoint)
 
         if (this.sel) {
@@ -130,7 +133,7 @@ export class Room extends MapRect {
     pushAllRooms(arr: Room[]) {
         arr.push(this)
         this.ios.forEach(io => {
-            // @ts-expect-error
+            // @ts-expect-error cant import RoomIOTunnel because of a circular dependency so im doing this
             if (io.tunnel) { arr.push(io.tunnel) }
         })
     }
@@ -140,6 +143,27 @@ export class Room extends MapRect {
     async place(rpv: RoomPlaceVars): Promise<RoomPlaceVars | undefined> {
         if (this.placeOrder == RoomPlaceOrder.NoPlace) { return }
         this.placeRoom(rpv, this.addNavMap)
+        this.placeTprs(rpv)
+    }
+
+    private placeTprs(rpv: RoomPlaceVars) {
+        for (const io of this.ios) {
+            if (io instanceof RoomIOTpr) {
+                const tpr = io.getTpr()
+                if (tpr.entity) { continue }
+                let e: MapTransporter
+                assert(tpr.destMap); assert(tpr.destMarker)
+                switch (tpr.entityType) {
+                    case 'Door':
+                        e = MapDoor.new(tpr.pos, rpv.masterLevel, DirUtil.dir3dToDir(tpr.dir), tpr.name, tpr.destMap, tpr.destMarker, tpr.condition)
+                        break
+                    case 'TeleportGround': throw new Error('not implemented')
+                    case 'TeleportField': throw new Error('not implemented')
+                    default: throw new Error('not implemented')
+                }
+                rpv.entities.push(e)
+            }
+        }
     }
 
     placeRoom(rpv: RoomPlaceVars, addNavMap: boolean) {
