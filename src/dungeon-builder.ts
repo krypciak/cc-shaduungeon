@@ -5,6 +5,7 @@ import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from './area/area
 import DngGen from './plugin'
 import { SimpleDoubleRoomMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder } from './room/simple-map-builder'
 import { BattlePuzzleMapBuilder } from './room/dungeon-map-builder'
+import { loadArea } from './util/map'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
@@ -72,6 +73,7 @@ export class DungeonBuilder {
         // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleDoubleRoomMapBuilder])
         // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleDoubleRoomMapBuilder])
 
+        SimpleSingleTunnelMapBuilder.addPreset(builders, areaInfo)
         // SimpleDoubleRoomMapBuilder.addPreset(builders, areaInfo)
 
         type RecReturn = undefined | { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> }
@@ -79,7 +81,7 @@ export class DungeonBuilder {
         let highestRecReturn: { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> } = { stack: new Stack(), leftBuilders: new Set() }
         const countTarget: number = Math.min(builders.length, 
             // Math.min(builders.length, 3)
-            builders.length / 3
+            builders.length / 1.1
         )
         
         
@@ -155,10 +157,18 @@ export class DungeonBuilder {
 
         const areaBuilder: AreaBuilder = new AreaBuilder(areaInfo, obj.stack, size)
         console.log(areaBuilder.builtArea)
-        // areaBuilder.saveToFile()
+        areaBuilder.saveToFile()
         areaBuilder.addToDatabase()
-        // dnggen.areaDrawer.drawArea(obj.stack, size)
-        // dnggen.areaDrawer.copyToClipboard()
+
+        await loadArea('gendng')
+        sc.map.currentArea = sc.map.currentPlayerArea = new sc.AreaLoadable('gendng')
+        sc.map.currentPlayerFloor = 0
+        sc.map.currentMap = obj.stack.array[0].builder!.name!
+        sc.menu.setDirectMode(true, sc.MENU_SUBMENU.MAP)
+        sc.model.enterMenu(true)
+        sc.model.prevSubState = sc.GAME_MODEL_SUBSTATE.RUNNING
+        dnggen.areaDrawer.drawArea(obj.stack, size)
+        dnggen.areaDrawer.copyToClipboard()
 
         /* obj.stack.array.forEach(e => {
             e.rects.forEach(r => {

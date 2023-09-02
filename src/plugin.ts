@@ -163,9 +163,9 @@ export default class DngGen {
         assert(blitzkrieg, blitzkriegMissingMsg)
         assert(blitzkrieg.loaded, blitzkriegMissingMsg)
 
+        overrideMapAreaContainer()
         registerStyles()
         updateLangLabels()
-        overrideMapAreaContainer()
         startDnggenGame()
     }
 }

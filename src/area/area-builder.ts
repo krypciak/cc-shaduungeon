@@ -1,12 +1,10 @@
 import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, PosDir, Rect, doRectsOverlap, doesRectArrayOverlapRectArray } from '../util/pos'
 import { Stamp } from '../util/map'
 import { Stack, allLangs, assert } from '../util/misc'
-import { Blitzkrieg } from '../util/blitzkrieg'
 import DngGen from '../plugin'
 import { Room } from '../room/room'
 import { MapBuilder } from '../room/map-builder'
 
-declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
 
 export class AreaInfo {
@@ -96,14 +94,6 @@ export class AreaBuilder {
         builder.rooms.forEach(r => {
             rects.push(AreaBuilder.roomToAreaRect(r, offset))
         })
-        /*
-        const exitRect = this.roomToAreaRect(builder.puzzle.room.room, offset)
-        rects.push(exitRect)
-        rects.push(this.roomToAreaRect(builder.puzzle.tunnel.room, offset))
-        const battleAreaRect: AreaRect = this.roomToAreaRect(builder.battle.room.room, offset)
-        rects.push(battleAreaRect)
-        rects.push(this.roomToAreaRect(builder.battle.tunnel.room, offset, battleAreaRect))
-        */
 
         if (dnggen.debug.collisionlessMapArrange) {
             for (let i = stackEntries.length - 1; i >= 0; i--) {
@@ -152,8 +142,6 @@ export class AreaBuilder {
         size = new AreaPoint(Math.ceil(size.x), Math.ceil(size.y))
         const chestCount = 0
 
-        const scale = 1 / AreaRect.multiplier
-
         const builtArea: sc.AreaLoadable.Data = {
             DOCTYPE: 'AREAS_MAP',
             name: allLangs(this.areaInfo.name),
@@ -181,23 +169,27 @@ export class AreaBuilder {
         let mapIndex = 0
         function addMap(path: string, displayName: string, rects: AreaRect[]) {
             const { min, max } = Rect.getMinMaxPosFromRectArr(rects)
+            const trimmedRecs: AreaRect[] = rects.map(r => new AreaRect(r.x - min.x, r.y - min.y, r.width, r.height))
             maps.push({
                 path: path.split('/').join('.'),
                 name: allLangs(displayName),
                 dungeon: mapType,
                 offset: { x: 0, y: 0 },
-                rects,
-                id: mapIndex,
+                rects: trimmedRecs,
+                id: mapIndex + 1,
                 min: min,
                 max: max,
             })
         }
         
         for (const entry of entries) {
-            const path = 'rouge.gen.' + mapIndex
+            const path = 'rouge/gen/' + mapIndex
             const displayName = 'n' + mapIndex
             addMap(path, displayName, entry.rects)
             mapIndex++
+            if (! dnggen.debug.dontDiscoverAllMaps) {
+                ig.vars.storage.maps[path] = {}
+            }
         }
 
         return {

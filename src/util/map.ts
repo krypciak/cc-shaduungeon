@@ -5,12 +5,6 @@ import { Dir, MapPoint } from './pos'
 
 const tilesize: number = 16
 
-//export enum CollisionTile {
-//    Empty,
-//    Floor, // green
-//    Wall,  // red
-//    Hole,  // blue
-//}
 export enum Coll {
     None = 0,
     Hole = 1,
@@ -149,4 +143,36 @@ export class Stamp {
         }
         return new Stamp(area, type, { x: pos.x/8, y: pos.y/8 }, level)
     }
+}
+
+
+const mapNameToMapDisplayName: Map<string, string> = new Map<string, string>()
+
+export async function getMapDisplayName(map: sc.MapModel.Map): Promise<string> {
+    return new Promise<string>(async (resolve) => {
+        const mapName = map.name.split('.').join('/')
+        if (mapNameToMapDisplayName.has(mapName)) {
+            resolve(mapNameToMapDisplayName.get(mapName) ?? 'maploadingerror')
+            return
+        }
+        const areaName: string = map.attributes.area
+        const area: sc.AreaLoadable = await loadArea(areaName)
+
+        for (const floor of area.data.floors) {
+            for (const map of floor.maps) {
+                const displayName = map.name.en_US!
+                mapNameToMapDisplayName.set(map.path.split('.').join('/'), displayName)
+            }
+        }
+        resolve(getMapDisplayName(map))
+    })
+}
+
+export async function loadArea(areaName: string): Promise<sc.AreaLoadable> {
+    return new Promise((resolve) => {
+        const area: sc.AreaLoadable = new sc.AreaLoadable(areaName)
+        area.load(() => {
+            resolve(area)
+        })
+    })
 }
