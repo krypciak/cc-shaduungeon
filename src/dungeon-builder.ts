@@ -1,24 +1,18 @@
 import { Blitzkrieg, Selection, SelectionMapEntry } from './util/blitzkrieg'
 import { Stack, assert } from './util/misc'
-import { AreaPoint, AreaRect, Dir, MapPoint, Rect } from './util/pos'
+import { AreaPoint, Dir, } from './util/pos'
 import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from './area/area-builder'
 import DngGen from './plugin'
-import { SimpleDoubleRoomMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder } from './room/simple-map-builder'
 import { BattlePuzzleMapBuilder } from './room/dungeon-map-builder'
-import { loadArea } from './util/map'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
 
 export class DungeonBuilder {
-    static initialMap = {
-        path: 'rouge.start',
-        exitMarker: 'exit',
-        entarenceMarker: 'start'
-    }
-
     static puzzleMap: Map<string, Selection[]>
     static puzzleList: Selection[]
+    
+    static basePath: string = 'dnggen'
 
     async preloadPuzzleList() {
         if (! DungeonBuilder.puzzleMap) {
@@ -36,11 +30,10 @@ export class DungeonBuilder {
         }
     }
 
-    async build(roomTp: number) {
+    async build(id: string, roomTp: number) {
         await this.preloadPuzzleList()
 
         const puzzles: Selection[] = []
-        // DungeonBuilder.puzzleList.length
         let puzzleList = ig.copy(DungeonBuilder.puzzleList)
         // puzzleList = puzzleList.sort(() => Math.random() - 0.5)
         for (let i = 0; i < puzzleList.length; i++) {
@@ -49,41 +42,30 @@ export class DungeonBuilder {
 
         console.log('puzzles:', puzzles)
 
-        const areaInfo: AreaInfo = new AreaInfo('gendng', 'Generated Dungeon', 'generic description', 'DUNGEON', { x: 150, y: 70})
-        // const areaBuilder: AreaBuilder = new AreaBuilder(areaInfo)
-        // areaBuilder.beginBuild()
-
-        // const fileWritePromises: Promise<void>[] = []
-        // let lastSide: Dir = await areaBuilder.placeStartingMap()
+        const areaInfo: AreaInfo = new AreaInfo(DungeonBuilder.basePath + '-' + id, 'Generated Dungeon', 'generic description, ' + DungeonBuilder.basePath + '-' + id, 'DUNGEON', Vec2.createC(150, 70))
         
-
         const builders: IndexedBuilder[] = []
         // add starting map as a builder?
 
-        if (true) {
         for (let builderIndex = builders.length, i = 0; i < puzzles.length; builderIndex++, i++) {
             const sel = puzzles[builderIndex]
             const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
             const builder: IndexedBuilder = IndexedBuilder.create(new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap), builderIndex)
-            // const builder: IndexedBuilder = IndexedBuilder.create(new PuzzleMapBuilder(areaInfo, sel, puzzleMap, true, ''), builderIndex)
             builders.push(builder)
-        }
         }
 
         // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleDoubleRoomMapBuilder])
         // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleDoubleRoomMapBuilder])
 
-        SimpleSingleTunnelMapBuilder.addPreset(builders, areaInfo)
+        // SimpleSingleTunnelMapBuilder.addPreset(builders, areaInfo)
         // SimpleDoubleRoomMapBuilder.addPreset(builders, areaInfo)
 
         type RecReturn = undefined | { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> }
 
         let highestRecReturn: { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> } = { stack: new Stack(), leftBuilders: new Set() }
         const countTarget: number = Math.min(builders.length, 
-            // Math.min(builders.length, 3)
             builders.length / 1.1
         )
-        
         
         function recursiveTryPlaceMaps(stack: Stack<ABStackEntry>, availableBuilders: Set<IndexedBuilder>): RecReturn {
             for (const possibleBuilder of availableBuilders) {
@@ -160,26 +142,13 @@ export class DungeonBuilder {
         areaBuilder.saveToFile()
         areaBuilder.addToDatabase()
 
-        await loadArea('gendng')
-        sc.map.currentArea = sc.map.currentPlayerArea = new sc.AreaLoadable('gendng')
-        sc.map.currentPlayerFloor = 0
-        sc.map.currentMap = obj.stack.array[0].builder!.name!
-        sc.menu.setDirectMode(true, sc.MENU_SUBMENU.MAP)
-        sc.model.enterMenu(true)
-        sc.model.prevSubState = sc.GAME_MODEL_SUBSTATE.RUNNING
         dnggen.areaDrawer.drawArea(obj.stack, size)
         dnggen.areaDrawer.copyToClipboard()
 
-        /* obj.stack.array.forEach(e => {
-            e.rects.forEach(r => {
-                if (r.x % 1 != 0 || r.y % 1 != 0 || r.width % 1 != 0 || r.height % 1 != 0) {
-                    debugger
-                    return
-                }
-            })
-        }) */
-        return
+        AreaBuilder.openAreaViewerGui(areaInfo.name, obj.stack.array[0].builder!.name!, 0)
 
+
+        if (roomTp) {}
         /*
         areaBuilder.addToDatabase()
         areaBuilder.finalizeBuild()
@@ -192,7 +161,7 @@ export class DungeonBuilder {
         await Promise.all(fileWritePromises)
 
         if (roomTp != -1) {
-            ig.game.teleport('rouge.gen.' + roomTp, ig.TeleportPosition.createFromJson({
+            ig.game.teleport('map name.' + roomTp, ig.TeleportPosition.createFromJson({
                 marker: DungeonMapBuilder.roomEntarenceMarker,
                 level: 0,
                 baseZPos: 0,

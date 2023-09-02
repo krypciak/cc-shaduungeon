@@ -3,13 +3,8 @@ old
 old.txt
 plugin.js
 src/util/old.txt
-assets/data/maps/rouge/gen/*
-assets/data/maps/rouge/fun*
-assets/data/maps/rouge/room-1.json
-assets/data/maps/rouge/room-2.json
-assets/data/maps/rouge/10emptytmp.json
-assets/data/maps/rouge/300emptytmp.json
-assets/data/areas/gendng.json*
+assets/data/maps/dnggen/unused
+assets/data/areas/gendng.json1
 json/special-enemies.txt
 json/genBattle.json
 json/genPuzzle.json

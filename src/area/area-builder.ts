@@ -1,5 +1,5 @@
 import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, PosDir, Rect, doRectsOverlap, doesRectArrayOverlapRectArray } from '../util/pos'
-import { Stamp } from '../util/map'
+import { Stamp, loadArea } from '../util/map'
 import { Stack, allLangs, assert } from '../util/misc'
 import DngGen from '../plugin'
 import { Room } from '../room/room'
@@ -111,6 +111,15 @@ export class AreaBuilder {
         }
     }
 
+    static async openAreaViewerGui(areaName: string, map: string, floor: number = 0) {
+        sc.map.currentArea = sc.map.currentPlayerArea = await loadArea(areaName)
+        sc.map.currentPlayerFloor = floor
+        sc.map.currentMap = map
+        sc.menu.setDirectMode(true, sc.MENU_SUBMENU.MAP)
+        sc.model.enterMenu(true)
+        sc.model.prevSubState = sc.GAME_MODEL_SUBSTATE.RUNNING
+    }
+
     builtArea?: sc.AreaLoadable.Data
 
     mapConnectionSize: number = 1
@@ -183,7 +192,7 @@ export class AreaBuilder {
         }
         
         for (const entry of entries) {
-            const path = 'rouge/gen/' + mapIndex
+            const path = this.areaInfo.name + '/' + mapIndex
             const displayName = 'n' + mapIndex
             addMap(path, displayName, entry.rects)
             mapIndex++

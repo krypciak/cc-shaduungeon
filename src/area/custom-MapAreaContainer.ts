@@ -80,7 +80,6 @@ export function overrideMapAreaContainer() {
 
                     const emptyTile = new ig.SimpleColor('#5e717f')
                     // const freeRule = { src: { x: 281, y: 411 }, }
-                    const step = 8
                     this.buffer = ig.imageAtlas.getFragment(
                         this.hook.size.x,
                         this.hook.size.y,
@@ -89,22 +88,6 @@ export function overrideMapAreaContainer() {
                                 const rect = { x: rect1.x * tilesize, y: rect1.y * tilesize,
                                     width: rect1.width * tilesize, height: rect1.height * tilesize }
                                 emptyTile.draw(rect.x, rect.y, rect.width, rect.height)
-                                // const x2 = rect.x + rect.width
-                                // const y2 = rect.y + rect.height
-                                // for (let y = rect.y; y < y2; y += step) {
-                                //     const sy = Math.min(tilesize, y2 - y)
-                                //     for (let x = rect.x; x < x2; x += step) {
-                                //         const sx = Math.min(tilesize, x2 - x)
-                                //         this.gfx.drawCheck(
-                                //             Math.floor(x),
-                                //             Math.floor(y),
-                                //             freeRule.src.x,
-                                //             freeRule.src.y,
-                                //             sx,
-                                //             sy,
-                                //         )
-                                //     }
-                                // }
                             }
                         })
                     this.prerendered = true

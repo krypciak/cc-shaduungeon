@@ -79,7 +79,7 @@ async function startDnggenGame(titleGuiInstance?: sc.TitleScreenButtonGui, roomT
 
     // sc.newgame.active = true
     // sc.newgame.options[ngOptionName] = true
-    dnggen.dungeonBuilder.build(roomTp)
+    dnggen.dungeonBuilder.build('0', roomTp)
 
     // godlikeStats()
 }
@@ -145,14 +145,14 @@ export default class DngGen {
 
         // https://github.com/krypciak/cc-vim
         if (vim) {
-            const isInGenMap = (ingame: boolean) => ingame && ig.game.mapName.startsWith('rouge')
-            vim.addAlias('rouge', 'generate-dungeon', 'Generate dungeon', 'global', (roomTp: string= '-1') => {
+            const isInGenMap = (ingame: boolean) => ingame && ig.game.mapName.startsWith('dnggen')
+            vim.addAlias('dnggen', 'generate-dungeon', 'Generate dungeon', 'global', (roomTp: string= '-1') => {
                 vim.executeString('title-screen')
                 startDnggenGame(undefined, parseInt(roomTp))
             }, [{
                     type: 'number', description: 'room to teleport to'
             }])
-            vim.addAlias('rouge', 'skip-battle', 'Skips the battle', isInGenMap, () => { ig.vars.set('map.battle1done', true) })
+            vim.addAlias('dnggen', 'skip-battle', 'Skips the battle', isInGenMap, () => { ig.vars.set('map.battle1done', true) })
         }
         this.loaded = true
 

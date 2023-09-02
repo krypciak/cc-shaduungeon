@@ -8,7 +8,6 @@ import { PuzzleRoom } from './puzzle-room'
 import { Room } from './room'
 import { RoomIOTunnelClosed, RoomIOTunnelOpen } from './tunnel-room'
 
-export const basePath: string = 'rouge/gen'
 export const exitMarker: string = 'puzzleExit'
 export const entarenceMarker: string = 'battleEntarence'
 
