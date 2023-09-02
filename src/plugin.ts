@@ -68,20 +68,20 @@ function addInjects() {
 }
 
 async function startDnggenGame(titleGuiInstance?: sc.TitleScreenButtonGui, roomTp: number = -1) {
-    // ig.bgm.clear('MEDIUM_OUT');
-    // if (titleGuiInstance) {
-    //     ig.interact.removeEntry(titleGuiInstance.buttonInteract)
-    // } else {
-    //     ig.interact.entries.forEach((e) => ig.interact.removeEntry(e))
-    // }
-    // ig.game.start(sc.START_MODE.NEW_GAME_PLUS, 1)
-    // ig.game.setPaused(false);
+    ig.bgm.clear('MEDIUM_OUT');
+    if (titleGuiInstance) {
+        ig.interact.removeEntry(titleGuiInstance.buttonInteract)
+    } else {
+        ig.interact.entries.forEach((e) => ig.interact.removeEntry(e))
+    }
+    ig.game.start(sc.START_MODE.NEW_GAME_PLUS, 1)
+    ig.game.setPaused(false);
 
-    // sc.newgame.active = true
-    // sc.newgame.options[ngOptionName] = true
+    sc.newgame.active = true
+    sc.newgame.options[ngOptionName] = true
     dnggen.dungeonBuilder.build('0', roomTp)
 
-    // godlikeStats()
+    godlikeStats()
 }
 
 async function registerStyles() {

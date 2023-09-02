@@ -100,7 +100,8 @@ export class PuzzleRoom extends Room {
         /* prepare for super() call */
         let wallSides: boolean[], roomRect: MapRect
         if (puzzle.roomType == PuzzleRoomType.WholeRoom) {
-            wallSides = [false, false, false, false]
+            /* changeme later */
+            wallSides = [true, true, true, true]
             roomRect = puzzle.usel.sel.size.to(MapRect)
         } else if (puzzle.roomType == PuzzleRoomType.AddWalls) {
             wallSides = [true, true, true, true]

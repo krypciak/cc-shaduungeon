@@ -5,7 +5,7 @@ import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from './area/area
 import DngGen from './plugin'
 import { BattlePuzzleMapBuilder } from './room/dungeon-map-builder'
 import { MapBuilder } from './room/map-builder'
-import { SimpleSingleTunnelMapBuilder } from './room/simple-map-builder'
+import { SimpleDoubleRoomMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder } from './room/simple-map-builder'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
@@ -56,17 +56,17 @@ export class DungeonBuilder {
         //     builders.push(builder)
         // }
 
-        // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleDoubleRoomMapBuilder])
+        SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleDoubleRoomMapBuilder])
         // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleDoubleRoomMapBuilder])
 
-        SimpleSingleTunnelMapBuilder.addPreset(builders, areaInfo)
+        // SimpleSingleTunnelMapBuilder.addPreset(builders, areaInfo)
         // SimpleDoubleRoomMapBuilder.addPreset(builders, areaInfo)
 
         type RecReturn = undefined | { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> }
 
         let highestRecReturn: { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> } = { stack: new Stack(), leftBuilders: new Set() }
         const countTarget: number = Math.min(builders.length, 
-            builders.length / 1.1
+            builders.length / 4
         )
         
         function recursiveTryPlaceMaps(stack: Stack<ABStackEntry>, availableBuilders: Set<IndexedBuilder>): RecReturn {
@@ -147,32 +147,19 @@ export class DungeonBuilder {
         // dnggen.areaDrawer.drawArea(obj.stack, size)
         // dnggen.areaDrawer.copyToClipboard()
 
-        // AreaBuilder.openAreaViewerGui(areaInfo.name, obj.stack.array[0].builder!.name!, 0)
 
 
         const usedBuilders: IndexedBuilder[] = obj.stack.array.map(e => e.builder!)
         await MapBuilder.placeBuilders(usedBuilders)
 
         if (roomTp) {}
-        /*
-        areaBuilder.addToDatabase()
-        areaBuilder.finalizeBuild()
-        areaBuilder.saveToFile()
-
         ig.game.varsChangedDeferred()
-
-        blitzkrieg.puzzleSelections.save()
-        blitzkrieg.battleSelections.save()
-        await Promise.all(fileWritePromises)
-
-        if (roomTp != -1) {
-            ig.game.teleport('map name.' + roomTp, ig.TeleportPosition.createFromJson({
-                marker: DungeonMapBuilder.roomEntarenceMarker,
-                level: 0,
-                baseZPos: 0,
-                size: {x: 0, y: 0}
-            }))
-        }
-        */
+        ig.game.teleport(usedBuilders[0].path!, ig.TeleportPosition.createFromJson({
+            marker: usedBuilders[0].entarenceRoom.primaryEntarence.getTpr().name,
+            level: 0,
+            baseZPos: 0,
+            size: {x: 0, y: 0}
+        }))
+        // AreaBuilder.openAreaViewerGui(areaInfo.name, obj.stack.array[0].builder!.name!, 0)
     }
 }
