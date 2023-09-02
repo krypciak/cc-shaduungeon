@@ -34,7 +34,7 @@ function addInjects() {
     sc.CrossCode.inject({
         transitionEnded() {
             if (sc.model.currentSubState == sc.GAME_MODEL_SUBSTATE.NEWGAME && sc.newgame.get(ngOptionName)) {
-                ig.game.teleport(DungeonBuilder.initialMap.path, new ig.TeleportPosition(DungeonBuilder.initialMap.entarenceMarker), 'NEW')
+                // ig.game.teleport(DungeonBuilder.initialMap.path, new ig.TeleportPosition(DungeonBuilder.initialMap.entarenceMarker), 'NEW')
             } else {
                 this.parent()
             }

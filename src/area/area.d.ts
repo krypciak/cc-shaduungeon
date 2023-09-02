@@ -20,7 +20,8 @@ declare global {
                 maxZ?: number
             }
             interface MapRoomList extends sc.AreaLoadable.Map {
-                rects: bareRect[]
+                // arearect is calculated at runtime and cached here
+                rects: (bareRect & { arearect?: bareRect })[]
                 id: number
                 min: Vec2 
                 max: Vec2
@@ -32,7 +33,6 @@ declare global {
             _createRooms(this: this): void
         }
         /* AreaLoadable end */
-
         /* AreaRoomBounds */
         interface AreaRoomBounds extends ig.Class {
             zMin: number
@@ -51,7 +51,6 @@ declare global {
         }
         var AreaRoomBounds: AreaRoomBoundsConstructor
         /* AreaRoomBounds end */
-
         /* MapFloor */
         interface MapFloor extends ig.GuiElementBase {
             floor: sc.AreaLoadable.Floor
@@ -74,17 +73,43 @@ declare global {
         }
         var MapFloor: MapFloorConstructor
         /* MapFloor end */
-
-        interface MapAreaContainer extends ig.GuiElementBase {
-            findMap(this: this, a: any, b: any, c: any, d: any): boolean
+        /* MapArea */
+        interface MapArea extends ig.GuiElementBase { }
+        interface MapAreaConstructor extends ImpactClass<MapArea> {
+            new (): MapArea
         }
+        var MapArea: MapAreaConstructor
+        /* MapArea end */
+        /* MapNameGui */
+        interface MapNameGui extends ig.BoxGui {
+            text: string
+            
+            setText(text: string, wait?: any, skip?: boolean): void
+        }
+        interface MapNameGuiConstructor extends ImpactClass<MapNameGui> {
+            new (): MapNameGui
+        }
+        var MapNameGui: MapNameGuiConstructor
+        /* MapNameGui end */
+        /* MapAreaContainer */
+        interface MapAreaContainer extends ig.GuiElementBase {
+            area: sc.MapArea
+            hoverRoom: sc.AreaRoomBounds | null
+            mapNameGui: sc.MapNameGui
 
+            findMap(this: this, a: any, b: any, c: any, d: any): boolean | undefined
+        }
+        /* MapAreaContainer end */
+        /* MapModel */
         interface MapModel {
             currentPlayerArea: sc.AreaLoadable
             currentPlayerFloor: number
             currentMap: string
-        }
 
+            getCurrentArea(): sc.AreaLoadable.Data
+            getCurrentFloorIndex(): number
+        }
+        /* MapModel end */
         /* MapRoom */
         interface MapRoom extends ig.GuiElementBase {
             gfx: ig.Image
@@ -107,6 +132,13 @@ declare global {
         }
         var MapRoom: MapRoomConstructor
         /* MapRoom end */
+        /* MenuModel */
+        interface MenuModel {
+            mapMapFocus: any
+            mapCamera: Vec2
+            mapCursor: Vec2
+        }
+        /* MenuModel end */
     }
 
     namespace ig {

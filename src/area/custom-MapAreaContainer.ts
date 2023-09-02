@@ -1,11 +1,73 @@
 import { assert } from '../util/misc'
+import { Point } from '../util/pos'
 
 const tilesize = 8
+type GuiHookMapRoomList = ig.GuiHook & { gui: { floor: sc.AreaLoadable.Floor, room: sc.AreaRoomBounds, unlocked: boolean } }
 
 export function overrideMapAreaContainer() {
     sc.MapAreaContainer.inject({
-        findMap(a: any, b: any, c: any, d: any) {
-            if (a || b || c || d) {}
+        findMap(mx: number, my: number, gamepad: boolean, wait: number): boolean | undefined {
+            if (sc.menu.mapMapFocus) { return }
+            const area = sc.map.getCurrentArea()
+            if (area && area.type == 'roomList') {
+                let pos: Vec2 = Vec2.createC(0, 0)
+                if (gamepad) {
+                    pos = this.area.hook.pos
+                } else {
+                    pos = Vec2.createC(
+                        mx - sc.menu.mapCamera.x - this.area.hook.pos.x + 1,
+                        my - sc.menu.mapCamera.y - this.area.hook.pos.y + 1
+                    )
+                }
+                if (this.area.hook.children.length == 0) { return }
+
+                const mapGuis: GuiHookMapRoomList[] = this.area.hook.children[sc.map.getCurrentFloorIndex()].children as GuiHookMapRoomList[]
+                for (const hook of mapGuis) {
+                    if (! hook.gui.room || ! hook.gui.unlocked) { continue }
+
+                    if (gamepad) {
+                        this.mapNameGui.setPos(
+                            sc.menu.mapCursor.x + 5,
+                            sc.menu.mapCursor.y - this.mapNameGui.hook.size.y - 4,
+                        )
+                    } else {
+                        this.mapNameGui.setPos(
+                            mx - sc.menu.mapCamera.x,
+                            my - sc.menu.mapCamera.y - this.mapNameGui.hook.size.y - 1,
+                        )
+                    }
+                    const map: sc.AreaLoadable.MapRoomList = hook.gui.floor.maps[hook.gui.room.index!] as sc.AreaLoadable.MapRoomList
+                    for (const r of map.rects) {
+                        if (! r.arearect) {
+                            r.arearect = {
+                                x: (r.x + map.min.x) * tilesize,
+                                y: (r.y + map.min.y) * tilesize,
+                                width: r.width * tilesize,
+                                height: r.height * tilesize,
+                            }
+                        }
+                        const rect = r.arearect
+                        if (
+                            pos.x >= rect.x &&
+                            pos.x <= rect.x + rect.width &&
+                            pos.y >= rect.y &&
+                            pos.y <= rect.y + rect.height
+                        ) {
+                            if (this.hoverRoom != hook.gui.room) {
+                                this.hoverRoom = hook.gui.room
+                                this.mapNameGui.setText(hook.gui.room.text, wait)
+                            }
+                            return true
+                        }
+                    }
+                }
+
+                this.hoverRoom = null
+                this.mapNameGui.setText("")
+                return false
+            } else {
+                this.parent(mx, my, gamepad, wait)
+            }
             return true
         }
     })
