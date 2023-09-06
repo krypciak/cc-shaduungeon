@@ -4,16 +4,20 @@ import { Stack, allLangs, assert } from '../util/misc'
 import DngGen from '../plugin'
 import { Room } from '../room/room'
 import { MapBuilder } from '../room/map-builder'
+import { DungeonPaths } from '../dungeon-builder'
 
 declare const dnggen: DngGen
 
 export class AreaInfo {
+    name: string
     constructor(
-        public name: string,
+        public paths: DungeonPaths,
         public displayName: string,
         public displayDesc: string,
         public type: 'PATH' | 'TOWN' | 'DUNGEON',
-        public pos: Vec2) {}
+        public pos: Vec2) {
+        this.name = paths.nameAndId
+    }
 }
 
 
@@ -195,7 +199,8 @@ export class AreaBuilder {
         
         for (const entry of entries) {
             const builder = entry.builder!
-            builder.path = this.areaInfo.name + '/' + (builder.index.toLocaleString('en-US', {minimumIntegerDigits: 3, useGrouping: false}))
+            builder.pathParent = this.areaInfo.name
+            builder.path = builder.pathParent + '/' + (builder.index.toLocaleString('en-US', {minimumIntegerDigits: 3, useGrouping: false}))
             await builder.decideDisplayName(mapIndex)
             assert(builder.displayName)
             addMap(builder.path, builder.displayName, entry.rects)
@@ -233,8 +238,7 @@ export class AreaBuilder {
     }
 
     saveToFile() {
-        assert(this.builtArea, 'called saveToFile() before finalizing build') 
-        require('fs').writeFileSync(dnggen.dir + 'assets/data/areas/' + this.areaInfo.name + '.json', JSON.stringify(this.builtArea))
+        this.areaInfo.paths.saveArea(this)
     }
 
 

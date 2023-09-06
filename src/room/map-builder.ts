@@ -193,26 +193,7 @@ export abstract class MapBuilder {
     }
 
     save(): Promise<void> {
-        const fs = require('fs')
-        const path = require('path')
-        return new Promise((resolve, reject) => {
-            assert(this.rpv)
-            console.log('map: ', ig.copy(this.rpv.map))
-            const filePath = dnggen.dir + 'assets/data/maps/' + this.path + '.json'
-            const parentPath = path.dirname(filePath)
-            const json = JSON.stringify(this.rpv.map)
-            if (! fs.existsSync(parentPath)) {
-                fs.mkdirSync(parentPath, { recursive: true })
-            }
-            fs.writeFile(filePath, json, (err: Error) => {
-                if (err) {
-                    console.error('error writing map:', err)
-                    reject()
-                } else {
-                    resolve()
-                }
-            })
-        })
+        return this.areaInfo.paths.saveMap(this)
     }
 }
 

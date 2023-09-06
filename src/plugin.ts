@@ -27,11 +27,18 @@ declare global {
 type Mod1 = {
     -readonly [K in keyof Mod]: Mod[K]
 } & {
+    name: string
+} & ({
+    isCCL3: true
+    findAllAssets(): void
+} | {
+    isCCL3: false
     filemanager: {
         findFiles(dir: string, exts: string[]): Promise<string[]>
     }
-    findAllAssets(): void
-}
+    getAsset(path: string): string
+    runtimeAssets: {[ key: string ]: string}
+})
 
 
 function updateLangLabels() {
@@ -137,6 +144,8 @@ export default class DngGen {
         this.mod = mod
         // @ts-ignore
         window.dnggen = this
+        // @ts-expect-error
+        this.mod.isCCL3 = mod.findAllAssets ? true : false
     }
 
     async prestart() {
@@ -183,12 +192,10 @@ export default class DngGen {
     }
 
     async reloadModAssetList() {
-        // if ccloader2
-         if (this.mod.filemanager) {
-            this.mod.assets = new Set(await this.mod.filemanager.findFiles(dnggen.mod.baseDirectory + 'assets/', ['.json', '.json.patch', '.png', '.ogg']))
-        } else {
-            // ccloader3
+        if (this.mod.isCCL3) {
             this.mod.findAllAssets()
+        } else {
+            this.mod.assets = new Set(await this.mod.filemanager.findFiles(dnggen.mod.baseDirectory + 'assets/', ['.json', '.json.patch', '.png', '.ogg']))
         }
     }
 }

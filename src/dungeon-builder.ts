@@ -3,12 +3,64 @@ import { Stack, assert } from './util/misc'
 import { AreaPoint, Dir, } from './util/pos'
 import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from './area/area-builder'
 import DngGen from './plugin'
-import { BattlePuzzleMapBuilder } from './room/dungeon-map-builder'
 import { MapBuilder } from './room/map-builder'
 import { SimpleDoubleRoomMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder } from './room/simple-map-builder'
+import { mkdirs, writeFile, writeFileSync } from './util/fsutil'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
+
+export class DungeonPaths {
+    baseDir: string
+    nameAndId: string
+    mapsDirGame: string = 'data/maps'
+    mapsDir: string
+    areaDirGame: string = 'data/areas'
+    areaFileGame: string
+    areaFile: string
+
+    private files: {[ key: string ]: string} = {}
+
+    constructor(public id: string) {
+        this.baseDir = `assets/mod-data/${dnggen.mod.name}/saves/${id}`
+        this.nameAndId = `${DungeonBuilder.basePath}-${id}`
+
+        this.mapsDir = `${this.baseDir}/assets/${this.mapsDirGame}`
+        mkdirs(this.mapsDir)
+
+        this.areaFileGame = `${this.areaDirGame}/${this.nameAndId}.json`
+        const areaDir = `${this.baseDir}/assets/${this.areaDirGame}`
+        mkdirs(areaDir)
+        this.areaFile = `${areaDir}/${this.nameAndId}.json`
+    }
+
+    saveMap(builder: MapBuilder): Promise<void> {
+        assert(builder.rpv)
+        console.log('map: ', ig.copy(builder.rpv.map))
+        mkdirs(`${this.mapsDir}/${builder.pathParent}`)
+        const path = `${this.mapsDir}/${builder.path}.json`
+        const gamePath = `${this.mapsDirGame}/${builder.path}.json`
+
+        this.files[gamePath] = path
+        return writeFile(path, builder.rpv.map)
+    }
+
+    saveArea(builder: AreaBuilder) {
+        assert(builder.builtArea, 'called saveToFile() before finalizing build') 
+    
+        const path = this.areaFile
+        this.files[this.areaFileGame] = path
+        writeFileSync(path, builder.builtArea)
+    }
+
+    registerFiles() {
+        if (dnggen.mod.isCCL3) {
+
+        } else {
+            dnggen.mod.runtimeAssets = this.files
+        }
+    }
+}
 
 export class DungeonBuilder {
     static puzzleMap: Map<string, Selection[]>
@@ -44,19 +96,21 @@ export class DungeonBuilder {
 
         console.log('puzzles:', puzzles)
 
-        const areaInfo: AreaInfo = new AreaInfo(DungeonBuilder.basePath + '-' + id, 'Generated Dungeon', 'generic description, ' + DungeonBuilder.basePath + '-' + id, 'DUNGEON', Vec2.createC(150, 70))
+        const dngPaths = new DungeonPaths(id)
+
+        const areaInfo: AreaInfo = new AreaInfo(dngPaths, 'Generated Dungeon', 'generic description, ' + dngPaths.nameAndId, 'DUNGEON', Vec2.createC(150, 70))
         
         const builders: IndexedBuilder[] = []
         // add starting map as a builder?
 
-        for (let builderIndex = builders.length, i = 0; i < puzzles.length; builderIndex++, i++) {
-            const sel = puzzles[builderIndex]
-            const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
-            const builder: IndexedBuilder = IndexedBuilder.create(new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap), builderIndex)
-            builders.push(builder)
-        }
+        // for (let builderIndex = builders.length, i = 0; i < puzzles.length; builderIndex++, i++) {
+        //     const sel = puzzles[builderIndex]
+        //     const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
+        //     const builder: IndexedBuilder = IndexedBuilder.create(new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap), builderIndex)
+        //     builders.push(builder)
+        // }
 
-        // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleDoubleRoomMapBuilder])
+        SimpleRoomMapBuilder.addRandom(builders, areaInfo, 10, [SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleDoubleRoomMapBuilder])
         // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleDoubleRoomMapBuilder])
 
         // SimpleSingleTunnelMapBuilder.addPreset(builders, areaInfo)
@@ -66,7 +120,7 @@ export class DungeonBuilder {
 
         let highestRecReturn: { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> } = { stack: new Stack(), leftBuilders: new Set() }
         const countTarget: number = Math.min(builders.length, 
-            builders.length / 1.5
+            builders.length / 1
         )
         
         function recursiveTryPlaceMaps(stack: Stack<ABStackEntry>, availableBuilders: Set<IndexedBuilder>): RecReturn {
@@ -151,7 +205,8 @@ export class DungeonBuilder {
 
         const usedBuilders: IndexedBuilder[] = obj.stack.array.map(e => e.builder!)
         await MapBuilder.placeBuilders(usedBuilders)
-        await dnggen.reloadModAssetList()
+
+        dngPaths.registerFiles()
 
         if (roomTp) {}
         ig.game.varsChangedDeferred()
