@@ -4,6 +4,7 @@ import { VimLogic } from '../node_modules/cc-vim/src/logic'
 import { AreaDrawer } from './area/area-drawer'
 import { Blitzkrieg } from './util/blitzkrieg'
 import { overrideMapAreaContainer } from './area/custom-MapAreaContainer'
+import { Mod } from 'ultimate-crosscode-typedefs/modloader/mod'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
@@ -22,6 +23,16 @@ declare global {
         }
     }
 }
+
+type Mod1 = {
+    -readonly [K in keyof Mod]: Mod[K]
+} & {
+    filemanager: {
+        findFiles(dir: string, exts: string[]): Promise<string[]>
+    }
+    findAllAssets(): void
+}
+
 
 function updateLangLabels() {
     ig.lang.labels.sc.gui.menu['new-game'].options.names[ngOptionName] = ngOptionDisplayName
@@ -103,6 +114,7 @@ async function registerStyles() {
 
 export default class DngGen {
     dir: string
+    mod: Mod1
     puzzleFileIndex: number = -1
     battleFileIndex: number = -1
     loaded: boolean = false
@@ -120,8 +132,9 @@ export default class DngGen {
         areaMapConnections: true,
     }
 
-    constructor(mod: { baseDirectory: string }) {
+    constructor(mod: Mod1) {
         this.dir = mod.baseDirectory
+        this.mod = mod
         // @ts-ignore
         window.dnggen = this
     }
@@ -167,5 +180,15 @@ export default class DngGen {
         registerStyles()
         updateLangLabels()
         startDnggenGame()
+    }
+
+    async reloadModAssetList() {
+        // if ccloader2
+         if (this.mod.filemanager) {
+            this.mod.assets = new Set(await this.mod.filemanager.findFiles(dnggen.mod.baseDirectory + 'assets/', ['.json', '.json.patch', '.png', '.ogg']))
+        } else {
+            // ccloader3
+            this.mod.findAllAssets()
+        }
     }
 }

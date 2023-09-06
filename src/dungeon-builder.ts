@@ -151,6 +151,7 @@ export class DungeonBuilder {
 
         const usedBuilders: IndexedBuilder[] = obj.stack.array.map(e => e.builder!)
         await MapBuilder.placeBuilders(usedBuilders)
+        await dnggen.reloadModAssetList()
 
         if (roomTp) {}
         ig.game.varsChangedDeferred()
