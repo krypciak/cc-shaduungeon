@@ -1,3 +1,7 @@
+import { Blitzkrieg, Selection } from './blitzkrieg'
+
+declare const blitzkrieg: Blitzkrieg
+
 export class Stack<T> {
     array: T[] = []
 
@@ -37,6 +41,12 @@ export function allLangs(text: string): ig.LangLabel.Data {
     }
 }
 
+export function addSel(mapName: string, sel: Selection, fileIndex: number) {
+    blitzkrieg.puzzleSelections.setSelHashMapEntry(mapName, {
+        sels: [ sel ],
+        fileIndex,
+    })
+}
 
 export function round(num: number): number {
     if (Math.ceil(num) - num < 0.3) { return Math.ceil(num) }

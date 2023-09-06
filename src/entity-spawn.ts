@@ -8,7 +8,7 @@ export namespace MapTransporter {
     export type Types = MapDoorLike.Types | 'TeleportField'
 
     export function check(e: MapEntity): e is MapTransporter {
-        return 'map' in e.settings && 'marker' in e.settings && 'dir' in e.settings
+        return e.settings && 'map' in e.settings && 'marker' in e.settings && 'dir' in e.settings
     }
 }
 

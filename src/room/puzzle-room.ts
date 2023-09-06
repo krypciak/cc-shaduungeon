@@ -1,11 +1,14 @@
 import { Dir, MapPoint, EntityRect, Rect, setToClosestSelSide, EntityPoint, DirUtil, MapRect } from '../util/pos'
 import { Blitzkrieg, Selection } from '../util/blitzkrieg'
-import { Room, RoomIO, RoomIODoorLike, RoomPlaceOrder, RoomType } from './room'
-import { assert } from '../util/misc'
-import { MapDoorLike } from '../entity-spawn'
+import { Room, RoomIO, RoomIODoorLike, } from './room'
+import { addSel, assert } from '../util/misc'
+import { MapDoorLike, MapEntity, MapFloorSwitch, MapTransporter } from '../entity-spawn'
 import { RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen } from './tunnel-room'
+import { RoomPlaceVars } from './map-builder'
+import DngGen from '../plugin'
 
 declare const blitzkrieg: Blitzkrieg
+declare const dnggen: DngGen
 
 enum PuzzleRoomType {
     WholeRoom,
@@ -72,13 +75,13 @@ export class PuzzleRoom extends Room {
         /* extract data from original puzzle selection */ {
         const id = blitzkrieg.util.generateUniqueID()
         const sel = blitzkrieg.selectionCopyManager
-            .createUniquePuzzleSelection(puzzle.sel, 0, 0, id)
+            .createUniquePuzzleSelection(puzzle.sel, 0, 0, id) /* changed from usel to sel now no work :( */
 
         let solveCondition: string | undefined
         let solveConditionUnique: string | undefined
         switch (puzzle.completion) {
             case PuzzleCompletionType.Normal:
-                solveCondition = blitzkrieg.puzzleSelectionManager.getPuzzleSolveCondition(sel)
+                solveCondition = blitzkrieg.puzzleSelectionManager.getPuzzleSolveCondition(puzzle.sel)
                 break
             case PuzzleCompletionType.GetTo:
                 if (puzzle.roomType == PuzzleRoomType.WholeRoom) {
@@ -91,7 +94,7 @@ export class PuzzleRoom extends Room {
         }
         if (solveCondition) {
             solveConditionUnique = solveCondition
-            if (solveCondition && solveCondition.includes('_destroyed')) { solveConditionUnique += '_' + id }
+            if (solveCondition && ! solveCondition.includes('_destroyed')) { solveConditionUnique += '_' + id }
         }
         sel.size = Rect.new(EntityRect, sel.size)
         puzzle.usel = { id, sel, solveCondition, solveConditionUnique }
@@ -100,8 +103,7 @@ export class PuzzleRoom extends Room {
         /* prepare for super() call */
         let wallSides: boolean[], roomRect: MapRect
         if (puzzle.roomType == PuzzleRoomType.WholeRoom) {
-            /* changeme later */
-            wallSides = [true, true, true, true]
+            wallSides = [false, false, false, false]
             roomRect = puzzle.usel.sel.size.to(MapRect)
         } else if (puzzle.roomType == PuzzleRoomType.AddWalls) {
             wallSides = [true, true, true, true]
@@ -150,7 +152,7 @@ export class PuzzleRoom extends Room {
                     Vec2.sub(newPos, puzzle.sel.size)
 
                     const dir: Dir = DirUtil.flip(DirUtil.convertToDir(closestTransporter.settings.dir))
-                    this.primaryExit = RoomIODoorLike.fromReference(name, dir, newPos, closestTransporter)
+                    this.primaryExit = RoomIODoorLike.fromReference(name, dir, newPos, closestTransporter, puzzle.usel.solveCondition)
                 } else {
                     this.primaryExit = RoomIODoorLike.fromRoom('Door', this, name, puzzle.end.dir, EntityPoint.fromVec(puzzle.end.pos))
                 }
@@ -165,7 +167,7 @@ export class PuzzleRoom extends Room {
         }
         assert(this.primaryExit, 'primary exit missing?')
 
-        this.sel = puzzle.sel
+        this.sel = puzzle.usel.sel
 
         /* at this point all variables in PuzzleData are satisfied */
         assert(puzzle.roomType); assert(puzzle.completion); assert(puzzle.map); assert(puzzle.usel)
@@ -202,6 +204,45 @@ export class PuzzleRoom extends Room {
 
         this.primaryEntarence = entIO
         this.ios.push(this.primaryEntarence)
+    }
+
+    async place(rpv: RoomPlaceVars): Promise<RoomPlaceVars | undefined> {
+        const puzzle = this.puzzle
+        const rpv1 = await super.place(rpv)
+        if (rpv1) { rpv = rpv1 }
+     
+        if (puzzle.completion == PuzzleCompletionType.GetTo && puzzle.roomType == PuzzleRoomType.AddWalls) {
+            assert(puzzle.usel.solveConditionUnique)
+            rpv.entities.push(MapFloorSwitch.new(EntityPoint.fromVec(puzzle.end.pos), puzzle.end.pos.level, 'puzzleSolveSwitch', puzzle.usel.solveConditionUnique))
+        }
+
+        if (puzzle.roomType == PuzzleRoomType.WholeRoom) {
+            this.placeWallsInEmptySpace(rpv, puzzle.usel.sel)
+        }
+
+        if (dnggen.debug.pastePuzzle) {
+            /* delete all tprs other than the optional tpr (when whole room) */
+            puzzle.map = ig.copy(puzzle.map)
+            const priExitE: MapEntity | undefined = this.primaryExit.tpr.entity
+            puzzle.map.entities = puzzle.map.entities.filter(
+                e => (! MapTransporter.check(e)) || (! priExitE) || (e.x == priExitE.x && e.y == priExitE.y))
+
+            const pastePos: EntityPoint = EntityPoint.fromVec(puzzle.usel.sel.size)
+            const map: sc.MapModel.Map = await blitzkrieg.selectionCopyManager
+                .copySelToMap(ig.copy(rpv.map), puzzle.map, puzzle.sel, pastePos.x, pastePos.y, rpv.map.name, {
+                    disableEntities: false,
+                    mergeLayers: false,
+                    removeCutscenes: true,
+                    makePuzzlesUnique: true,
+                    uniqueId: puzzle.usel.id,
+                    uniqueSel: puzzle.usel.sel,
+                })
+            rpv = RoomPlaceVars.fromRawMap(map, rpv.theme)
+        }
+
+        addSel(rpv.map.name, puzzle.usel.sel, dnggen.puzzleFileIndex)
+
+        return rpv
     }
 }
 

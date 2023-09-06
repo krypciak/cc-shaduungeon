@@ -180,7 +180,6 @@ export abstract class MapBuilder {
         this.createEmptyMap()
         assert(this.rpv)
         this.rooms = this.rooms.sort((a, b) => a.placeOrder - b.placeOrder)
-        console.log(this.rooms)
         for (const room of this.rooms) {
             const rpv: RoomPlaceVars | undefined = await room.place(this.rpv)
             if (rpv) {

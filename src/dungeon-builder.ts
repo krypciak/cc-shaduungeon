@@ -49,14 +49,14 @@ export class DungeonBuilder {
         const builders: IndexedBuilder[] = []
         // add starting map as a builder?
 
-        // for (let builderIndex = builders.length, i = 0; i < puzzles.length; builderIndex++, i++) {
-        //     const sel = puzzles[builderIndex]
-        //     const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
-        //     const builder: IndexedBuilder = IndexedBuilder.create(new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap), builderIndex)
-        //     builders.push(builder)
-        // }
+        for (let builderIndex = builders.length, i = 0; i < puzzles.length; builderIndex++, i++) {
+            const sel = puzzles[builderIndex]
+            const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
+            const builder: IndexedBuilder = IndexedBuilder.create(new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap), builderIndex)
+            builders.push(builder)
+        }
 
-        SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleDoubleRoomMapBuilder])
+        // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleDoubleRoomMapBuilder])
         // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleDoubleRoomMapBuilder])
 
         // SimpleSingleTunnelMapBuilder.addPreset(builders, areaInfo)
@@ -66,7 +66,7 @@ export class DungeonBuilder {
 
         let highestRecReturn: { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> } = { stack: new Stack(), leftBuilders: new Set() }
         const countTarget: number = Math.min(builders.length, 
-            builders.length / 4
+            builders.length / 1.5
         )
         
         function recursiveTryPlaceMaps(stack: Stack<ABStackEntry>, availableBuilders: Set<IndexedBuilder>): RecReturn {

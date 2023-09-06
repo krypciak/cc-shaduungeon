@@ -15,7 +15,7 @@ export const entarenceMarker: string = 'battleEntarence'
 
 export class PuzzleMapBuilder extends MapBuilder {
     static closedTunnelSize = new MapPoint(5, 4)
-    static openTunnelSize = new MapPoint(5, 4)
+    static openTunnelSize = new MapPoint(5, 8)
 
     entarenceRoom: Room
     exitRoom: PuzzleRoom

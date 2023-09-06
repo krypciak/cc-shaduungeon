@@ -29,8 +29,8 @@ export namespace Tpr {
     export function get(name: string, dir: Dir3d, pos: EntityPoint, entityType: MapTransporter.Types, condition?: string): Tpr {
         return { name, dir, pos, entityType, condition }
     }
-    export function getReference(name: string, dir: Dir3d, pos: EntityPoint, mtpr: MapTransporter): Tpr {
-        return { name, dir, pos, entityType: mtpr.type as MapTransporter.Types, entity: mtpr }
+    export function getReference(name: string, dir: Dir3d, pos: EntityPoint, mtpr: MapTransporter, condition?: string): Tpr {
+        return { name, dir, pos, entityType: mtpr.type as MapTransporter.Types, entity: mtpr, entityCondition: condition }
     }
 }
 
@@ -42,6 +42,7 @@ export interface Tpr {
     condition?: string
     /* this is only set to a reference to a MapTransporter in the puzzle room (if puzzle type is 'whole room') */
     entity?: MapTransporter
+    entityCondition?: string /* only set when entity is set */
     /* set after place */
     destMap?: string
     destMarker?: string
@@ -68,8 +69,8 @@ export class RoomIODoorLike extends RoomIOTpr {
     static fromRoom(type: MapDoorLike.Types, room: Room, name: string, dir: Dir, prefPos?: EntityPoint): RoomIODoorLike {
         return new RoomIODoorLike(room.getDoorLikeTpr(type, name, dir, prefPos))
     }
-    static fromReference(name: string, dir: Dir, pos: EntityPoint, doorLike: MapDoorLike): RoomIODoorLike {
-        return new RoomIODoorLike(Tpr.getReference(name, DirUtil.dirToDir3d(dir), pos, doorLike) as TprDoorLike)
+    static fromReference(name: string, dir: Dir, pos: EntityPoint, doorLike: MapDoorLike, condition: string = ''): RoomIODoorLike {
+        return new RoomIODoorLike(Tpr.getReference(name, DirUtil.dirToDir3d(dir), pos, doorLike, condition) as TprDoorLike)
 
     }
 }
@@ -113,9 +114,6 @@ export class Room extends MapRect {
         this.ios.forEach(io => {
             if (io instanceof RoomIOTpr) {
                 Vec2.add(io.tpr.pos, entityOffset)
-                if (io.tpr.entity) {
-                    Vec2.add(io.tpr.entity, entityOffset)
-                }
             }
         })
     }
@@ -150,7 +148,14 @@ export class Room extends MapRect {
         for (const io of this.ios) {
             if (io instanceof RoomIOTpr) {
                 const tpr = io.getTpr()
-                if (tpr.entity) { continue }
+                if (tpr.entity) {
+                    const s = tpr.entity.settings
+                    s.name = tpr.name
+                    s.map = tpr.destMap!
+                    s.marker = tpr.destMarker!
+                    s.condition = tpr.entityCondition!
+                    continue
+                }
                 let e: MapTransporter
                 assert(tpr.destMap); assert(tpr.destMarker)
                 switch (tpr.entityType) {
