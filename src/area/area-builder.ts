@@ -195,7 +195,7 @@ export class AreaBuilder {
         
         for (const entry of entries) {
             const builder = entry.builder!
-            builder.path = this.areaInfo.name + '/' + builder.index
+            builder.path = this.areaInfo.name + '/' + (builder.index.toLocaleString('en-US', {minimumIntegerDigits: 3, useGrouping: false}))
             await builder.decideDisplayName(mapIndex)
             assert(builder.displayName)
             addMap(builder.path, builder.displayName, entry.rects)
