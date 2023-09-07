@@ -2,71 +2,15 @@ import { Blitzkrieg, Selection, SelectionMapEntry } from './util/blitzkrieg'
 import { Stack, assert } from './util/misc'
 import { AreaPoint, Dir, } from './util/pos'
 import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from './area/area-builder'
-import DngGen from './plugin'
 import { MapBuilder } from './room/map-builder'
 import { SimpleDoubleRoomMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder } from './room/simple-map-builder'
-import { mkdirs, writeFile, writeFileSync } from './util/fsutil'
+import { DungeonPaths } from './dungeon-paths'
 
 declare const blitzkrieg: Blitzkrieg
-declare const dnggen: DngGen
-
-export class DungeonPaths {
-    baseDir: string
-    nameAndId: string
-    mapsDirGame: string = 'data/maps'
-    mapsDir: string
-    areaDirGame: string = 'data/areas'
-    areaFileGame: string
-    areaFile: string
-
-    private files: Record<string, string>= {}
-
-    constructor(public id: string) {
-        this.baseDir = `assets/mod-data/${dnggen.mod.name}/saves/${id}`
-        this.nameAndId = `${DungeonBuilder.basePath}-${id}`
-
-        this.mapsDir = `${this.baseDir}/assets/${this.mapsDirGame}`
-        mkdirs(this.mapsDir)
-
-        this.areaFileGame = `${this.areaDirGame}/${this.nameAndId}.json`
-        const areaDir = `${this.baseDir}/assets/${this.areaDirGame}`
-        mkdirs(areaDir)
-        this.areaFile = `${areaDir}/${this.nameAndId}.json`
-    }
-
-    saveMap(builder: MapBuilder): Promise<void> {
-        assert(builder.rpv)
-        console.log('map: ', ig.copy(builder.rpv.map))
-        mkdirs(`${this.mapsDir}/${builder.pathParent}`)
-        const path = `${this.mapsDir}/${builder.path}.json`
-        const gamePath = `${this.mapsDirGame}/${builder.path}.json`
-
-        this.files[gamePath] = path
-        return writeFile(path, builder.rpv.map)
-    }
-
-    saveArea(builder: AreaBuilder) {
-        assert(builder.builtArea, 'called saveToFile() before finalizing build') 
-    
-        const path = this.areaFile
-        this.files[this.areaFileGame] = path
-        writeFileSync(path, builder.builtArea)
-    }
-
-    registerFiles() {
-        if (dnggen.mod.isCCL3) {
-
-        } else {
-            dnggen.mod.runtimeAssets = this.files
-        }
-    }
-}
 
 export class DungeonBuilder {
     static puzzleMap: Map<string, Selection[]>
     static puzzleList: Selection[]
-    
-    static basePath: string = 'dnggen'
 
     async preloadPuzzleList() {
         if (! DungeonBuilder.puzzleMap) {
@@ -206,6 +150,7 @@ export class DungeonBuilder {
         const usedBuilders: IndexedBuilder[] = obj.stack.array.map(e => e.builder!)
         await MapBuilder.placeBuilders(usedBuilders)
 
+        dngPaths.saveConfig()
         dngPaths.registerFiles()
 
         if (roomTp) {}

@@ -4,7 +4,7 @@ import { Stack, allLangs, assert } from '../util/misc'
 import DngGen from '../plugin'
 import { Room } from '../room/room'
 import { MapBuilder } from '../room/map-builder'
-import { DungeonPaths } from '../dungeon-builder'
+import { DungeonPaths } from '../dungeon-paths'
 
 declare const dnggen: DngGen
 

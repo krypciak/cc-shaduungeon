@@ -5,6 +5,7 @@ import { AreaDrawer } from './area/area-drawer'
 import { Blitzkrieg } from './util/blitzkrieg'
 import { overrideMapAreaContainer } from './area/custom-MapAreaContainer'
 import { Mod } from 'ultimate-crosscode-typedefs/modloader/mod'
+import { DungeonPaths } from './dungeon-paths'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
@@ -22,22 +23,27 @@ declare global {
             dnggen: sc.NewGameOption;
         }
     }
+    namespace ig {
+        interface Game {
+            preloadLevel(this: this, mapName: string): void
+        }
+    }
 }
 
 type Mod1 = {
     -readonly [K in keyof Mod]: Mod[K]
-} & {
-    name: string
 } & ({
     isCCL3: true
+    id: string
     findAllAssets(): void
 } | {
     isCCL3: false
+    name: string
     filemanager: {
         findFiles(dir: string, exts: string[]): Promise<string[]>
     }
     getAsset(path: string): string
-    runtimeAssets: {[ key: string ]: string}
+    runtimeAssets: Record<string, string>
 })
 
 
@@ -74,6 +80,11 @@ function addInjects() {
         },
     });
 
+    ig.Game.inject({
+        preloadLevel(mapName: string) {
+            this.parent(DungeonPaths.loadIfNeeded(mapName) ?? mapName)
+        }
+    })
     // ig.Game.inject({
     //     // @ts-ignore
     //     preloadLevel(mapName: string) {
@@ -188,7 +199,7 @@ export default class DngGen {
         overrideMapAreaContainer()
         registerStyles()
         updateLangLabels()
-        startDnggenGame()
+        // startDnggenGame()
     }
 
     async reloadModAssetList() {
