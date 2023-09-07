@@ -43,7 +43,7 @@ interface PuzzleSelectionManager {
 interface Selections {
     name: string
     selIndexes: number[]
-    selHashMap: { [key: string]: SelectionMapEntry }
+    selHashMap: Record<string, SelectionMapEntry>
     mapSels: SelectionMapEntry
     inSelStack: Stack<Selection>
     jsonfiles: string[]

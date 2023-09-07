@@ -47,7 +47,7 @@ export class RoomTheme {
         }
     }
 
-    static themes: { [key: string]: RoomTheme } = {
+    static themes: Record<string, RoomTheme> = {
         'rhombus-dng': new RoomTheme({
             bgm: 'puzzle',
             mapSounds: '',

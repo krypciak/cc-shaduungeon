@@ -19,7 +19,7 @@ export class DungeonPaths {
     areaFileGame: string
     areaFile: string
 
-    private files: {[ key: string ]: string} = {}
+    private files: Record<string, string>= {}
 
     constructor(public id: string) {
         this.baseDir = `assets/mod-data/${dnggen.mod.name}/saves/${id}`
