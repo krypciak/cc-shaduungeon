@@ -2,7 +2,7 @@
 //    existsSync(path: string): boolean
 //    mkdirSync(path: string, options?: { recursive: boolean }): void
 //} = eval('require("fs")') /* eval for info suppress */
-const fs: any = eval('require("fs")')
+const fs: any = (0, eval)('require("fs")')
 
 export function mkdirs(path: string) {
     if (! fs.existsSync(path)) { fs.mkdirSync(path, { recursive: true }) }
