@@ -151,7 +151,11 @@ export class PuzzleRoom extends Room {
                     const newPos: EntityPoint = EntityPoint.fromVec(closestTransporter)
                     Vec2.sub(newPos, puzzle.sel.size)
 
-                    const dir: Dir = DirUtil.flip(DirUtil.convertToDir(closestTransporter.settings.dir))
+                    let dir: Dir = DirUtil.flip(DirUtil.convertToDir(closestTransporter.settings.dir))
+                    if (closestTransporter.type == 'TeleportGround') {
+                        dir = DirUtil.flip(dir) /* TeleportGround dir is the opposite of the door for whatever reason */
+                    }
+
                     this.primaryExit = RoomIODoorLike.fromReference(name, dir, newPos, closestTransporter, puzzle.usel.solveCondition)
                 } else {
                     this.primaryExit = RoomIODoorLike.fromRoom('Door', this, name, puzzle.end.dir, EntityPoint.fromVec(puzzle.end.pos))
