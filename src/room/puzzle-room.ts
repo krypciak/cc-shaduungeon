@@ -2,7 +2,7 @@ import { Dir, MapPoint, EntityRect, Rect, setToClosestSelSide, EntityPoint, DirU
 import { Blitzkrieg, Selection } from '../util/blitzkrieg'
 import { Room, RoomIO, RoomIODoorLike, } from './room'
 import { addSel, assert } from '../util/misc'
-import { MapDoorLike, MapEntity, MapFloorSwitch, MapTransporter } from '../entity-spawn'
+import { MapDoorLike, MapEntity, MapEventTrigger, MapFloorSwitch, MapTransporter } from '../entity-spawn'
 import { RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen } from './tunnel-room'
 import { RoomPlaceVars } from './map-builder'
 import DngGen from '../plugin'
@@ -230,6 +230,18 @@ export class PuzzleRoom extends Room {
             const priExitE: MapEntity | undefined = this.primaryExit.tpr.entity
             puzzle.map.entities = puzzle.map.entities.filter(
                 e => (! MapTransporter.check(e)) || (! priExitE) || (e.x == priExitE.x && e.y == priExitE.y))
+
+            /* remove all dialog event triggers */
+            puzzle.map.entities = puzzle.map.entities.filter(
+                e => {
+                    if (! e || e.type != 'EventTrigger') { return true }
+                    for (const event of (e as MapEventTrigger).settings.event ?? []) {
+                        if (event.type == 'START_PRIVATE_MSG') {
+                            return false
+                        }
+                    }
+                    return true
+                })
 
             const pastePos: EntityPoint = EntityPoint.fromVec(puzzle.usel.sel.size)
             const map: sc.MapModel.Map = await blitzkrieg.selectionCopyManager
