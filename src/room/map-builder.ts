@@ -158,8 +158,8 @@ export abstract class MapBuilder {
         offset.y -= additionalSpace.y
         this.trimOffset = offset
         this.size = new MapPoint(
-            newSize.width - offset.x + additionalSpace.width,
-            newSize.height - offset.y + additionalSpace.height)
+            Math.ceil(newSize.width - offset.x + additionalSpace.width),
+            Math.ceil(newSize.height - offset.y + additionalSpace.height))
 
         Vec2.mulC(offset, -1)
         for (const room of this.rooms) {

@@ -28,8 +28,7 @@ export class DungeonPaths {
                 if (paths.loadConfig()) {
                     paths.registerFiles()
                 } else {
-                    /* set the loading map path to a fallback map */
-                    return 'dnggen/limbo'
+                    return 'dnggen/limbo' /* set the loading map path to a fallback map */
                 }
             }
         }

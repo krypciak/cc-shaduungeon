@@ -100,9 +100,13 @@ export class Room extends MapRect {
     }
 
     offsetBy(offset: MapPoint) {
+        offset = offset.copy()
         Vec2.add(this, offset)
-        this.x = round(this.x)
-        this.y = round(this.y)
+        const roundDiff: Vec2 = Vec2.create(this)
+        const newPos = Vec2.createC(round(this.x), round(this.y))
+        Vec2.sub(roundDiff, newPos)
+        Vec2.sub(offset, roundDiff)
+        Vec2.sub(this, roundDiff)
 
         const entityOffset: EntityPoint = offset.to(EntityPoint)
 

@@ -5,6 +5,7 @@ import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from './area/area
 import { MapBuilder } from './room/map-builder'
 import { SimpleDoubleRoomMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder } from './room/simple-map-builder'
 import { DungeonPaths } from './dungeon-paths'
+import { BattlePuzzleMapBuilder } from './room/dungeon-map-builder'
 
 declare const blitzkrieg: Blitzkrieg
 
@@ -47,14 +48,14 @@ export class DungeonBuilder {
         const builders: IndexedBuilder[] = []
         // add starting map as a builder?
 
-        // for (let builderIndex = builders.length, i = 0; i < puzzles.length; builderIndex++, i++) {
-        //     const sel = puzzles[builderIndex]
-        //     const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
-        //     const builder: IndexedBuilder = IndexedBuilder.create(new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap), builderIndex)
-        //     builders.push(builder)
-        // }
+        for (let builderIndex = builders.length, i = 0; i < puzzles.length; builderIndex++, i++) {
+            const sel = puzzles[builderIndex]
+            const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
+            const builder: IndexedBuilder = IndexedBuilder.create(new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap), builderIndex)
+            builders.push(builder)
+        }
 
-        SimpleRoomMapBuilder.addRandom(builders, areaInfo, 10, [SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleDoubleRoomMapBuilder])
+        // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 10, [SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleDoubleRoomMapBuilder])
         // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleDoubleRoomMapBuilder])
 
         // SimpleSingleTunnelMapBuilder.addPreset(builders, areaInfo)
