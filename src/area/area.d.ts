@@ -1,3 +1,4 @@
+import { RoomType } from '../room/room'
 import { bareRect } from '../util/pos'
 
 export {}
@@ -21,7 +22,11 @@ declare global {
             }
             interface MapRoomList extends sc.AreaLoadable.Map {
                 // arearect is calculated at runtime and cached here
-                rects: (bareRect & { arearect?: bareRect })[]
+                rects: (bareRect & {
+                    roomType: RoomType
+                    wallSides: boolean[]
+                    arearect?: bareRect
+                })[]
                 id: number
                 min: Vec2 
                 max: Vec2

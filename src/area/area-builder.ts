@@ -1,8 +1,8 @@
-import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, PosDir, Rect, doRectsOverlap, doesRectArrayOverlapRectArray } from '../util/pos'
+import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, PosDir, Rect, bareRect, doRectsOverlap, doesRectArrayOverlapRectArray } from '../util/pos'
 import { Stamp, loadArea } from '../util/map'
 import { Stack, allLangs, assert } from '../util/misc'
 import DngGen from '../plugin'
-import { Room } from '../room/room'
+import { Room, RoomType } from '../room/room'
 import { MapBuilder } from '../room/map-builder'
 import { DungeonPaths } from '../dungeon-paths'
 
@@ -107,9 +107,13 @@ export class AreaBuilder {
                 }
             }
         }
+        /* sort rects by place order */
+        const obj = rects.map((r, i) => [r, builder.rooms[i]] as [AreaRect, Room])
+            .sort((a, b) => a[1].placeOrder - b[1].placeOrder)
 
+        builder.rooms = obj.map(e => e[1])
         return {
-            rects,
+            rects: obj.map(e => e[0]),
             exit,
             rooms: builder.rooms,
         }
@@ -153,6 +157,7 @@ export class AreaBuilder {
         public stack: Stack<ABStackEntry>,
         public size: AreaPoint,
     ) {
+        this.size = new AreaPoint(Math.ceil(size.x), Math.ceil(size.y))
     }
 
     async build() {
@@ -183,9 +188,16 @@ export class AreaBuilder {
         const mapType: 'DUNGEON' | 'NO_DUNGEON' = this.areaInfo.type == 'DUNGEON' ? 'DUNGEON' : 'NO_DUNGEON'
 
         let mapIndex = 0
-        function addMap(path: string, displayName: string, rects: AreaRect[]) {
+        function addMap(path: string, displayName: string, rects: AreaRect[], rooms: Room[]) {
             const { min, max } = Rect.getMinMaxPosFromRectArr(rects)
-            const trimmedRecs: AreaRect[] = rects.map(r => new AreaRect(r.x - min.x, r.y - min.y, r.width, r.height))
+            const trimmedRecs: (bareRect & { roomType: RoomType, wallSides: boolean[] })[] = rects.map(
+                (r, i) => ({ 
+                    ...(new AreaRect(r.x - min.x, r.y - min.y, r.width, r.height)),
+                    roomType: rooms[i].type,
+                    /* if the room has no walls make it have all walls (so it renders) */
+                    wallSides: rooms[i].wallSides.every(v => !v) ? [true, true, true, true] : rooms[i].wallSides,
+                })
+            )
             maps.push({
                 path: path.split('/').join('.'),
                 name: allLangs(displayName),
@@ -201,10 +213,10 @@ export class AreaBuilder {
         for (const entry of entries) {
             const builder = entry.builder!
             builder.pathParent = this.areaInfo.name
-            builder.path = builder.pathParent + '/' + (builder.index.toLocaleString('en-US', {minimumIntegerDigits: 3, useGrouping: false}))
+            builder.path = builder.pathParent + '/' + (mapIndex.toLocaleString('en-US', {minimumIntegerDigits: 3, useGrouping: false}))
             await builder.decideDisplayName(mapIndex)
             assert(builder.displayName)
-            addMap(builder.path, builder.displayName, entry.rects)
+            addMap(builder.path, builder.displayName, entry.rects, entry.rooms)
             mapIndex++
         }
 

@@ -1,7 +1,16 @@
 import { assert } from '../util/misc'
+import { Dir } from '../util/pos'
 
 const tilesize = 8
-type GuiHookMapRoomList = ig.GuiHook & { gui: { floor: sc.AreaLoadable.Floor, room: sc.AreaRoomBounds, unlocked: boolean } }
+type GuiHookMapRoomList = ig.GuiHook & {
+    gui: { floor: sc.AreaLoadable.Floor, room: sc.AreaRoomBounds, unlocked: boolean }
+}
+
+interface AreaRendererColorScheme {
+    empty: ig.SimpleColor
+    border: ig.SimpleColor
+    shadow: ig.SimpleColor
+}
 
 export function overrideMapAreaContainer() {
     sc.MapAreaContainer.inject({
@@ -129,6 +138,17 @@ export function overrideMapAreaContainer() {
         }
     })
 
+    const inactiveColors: AreaRendererColorScheme = {
+        empty: new ig.SimpleColor('#5e717f'),
+        border: new ig.SimpleColor('#7ac1d5'),
+        shadow: new ig.SimpleColor('#47566c'),
+    }
+    const activeColors: AreaRendererColorScheme = {
+        empty: new ig.SimpleColor('#8c516e'),
+        border: new ig.SimpleColor('#9f89aa'),
+        shadow: new ig.SimpleColor('#7c3e61'),
+    }
+    const tunnelClear: number = 2
     sc.MapRoom.inject({
         init(room, floor, id) {
             this.parent(room, floor, id)
@@ -138,22 +158,54 @@ export function overrideMapAreaContainer() {
                 if (! this.prerendered && this.unlocked) {
                     const map = this.floor.maps[this.room.index!] as sc.AreaLoadable.MapRoomList
                     assert(map.rects)
+                    const c = this.active ? activeColors : inactiveColors
 
-                    const emptyTile = new ig.SimpleColor('#5e717f')
-                    // const freeRule = { src: { x: 281, y: 411 }, }
                     this.buffer = ig.imageAtlas.getFragment(
                         this.hook.size.x,
                         this.hook.size.y,
                         () => {
-                            for (const rect1 of map.rects) {
-                                const rect = { x: rect1.x * tilesize, y: rect1.y * tilesize,
-                                    width: rect1.width * tilesize, height: rect1.height * tilesize }
-                                emptyTile.draw(rect.x, rect.y, rect.width, rect.height)
-                            }
+                            map.rects.forEach(o => {
+                                const rect = {
+                                    x: o.x * tilesize,
+                                    y: o.y * tilesize,
+                                    width: o.width * tilesize,
+                                    height: o.height * tilesize,
+                                    x2: 0, y2: 0 
+                                }
+                                rect.x2 = rect.x + rect.width - 1
+                                rect.y2 = rect.y + rect.height - 1
+
+                                c.empty.draw(rect.x, rect.y, rect.width, rect.height)
+                    
+                                /* draw room boundries */
+                                if (o.wallSides[Dir.NORTH]) {
+                                    c.border.draw(rect.x, rect.y, rect.width, 1)
+                                    c.shadow.draw(rect.x, rect.y + 1, rect.width, 1)
+                                } else {
+                                    c.empty.draw(rect.x + 1, rect.y - tunnelClear, rect.width - 2, tunnelClear + 1)
+                                }
+                                if (o.wallSides[Dir.SOUTH]) {
+                                    c.border.draw(rect.x, rect.y2, rect.width, 1)
+                                } else {
+                                    c.empty.draw(rect.x + 1, rect.y2, rect.width - 2, tunnelClear + 1)
+                                }
+
+                                if (o.wallSides[Dir.EAST]) {
+                                    c.border.draw(rect.x2, rect.y, 1, rect.height)
+                                } else {
+                                    c.empty.draw(rect.x2, rect.y + 1, tunnelClear + 1, rect.height - 2)
+                                }
+                                if (o.wallSides[Dir.WEST]) {
+                                    c.border.draw(rect.x, rect.y, 1, rect.height)
+                                } else {
+                                    c.empty.draw(rect.x - tunnelClear, rect.y + 1, tunnelClear + 1, rect.height - 2)
+                                }
+                            })
                         })
                     this.prerendered = true
                 }
             } else {
+                debugger
                 this.parent()
             }
         }

@@ -115,7 +115,6 @@ export abstract class MapBuilder {
     ) { }
 
     addRoom(room: Room) {
-        room.index = this.rooms.length
         this.rooms.push(room)
     }
 
@@ -179,8 +178,7 @@ export abstract class MapBuilder {
         this.trimRoomPositions(new MapRect(3, 10, 4, 4))
         this.createEmptyMap()
         assert(this.rpv)
-        this.rooms = this.rooms.sort((a, b) => a.placeOrder - b.placeOrder)
-        for (const room of this.rooms) {
+        for (const room of this.rooms.sort((a, b) => a.placeOrder - b.placeOrder)) {
             const rpv: RoomPlaceVars | void = await room.place(this.rpv)
             if (rpv) {
                 this.rpv = rpv

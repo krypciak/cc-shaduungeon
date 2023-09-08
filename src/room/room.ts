@@ -77,7 +77,6 @@ export class RoomIODoorLike extends RoomIOTpr {
 
 export class Room extends MapRect {
     private addWalls: boolean
-    index?: number
     sel?: Selection
     ios: RoomIO[] = []
     primaryEntarence!: RoomIO
