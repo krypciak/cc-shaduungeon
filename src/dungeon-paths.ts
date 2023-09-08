@@ -8,6 +8,7 @@ declare const dnggen: DngGen
 
 interface DungeonConfig {
     paths: Record<string, string>
+    areaDbEntries: Record<string, sc.MapModel.Area>
 }
 
 export class DungeonPaths {
@@ -63,7 +64,8 @@ export class DungeonPaths {
         this.areaFile = `${this.areaDir}/${this.nameAndId}.json`
 
         this.config = {
-            paths: {}
+            paths: {},
+            areaDbEntries: {},
         }
     }
 
@@ -80,10 +82,12 @@ export class DungeonPaths {
 
     saveArea(builder: AreaBuilder) {
         assert(builder.builtArea, 'called saveToFile() before finalizing build') 
+        assert(builder.dbEntry, 'area db entry not generated')
     
         FsUtil.mkdirs(this.areaDir)
         const path = this.areaFile
         this.config.paths[this.areaFileGame] = path
+        this.config.areaDbEntries[builder.areaInfo.name] = builder.dbEntry
         FsUtil.writeFileSync(path, builder.builtArea)
     }
 
@@ -106,6 +110,9 @@ export class DungeonPaths {
         } else {
             dnggen.mod.runtimeAssets = this.config.paths
         }
+        Object.entries(this.config.areaDbEntries).forEach(e => {
+            ig.database.data.areas[e[0]] = e[1]
+        })
         DungeonPaths.registeredIds.add(this.id)
     }
 }

@@ -140,8 +140,8 @@ export class DungeonBuilder {
         const areaBuilder: AreaBuilder = new AreaBuilder(areaInfo, obj.stack, size)
         await areaBuilder.build()
         console.log(areaBuilder.builtArea)
+        areaBuilder.createDbEntry()
         areaBuilder.saveToFile()
-        areaBuilder.addToDatabase()
 
         // dnggen.areaDrawer.drawArea(obj.stack, size)
         // dnggen.areaDrawer.copyToClipboard()

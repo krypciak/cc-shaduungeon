@@ -124,6 +124,7 @@ export class AreaBuilder {
         sc.model.prevSubState = sc.GAME_MODEL_SUBSTATE.RUNNING
     }
 
+    dbEntry?: sc.MapModel.Area
     builtArea?: sc.AreaLoadable.Data
 
     mapConnectionSize: number = 1
@@ -220,8 +221,8 @@ export class AreaBuilder {
         }
     }
 
-    addToDatabase() {
-        const dbEntry: sc.MapModel.Area = {
+    createDbEntry() {
+        this.dbEntry = {
             path: '',
             boosterItem: '1000000',
             landmarks: {},
@@ -233,8 +234,15 @@ export class AreaBuilder {
             chests: 0,
             position: this.areaInfo.pos,
         }
+    }
+
+    addToDb() {
+        if (! this.dbEntry) {
+            this.createDbEntry()
+            assert(this.dbEntry)
+        }
         
-        ig.database.data.areas[this.areaInfo.name] = dbEntry
+        ig.database.data.areas[this.areaInfo.name] = this.dbEntry
     }
 
     saveToFile() {
