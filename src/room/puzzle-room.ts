@@ -75,7 +75,7 @@ export class PuzzleRoom extends Room {
         /* extract data from original puzzle selection */ {
         const id = blitzkrieg.util.generateUniqueID()
         const sel = blitzkrieg.selectionCopyManager
-            .createUniquePuzzleSelection(puzzle.sel, 0, 0, id) /* changed from usel to sel now no work :( */
+            .createUniquePuzzleSelection(puzzle.sel, 0, 0, id)
 
         let solveCondition: string | undefined
         let solveConditionUnique: string | undefined
@@ -210,7 +210,7 @@ export class PuzzleRoom extends Room {
         this.ios.push(this.primaryEntarence)
     }
 
-    async place(rpv: RoomPlaceVars): Promise<RoomPlaceVars | undefined> {
+    async place(rpv: RoomPlaceVars): Promise<RoomPlaceVars | void> {
         const puzzle = this.puzzle
         const rpv1 = await super.place(rpv)
         if (rpv1) { rpv = rpv1 }
@@ -256,7 +256,8 @@ export class PuzzleRoom extends Room {
             rpv = RoomPlaceVars.fromRawMap(map, rpv.theme)
         }
 
-        addSel(rpv.map.name, puzzle.usel.sel, dnggen.puzzleFileIndex)
+        puzzle.usel.sel.map = rpv.map.name
+        addSel(blitzkrieg.puzzleSelections, puzzle.usel.sel, dnggen.puzzleFileIndex)
 
         return rpv
     }

@@ -63,7 +63,7 @@ export class RoomIOTpr implements RoomIO {
     getTpr(): Tpr { return this.tpr }
 }
 export class RoomIODoorLike extends RoomIOTpr {
-    private constructor(tpr: TprDoorLike) {
+    constructor(tpr: TprDoorLike) {
         super(tpr)
     }
     static fromRoom(type: MapDoorLike.Types, room: Room, name: string, dir: Dir, prefPos?: EntityPoint): RoomIODoorLike {
@@ -142,7 +142,7 @@ export class Room extends MapRect {
 
     // place functions
     
-    async place(rpv: RoomPlaceVars): Promise<RoomPlaceVars | undefined> {
+    async place(rpv: RoomPlaceVars): Promise<RoomPlaceVars | void> {
         if (this.placeOrder == RoomPlaceOrder.NoPlace) { return }
         this.placeRoom(rpv, this.addNavMap)
         this.placeTprs(rpv)

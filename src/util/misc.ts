@@ -1,4 +1,4 @@
-import { Blitzkrieg, Selection } from './blitzkrieg'
+import { Blitzkrieg, Selection, Selections } from './blitzkrieg'
 
 declare const blitzkrieg: Blitzkrieg
 
@@ -41,8 +41,8 @@ export function allLangs(text: string): ig.LangLabel.Data {
     }
 }
 
-export function addSel(mapName: string, sel: Selection, fileIndex: number) {
-    blitzkrieg.puzzleSelections.setSelHashMapEntry(mapName, {
+export function addSel(pool: Selections, sel: Selection, fileIndex: number) {
+    pool.setSelHashMapEntry(sel.map, {
         sels: [ sel ],
         fileIndex,
     })

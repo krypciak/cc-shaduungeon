@@ -62,7 +62,7 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
         puzzleMap: sc.MapModel.Map,
     ) {
         const battleStartCondition: string = 'tmp.battle1'
-        const battleDoneCondition: string = 'map.battle1battleDone'
+        const battleDoneCondition: string = 'map.battle1done'
         const puzzleEntarenceCondition: string = battleStartCondition + ' && !' + battleDoneCondition
 
         super(areaInfo, puzzleSel, puzzleMap, false, puzzleEntarenceCondition, false)
@@ -72,7 +72,7 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
         assertBool(this.puzzleRoom.primaryEntarence instanceof RoomIOTunnelOpen)
         const battlePos: MapPoint = this.puzzleRoom.primaryEntarence.tunnel.getRoomPosThatConnectsToTheMiddle(battleSize)
 
-        this.battleRoom = this.entarenceRoom = new BattleRoom(battlePos, battleSize, battleStartCondition, battleDoneCondition)
+        this.battleRoom = this.entarenceRoom = new BattleRoom(battlePos, battleSize, battleStartCondition, battleDoneCondition, this.puzzleRoom.primaryEntarence)
     }
 
     prepareToArrange(dir: Dir): boolean {

@@ -181,7 +181,7 @@ export abstract class MapBuilder {
         assert(this.rpv)
         this.rooms = this.rooms.sort((a, b) => a.placeOrder - b.placeOrder)
         for (const room of this.rooms) {
-            const rpv: RoomPlaceVars | undefined = await room.place(this.rpv)
+            const rpv: RoomPlaceVars | void = await room.place(this.rpv)
             if (rpv) {
                 this.rpv = rpv
             }
