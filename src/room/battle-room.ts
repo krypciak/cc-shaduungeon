@@ -1,7 +1,7 @@
 import { MapEnemyCounter, MapEventTrigger, MapGlowingLine, MapHiddenBlock, MapTouchTrigger, MapWall } from '../entity-spawn'
 import DngGen from '../plugin'
 import { Blitzkrieg } from '../util/blitzkrieg'
-import { addSel, assert } from '../util/misc'
+import { assert } from '../util/misc'
 import { DirUtil, EntityPoint, EntityRect, MapPoint, MapRect } from '../util/pos'
 import { RoomPlaceVars } from './map-builder'
 import { Room, RoomIO, RoomIODoorLike, RoomIOTpr } from './room'
@@ -22,9 +22,8 @@ export class BattleRoom extends Room {
     }
 
     async place(rpv: RoomPlaceVars): Promise<RoomPlaceVars | void> {
+        this.sel = { sel: blitzkrieg.util.getSelFromRect(this.to(EntityRect), rpv.map.name, 0), poolName: 'battle'  }
         super.place(rpv)
-        this.sel = blitzkrieg.util.getSelFromRect(this.to(EntityRect), rpv.map.name, 0)
-        addSel(blitzkrieg.battleSelections, this.sel, dnggen.battleFileIndex)
 
         if (dnggen.debug.decorateBattleRoom) {
             assert(this.primExit, 'closed tunnels not implemented')

@@ -1,6 +1,6 @@
 import { EntityRect } from './pos'
 
-export interface Blitzkrieg {
+export interface Blitzkrieg extends Record<string, Selections> {
     puzzleSelections: Selections
     puzzleSelectionManager: PuzzleSelectionManager
     battleSelections: Selections

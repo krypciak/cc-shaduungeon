@@ -133,8 +133,6 @@ async function registerStyles() {
 export default class DngGen {
     dir: string
     mod: Mod1
-    puzzleFileIndex: number = -1
-    battleFileIndex: number = -1
     loaded: boolean = false
     dungeonBuilder!: DungeonBuilder
     areaDrawer!: AreaDrawer
@@ -163,15 +161,6 @@ export default class DngGen {
         assert(blitzkrieg, blitzkriegMissingMsg)
         assert(blitzkrieg.loaded, blitzkriegMissingMsg)
 
-        // register selections
-        this.puzzleFileIndex = blitzkrieg.puzzleSelections.jsonfiles.length
-        blitzkrieg.puzzleSelections.jsonfiles.push(this.dir + 'json/genPuzzle.json')
-        blitzkrieg.puzzleSelections.load(this.puzzleFileIndex)
-
-        this.battleFileIndex = blitzkrieg.battleSelections.jsonfiles.length
-        blitzkrieg.battleSelections.jsonfiles.push(this.dir + 'json/genBattle.json')
-        blitzkrieg.battleSelections.load(this.battleFileIndex)
- 
         this.dungeonBuilder = new DungeonBuilder()
 
         addInjects()

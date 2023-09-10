@@ -1,14 +1,19 @@
 import { AreaBuilder } from './area/area-builder'
 import DngGen from './plugin'
 import { MapBuilder } from './room/map-builder'
+import { Blitzkrieg, Selection, Selections } from './util/blitzkrieg'
 import { FsUtil } from './util/fsutil'
 import { assert } from './util/misc'
 
+declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
+
+export type SelectionPools = 'puzzle' | 'battle'
 
 interface DungeonConfig {
     paths: Record<string, string>
     areaDbEntries: Record<string, sc.MapModel.Area>
+    sels: Record<SelectionPools, string>
 }
 
 export class DungeonPaths {
@@ -27,7 +32,7 @@ export class DungeonPaths {
             if (! DungeonPaths.registeredIds.has(id)) {
                 const paths = new DungeonPaths(id)
                 if (paths.loadConfig()) {
-                    paths.registerFiles()
+                    paths.register()
                 } else {
                     return 'dnggen/limbo' /* set the loading map path to a fallback map */
                 }
@@ -50,6 +55,8 @@ export class DungeonPaths {
     areaDir: string
     areaFile: string
 
+    selIndexes: Record<string, number> = {}
+
     constructor(public id: string) {
         const name = dnggen.mod.isCCL3 ? dnggen.mod.id : dnggen.mod.name
         this.baseDir = `assets/mod-data/${name}/saves/${id}`
@@ -66,6 +73,10 @@ export class DungeonPaths {
         this.config = {
             paths: {},
             areaDbEntries: {},
+            sels: {
+                puzzle: `${this.baseDir}/selPuzzle.json`,
+                battle: `${this.baseDir}/selBattle.json`,
+            }
         }
     }
 
@@ -102,6 +113,11 @@ export class DungeonPaths {
         return true
     }
 
+    register() {
+        this.registerFiles()
+        this.registerSelections()
+    }
+
     registerFiles() {
         if (dnggen.mod.isCCL3) {
             Object.entries(this.config.paths).forEach(e => {
@@ -114,5 +130,25 @@ export class DungeonPaths {
             ig.database.data.areas[e[0]] = e[1]
         })
         DungeonPaths.registeredIds.add(this.id)
+    }
+
+    registerSelections() {
+        for (const selEntry of Object.entries(this.config.sels)) {
+            const [ poolName, path ] = selEntry
+            const pool = (blitzkrieg[poolName + 'Selections'] as Selections)
+            const index = this.selIndexes[poolName] = pool.jsonfiles.length
+            pool.jsonfiles.push(path)
+            pool.load(index)
+        }
+    }
+
+    addSelectionToPool(poolName: SelectionPools, sel: Selection) {
+        const index: number = this.selIndexes[poolName]
+        if (index === undefined) { throw new Error('pool name doesnt exist: ' + poolName) }
+        const pool: Selections = blitzkrieg[poolName + 'Selections'] as Selections
+        pool.setSelHashMapEntry(sel.map, {
+            sels: [ sel ],
+            fileIndex: index,
+        })
     }
 }

@@ -1,7 +1,3 @@
-import { Blitzkrieg, Selection, Selections } from './blitzkrieg'
-
-declare const blitzkrieg: Blitzkrieg
-
 export class Stack<T> {
     array: T[] = []
 
@@ -39,13 +35,6 @@ export function allLangs(text: string): ig.LangLabel.Data {
         zh_TW: text,
         langUid: langUid++,
     }
-}
-
-export function addSel(pool: Selections, sel: Selection, fileIndex: number) {
-    pool.setSelHashMapEntry(sel.map, {
-        sels: [ sel ],
-        fileIndex,
-    })
 }
 
 export function round(num: number): number {

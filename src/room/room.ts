@@ -4,6 +4,7 @@ import { Coll } from '../util/map'
 import { Point, Rect, Dir, DirUtil, MapPoint, MapRect, EntityRect, EntityPoint, Dir3d } from '../util/pos'
 import { assert, round } from '../util/misc'
 import { RoomPlaceVars } from './map-builder'
+import { SelectionPools } from '../dungeon-paths'
 
 const tilesize: number = 16
 declare const blitzkrieg: Blitzkrieg
@@ -77,7 +78,7 @@ export class RoomIODoorLike extends RoomIOTpr {
 
 export class Room extends MapRect {
     private addWalls: boolean
-    sel?: Selection
+    sel?: { sel: Selection, poolName: SelectionPools }
     ios: RoomIO[] = []
     primaryEntarence!: RoomIO
     primaryExit?: RoomIO
@@ -110,9 +111,9 @@ export class Room extends MapRect {
         const entityOffset: EntityPoint = offset.to(EntityPoint)
 
         if (this.sel) {
-            const newPos: EntityPoint = EntityPoint.fromVec(this.sel.size)
+            const newPos: EntityPoint = EntityPoint.fromVec(this.sel.sel.size)
             Vec2.add(newPos, entityOffset)
-            blitzkrieg.util.setSelPos(this.sel, newPos.x, newPos.y)
+            blitzkrieg.util.setSelPos(this.sel.sel, newPos.x, newPos.y)
         }
         this.ios.forEach(io => {
             if (io instanceof RoomIOTpr) {
@@ -145,6 +146,10 @@ export class Room extends MapRect {
         if (this.placeOrder == RoomPlaceOrder.NoPlace) { return }
         this.placeRoom(rpv, this.addNavMap)
         this.placeTprs(rpv)
+
+        if (this.sel) {
+            rpv.areaInfo.paths.addSelectionToPool(this.sel.poolName, this.sel.sel)
+        }
     }
 
     private placeTprs(rpv: RoomPlaceVars) {

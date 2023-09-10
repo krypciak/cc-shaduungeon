@@ -43,26 +43,27 @@ export class DungeonBuilder {
         console.log('puzzles:', puzzles)
 
         const dngPaths = new DungeonPaths(id)
+        dngPaths.registerSelections()
 
         const areaInfo: AreaInfo = new AreaInfo(dngPaths, 'Generated Dungeon', 'generic description, ' + dngPaths.nameAndId, 'DUNGEON', Vec2.createC(150, 70))
         
         const builders: IndexedBuilder[] = []
         // add starting map as a builder?
 
-        // for (let builderIndex = builders.length, i = 0; i < puzzles.length; builderIndex++, i++) {
-        //     const sel = puzzles[builderIndex]
-        //     const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
-        //     const builder: IndexedBuilder = IndexedBuilder.create(new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap), builderIndex)
-        //     builders.push(builder)
-        // }
+        for (let builderIndex = builders.length, i = 0; i < puzzles.length; builderIndex++, i++) {
+            const sel = puzzles[builderIndex]
+            const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
+            const builder: IndexedBuilder = IndexedBuilder.create(new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap), builderIndex)
+            builders.push(builder)
+        }
 
         // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleDoubleRoomMapBuilder])
         // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleDoubleRoomMapBuilder])
 
 
-        SimpleSingleTunnelMapBuilder.addPreset(builders, areaInfo)
-        SimpleRoomMapBuilder.addPreset(builders, areaInfo)
-        SimpleDoubleRoomMapBuilder.addPreset(builders, areaInfo)
+        // SimpleSingleTunnelMapBuilder.addPreset(builders, areaInfo)
+        // SimpleRoomMapBuilder.addPreset(builders, areaInfo)
+        // SimpleDoubleRoomMapBuilder.addPreset(builders, areaInfo)
 
         type RecReturn = undefined | { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> }
 

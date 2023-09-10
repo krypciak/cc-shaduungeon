@@ -11,7 +11,7 @@ import { getPosDirFromRoomIO } from './tunnel-room'
 declare const dnggen: DngGen
 
 export namespace RoomPlaceVars {
-    export function fromRawMap(map: sc.MapModel.Map, theme: RoomTheme): RoomPlaceVars {
+    export function fromRawMap(map: sc.MapModel.Map, theme: RoomTheme, areaInfo: AreaInfo): RoomPlaceVars {
         let background: number[][] | undefined
         let shadow: number[][] | undefined
         let light: number[][] | undefined
@@ -43,6 +43,7 @@ export namespace RoomPlaceVars {
             entities: map.entities,
             theme, tc: theme.config,
             masterLevel: map.masterLevel,
+            areaInfo,
         }
     }
 }
@@ -58,6 +59,7 @@ export interface RoomPlaceVars {
     theme: RoomTheme
     tc: RoomThemeConfig
     masterLevel: number
+    areaInfo: AreaInfo
 }
 
 export abstract class MapBuilder {
@@ -168,7 +170,7 @@ export abstract class MapBuilder {
 
     createEmptyMap() {
         assert(this.theme); assert(this.path); assert(this.size)
-        const rpv: RoomPlaceVars = CCMap.getEmpty(this.size, this.levelCount, this.theme, this.path, this.areaInfo.name)
+        const rpv: RoomPlaceVars = CCMap.getEmpty(this.size, this.levelCount, this.theme, this.path, this.areaInfo)
         this.rpv = rpv
     }
 

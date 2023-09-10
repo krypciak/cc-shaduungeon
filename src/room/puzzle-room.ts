@@ -1,7 +1,7 @@
 import { Dir, MapPoint, EntityRect, Rect, setToClosestSelSide, EntityPoint, DirUtil, MapRect } from '../util/pos'
 import { Blitzkrieg, Selection } from '../util/blitzkrieg'
 import { Room, RoomIO, RoomIODoorLike, } from './room'
-import { addSel, assert } from '../util/misc'
+import { assert } from '../util/misc'
 import { MapDoorLike, MapEntity, MapEventTrigger, MapFloorSwitch, MapTransporter } from '../entity-spawn'
 import { RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen } from './tunnel-room'
 import { RoomPlaceVars } from './map-builder'
@@ -171,7 +171,7 @@ export class PuzzleRoom extends Room {
         }
         assert(this.primaryExit, 'primary exit missing?')
 
-        this.sel = puzzle.usel.sel
+        this.sel = { sel: puzzle.usel.sel, poolName: 'puzzle' }
 
         /* at this point all variables in PuzzleData are satisfied */
         assert(puzzle.roomType); assert(puzzle.completion); assert(puzzle.map); assert(puzzle.usel)
@@ -212,8 +212,8 @@ export class PuzzleRoom extends Room {
 
     async place(rpv: RoomPlaceVars): Promise<RoomPlaceVars | void> {
         const puzzle = this.puzzle
-        const rpv1 = await super.place(rpv)
-        if (rpv1) { rpv = rpv1 }
+        puzzle.usel.sel.map = rpv.map.name
+        rpv = await super.place(rpv) ?? rpv
      
         if (puzzle.completion == PuzzleCompletionType.GetTo && puzzle.roomType == PuzzleRoomType.AddWalls) {
             assert(puzzle.usel.solveConditionUnique)
@@ -253,11 +253,8 @@ export class PuzzleRoom extends Room {
                     uniqueId: puzzle.usel.id,
                     uniqueSel: puzzle.usel.sel,
                 })
-            rpv = RoomPlaceVars.fromRawMap(map, rpv.theme)
+            rpv = RoomPlaceVars.fromRawMap(map, rpv.theme, rpv.areaInfo)
         }
-
-        puzzle.usel.sel.map = rpv.map.name
-        addSel(blitzkrieg.puzzleSelections, puzzle.usel.sel, dnggen.puzzleFileIndex)
 
         return rpv
     }

@@ -1,3 +1,4 @@
+import { AreaInfo } from '../area/area-builder'
 import { RoomPlaceVars } from '../room/map-builder'
 import { RoomTheme } from '../room/themes'
 import { assert } from './misc'
@@ -63,7 +64,7 @@ export class CCMap implements sc.MapModel.Map {
 
     toJSON() { return this as sc.MapModel.Map }
 
-    static getEmpty(size: MapPoint, levelCount: number, theme: RoomTheme, mapName: string, areaName: string): RoomPlaceVars  {
+    static getEmpty(size: MapPoint, levelCount: number, theme: RoomTheme, mapName: string, areaInfo: AreaInfo): RoomPlaceVars  {
         const { x: width, y: height } = size
         const layers: MapLayer[] = []
         const levels: { height: number }[] = []
@@ -103,13 +104,14 @@ export class CCMap implements sc.MapModel.Map {
 
         assert(background)
 
-        const map: CCMap = new CCMap(mapName, levels, width, height, 0, theme.getMapAttributes(areaName), [], layers)
+        const map: CCMap = new CCMap(mapName, levels, width, height, 0, theme.getMapAttributes(areaInfo.name), [], layers)
         return {
             map,
             background, shadow, light, colls, navs,
             entities: map.entities,
             theme, tc: theme.config,
-            masterLevel: 0
+            masterLevel: 0,
+            areaInfo
         }
     }
 }
