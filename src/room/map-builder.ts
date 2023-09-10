@@ -7,7 +7,6 @@ import { Dir, MapPoint, MapRect, PosDir } from '../util/pos'
 import { assert } from '../util/misc'
 import { Room } from './room'
 import { getPosDirFromRoomIO } from './tunnel-room'
-
 declare const dnggen: DngGen
 
 export namespace RoomPlaceVars {

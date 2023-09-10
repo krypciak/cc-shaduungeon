@@ -5,6 +5,27 @@ export class FsUtil {
     static mkdirs(path: string) {
         if (! fs.existsSync(path)) { fs.mkdirSync(path, { recursive: true }) }
     }
+
+    static clearDir(path: string) {
+        fs.readdirSync(path).forEach((file: string) => {
+            const filePath = `${path}/${file}`
+
+            if (fs.lstatSync(filePath).isDirectory()) {
+                FsUtil.clearDir(filePath)
+                fs.rmdirSync(filePath)
+            } else {
+                fs.unlinkSync(filePath)
+            }
+        })
+    }
+
+    static mkdirsClear(path: string) {
+        if (fs.existsSync(path)) {
+            FsUtil.clearDir(path)
+        } else {
+            FsUtil.mkdirs(path)
+        }
+    }
     
     static writeFile(path: string, obj: object): Promise<void> {
         return new Promise((resolve, reject) => {

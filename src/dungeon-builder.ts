@@ -1,5 +1,5 @@
 import { Blitzkrieg, Selection, SelectionMapEntry } from './util/blitzkrieg'
-import { Stack, assert } from './util/misc'
+import { Stack, assert, assertBool } from './util/misc'
 import { AreaPoint, Dir, } from './util/pos'
 import { AreaInfo, AreaBuilder, ABStackEntry } from './area/area-builder'
 import { MapBuilder } from './room/map-builder'
@@ -44,6 +44,7 @@ export class DungeonBuilder {
 
         const dngPaths = new DungeonPaths(id)
         dngPaths.registerSelections()
+        dngPaths.clearDir()
 
         const areaInfo: AreaInfo = new AreaInfo(dngPaths, 'Generated Dungeon', 'generic description, ' + dngPaths.nameAndId, 'DUNGEON', Vec2.createC(150, 70))
         
@@ -57,19 +58,18 @@ export class DungeonBuilder {
             builders.push(builder)
         }
 
-        // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleDoubleRoomMapBuilder])
+        SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleDoubleRoomMapBuilder])
         // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleDoubleRoomMapBuilder])
-
 
         // SimpleSingleTunnelMapBuilder.addPreset(builders, areaInfo)
         // SimpleRoomMapBuilder.addPreset(builders, areaInfo)
-        SimpleDoubleRoomMapBuilder.addPreset(builders, areaInfo)
+        // SimpleDoubleRoomMapBuilder.addPreset(builders, areaInfo)
 
         type RecReturn = undefined | { stack: Stack<ABStackEntry>, leftBuilders: Set<MapBuilder> }
 
         let highestRecReturn: { stack: Stack<ABStackEntry>, leftBuilders: Set<MapBuilder> } = { stack: new Stack(), leftBuilders: new Set() }
         const countTarget: number = Math.min(builders.length, 
-            builders.length
+            builders.length / 1.5
         )
         
         function recursiveTryPlaceMaps(stack: Stack<ABStackEntry>, availableBuilders: Set<MapBuilder>): RecReturn {
@@ -100,6 +100,7 @@ export class DungeonBuilder {
 
             const obj = AreaBuilder.tryGetAreaRects(builder, lastEntry.exit, stack.array)
             if (! obj) { /* map overlaps */ return }
+            assertBool(obj.rooms.length == obj.rects.length)
         
             // areabuilder uses tpr pos insetad of edge p
             assert(builder.exitOnWall)

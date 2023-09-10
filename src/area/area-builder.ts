@@ -1,6 +1,6 @@
 import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, PosDir, Rect, bareRect, doRectsOverlap, doesRectArrayOverlapRectArray } from '../util/pos'
 import { Stamp, loadArea } from '../util/map'
-import { Stack, allLangs, assert } from '../util/misc'
+import { Stack, allLangs, assert, assertBool } from '../util/misc'
 import DngGen from '../plugin'
 import { Room, RoomType } from '../room/room'
 import { MapBuilder } from '../room/map-builder'
@@ -98,13 +98,9 @@ export class AreaBuilder {
                 }
             }
         }
-        /* sort rects by place order */
-        const obj = rects.map((r, i) => [r, builder.rooms[i]] as [AreaRect, Room])
-            .sort((a, b) => a[1].placeOrder - b[1].placeOrder)
-
-        builder.rooms = obj.map(e => e[1])
+        
         return {
-            rects: obj.map(e => e[0]),
+            rects,
             exit,
             rooms: builder.rooms,
         }
@@ -180,6 +176,14 @@ export class AreaBuilder {
 
         let mapIndex = 0
         function addMap(path: string, displayName: string, rects: AreaRect[], rooms: Room[]) {
+            assertBool(rects.length == rooms.length)
+
+            const obj = rects.map((r, i) => [r, rooms[i]] as [AreaRect, Room])
+                .sort((a, b) => a[1].placeOrder - b[1].placeOrder)
+
+            rects = obj.map(e => e[0])
+            rooms = obj.map(e => e[1])
+
             const { min, max } = Rect.getMinMaxPosFromRectArr(rects)
             const trimmedRecs: (bareRect & { roomType: RoomType, wallSides: boolean[] })[] = rects.map(
                 (r, i) => ({ 

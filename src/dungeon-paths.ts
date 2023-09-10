@@ -80,6 +80,10 @@ export class DungeonPaths {
         }
     }
 
+    clearDir() {
+        FsUtil.mkdirsClear(this.baseDir)
+    }
+
     saveMap(builder: MapBuilder): Promise<void> {
         assert(builder.rpv)
         console.log('map: ', ig.copy(builder.rpv.map))
