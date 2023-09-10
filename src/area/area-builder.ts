@@ -5,6 +5,7 @@ import DngGen from '../plugin'
 import { Room, RoomType } from '../room/room'
 import { MapBuilder } from '../room/map-builder'
 import { DungeonPaths } from '../dungeon-paths'
+import { AreaViewFloorTypes } from './custom-MapAreaContainer'
 
 declare const dnggen: DngGen
 
@@ -160,7 +161,7 @@ export class AreaBuilder {
             floors: [
                 await this.generateFloor(0, 'G', this.size, this.stack.array),
             ],
-            type: 'roomList',
+            type: AreaViewFloorTypes.RoomList,
         }
         this.builtArea = builtArea
     }
@@ -187,7 +188,12 @@ export class AreaBuilder {
             const { min, max } = Rect.getMinMaxPosFromRectArr(rects)
             const trimmedRecs: (bareRect & { roomType: RoomType, wallSides: boolean[] })[] = rects.map(
                 (r, i) => ({ 
-                    ...(new AreaRect(r.x - min.x, r.y - min.y, r.width, r.height)),
+                    ...(new AreaRect(
+                        Math.floor((r.x - min.x) * 8)/8, 
+                        Math.floor((r.y - min.y) * 8)/8,
+                        Math.floor(r.width * 8)/8,
+                        Math.floor(r.height * 8)/8,
+                    )),
                     roomType: rooms[i].type,
                     /* if the room has no walls make it have all walls (so it renders) */
                     wallSides: rooms[i].wallSides.every(v => !v) ? [true, true, true, true] : rooms[i].wallSides,
@@ -220,7 +226,7 @@ export class AreaBuilder {
             name: allLangs(name),
             icons: [],
             tiles: [],
-            type: 'roomList',
+            type: AreaViewFloorTypes.RoomList,
             size,
             maps,
             connections,

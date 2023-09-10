@@ -7,10 +7,10 @@ declare global {
     namespace sc {
         namespace AreaLoadable {
             interface Data {
-                type?: 'grid' | 'roomList'
+                type?: AreaViewFloorTypes
             }
             interface Floor {
-                type?: 'grid' | 'roomList'
+                type?: AreaViewFloorTypes
                 size?: Vec2
 
                 rooms?: sc.AreaRoomBounds[]
@@ -65,8 +65,7 @@ declare global {
             activeRoom: null
             callback: any
             bounds: bareRect
-            // custom
-            type: 'grid' | 'roomList'
+            type: AreaViewFloorTypes /* my custom type */
 
             setPos(this: this, x: number, y: number): void
             setSize(this: this, width: number, height: number): void

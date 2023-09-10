@@ -1,6 +1,11 @@
 import { assert } from '../util/misc'
 import { Dir } from '../util/pos'
 
+export enum AreaViewFloorTypes {
+    Grid, /* default */
+    RoomList,
+}
+
 const tilesize = 8
 type GuiHookMapRoomList = ig.GuiHook & {
     gui: { floor: sc.AreaLoadable.Floor, room: sc.AreaRoomBounds, unlocked: boolean }
@@ -17,7 +22,7 @@ export function overrideMapAreaContainer() {
         findMap(mx: number, my: number, gamepad: boolean, wait: number): boolean | undefined {
             if (sc.menu.mapMapFocus) { return }
             const area = sc.map.getCurrentArea()
-            if (area && area.type == 'roomList') {
+            if (area && area.type == AreaViewFloorTypes.RoomList) {
                 let pos: Vec2 = Vec2.createC(0, 0)
                 if (gamepad) {
                     pos = this.area.hook.pos
@@ -82,8 +87,8 @@ export function overrideMapAreaContainer() {
 
     sc.MapFloor.inject({
         init(floor: sc.AreaLoadable.Floor, callback: any) {
-            this.type = floor.type = floor.type ?? 'grid'
-            if (floor.type == 'roomList') {
+            this.type = floor.type = floor.type ?? AreaViewFloorTypes.Grid
+            if (floor.type == AreaViewFloorTypes.RoomList) {
                 if (floor.tiles.length == 0) {
                     floor.tiles = [[]]
                 }
@@ -94,7 +99,7 @@ export function overrideMapAreaContainer() {
                 }
             }
             this.parent(floor, callback)
-            if (floor.type == 'roomList') {
+            if (floor.type == AreaViewFloorTypes.RoomList) {
                 assert(floor.size)
                 this.setSize(floor.size.x * tilesize, floor.size.y * tilesize)
             }
@@ -103,10 +108,10 @@ export function overrideMapAreaContainer() {
 
     sc.AreaLoadable.inject({
         _createRooms() {
-            if (this.data!.type == 'roomList') {
+            if (this.data!.type == AreaViewFloorTypes.RoomList) {
                 for (const floor of this.data!.floors) {
                     const bounds: sc.AreaRoomBounds[] = []
-                    if (floor.type != 'roomList') { throw new Error('all area maps of type "roomList" must also have that type') }
+                    if (floor.type != AreaViewFloorTypes.RoomList) { throw new Error('all area maps of type "roomList" must also have that type') }
                     for (const map of (floor.maps as sc.AreaLoadable.MapRoomList[])) {
                         bounds.push(new sc.AreaRoomBounds(map, map.id, map.min.x, map.min.y, [], map.max))
                     }
@@ -139,22 +144,29 @@ export function overrideMapAreaContainer() {
     })
 
     const inactiveColors: AreaRendererColorScheme = {
-        empty: new ig.SimpleColor('#5e717f'),
-        border: new ig.SimpleColor('#7ac1d5'),
-        shadow: new ig.SimpleColor('#47566c'),
+        empty: new ig.SimpleColor('#5e717fff'),
+        border: new ig.SimpleColor('#7ac1d5ff'),
+        shadow: new ig.SimpleColor('#47566cff'),
     }
     const activeColors: AreaRendererColorScheme = {
-        empty: new ig.SimpleColor('#8c516e'),
-        border: new ig.SimpleColor('#9f89aa'),
-        shadow: new ig.SimpleColor('#7c3e61'),
+        empty: new ig.SimpleColor('#8c516eff'),
+        border: new ig.SimpleColor('#9f89aaff'),
+        shadow: new ig.SimpleColor('#7c3e61ff'),
     }
     const tunnelClear: number = 2
+
     sc.MapRoom.inject({
         init(room, floor, id) {
+            if (floor.type == AreaViewFloorTypes.RoomList) {
+                room.min.x = Math.floor(room.min.x * tilesize)/tilesize
+                room.min.y = Math.floor(room.min.y * tilesize)/tilesize
+                room.max.x = Math.ceil(room.max.x * tilesize)/tilesize
+                room.max.y = Math.ceil(room.max.y * tilesize)/tilesize
+            }
             this.parent(room, floor, id)
         },
         preRender() {
-            if (this.floor.type == 'roomList') {
+            if (this.floor.type == AreaViewFloorTypes.RoomList) {
                 if (! this.prerendered && this.unlocked) {
                     const map = this.floor.maps[this.room.index!] as sc.AreaLoadable.MapRoomList
                     assert(map.rects)
@@ -201,11 +213,10 @@ export function overrideMapAreaContainer() {
                                     c.empty.draw(rect.x - tunnelClear, rect.y + 1, tunnelClear + 1, rect.height - 2)
                                 }
                             })
+                            this.prerendered = true
                         })
-                    this.prerendered = true
                 }
             } else {
-                debugger
                 this.parent()
             }
         }
