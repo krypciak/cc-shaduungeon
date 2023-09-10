@@ -1,7 +1,7 @@
 import { Blitzkrieg, Selection, SelectionMapEntry } from './util/blitzkrieg'
 import { Stack, assert } from './util/misc'
 import { AreaPoint, Dir, } from './util/pos'
-import { AreaInfo, AreaBuilder, ABStackEntry, IndexedBuilder } from './area/area-builder'
+import { AreaInfo, AreaBuilder, ABStackEntry } from './area/area-builder'
 import { MapBuilder } from './room/map-builder'
 import { SimpleDoubleRoomMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder } from './room/simple-map-builder'
 import { DungeonPaths } from './dungeon-paths'
@@ -47,13 +47,13 @@ export class DungeonBuilder {
 
         const areaInfo: AreaInfo = new AreaInfo(dngPaths, 'Generated Dungeon', 'generic description, ' + dngPaths.nameAndId, 'DUNGEON', Vec2.createC(150, 70))
         
-        const builders: IndexedBuilder[] = []
+        const builders: MapBuilder[] = []
         // add starting map as a builder?
 
         for (let builderIndex = builders.length, i = 0; i < puzzles.length; builderIndex++, i++) {
             const sel = puzzles[builderIndex]
             const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
-            const builder: IndexedBuilder = IndexedBuilder.create(new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap), builderIndex)
+            const builder: MapBuilder = new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap)
             builders.push(builder)
         }
 
@@ -63,16 +63,16 @@ export class DungeonBuilder {
 
         // SimpleSingleTunnelMapBuilder.addPreset(builders, areaInfo)
         // SimpleRoomMapBuilder.addPreset(builders, areaInfo)
-        // SimpleDoubleRoomMapBuilder.addPreset(builders, areaInfo)
+        SimpleDoubleRoomMapBuilder.addPreset(builders, areaInfo)
 
-        type RecReturn = undefined | { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> }
+        type RecReturn = undefined | { stack: Stack<ABStackEntry>, leftBuilders: Set<MapBuilder> }
 
-        let highestRecReturn: { stack: Stack<ABStackEntry>, leftBuilders: Set<IndexedBuilder> } = { stack: new Stack(), leftBuilders: new Set() }
+        let highestRecReturn: { stack: Stack<ABStackEntry>, leftBuilders: Set<MapBuilder> } = { stack: new Stack(), leftBuilders: new Set() }
         const countTarget: number = Math.min(builders.length, 
             builders.length
         )
         
-        function recursiveTryPlaceMaps(stack: Stack<ABStackEntry>, availableBuilders: Set<IndexedBuilder>): RecReturn {
+        function recursiveTryPlaceMaps(stack: Stack<ABStackEntry>, availableBuilders: Set<MapBuilder>): RecReturn {
             for (const possibleBuilder of availableBuilders) {
                 const possibleObj = recursiveTryPlaceMap(possibleBuilder, stack, availableBuilders)
                 if (possibleObj && possibleObj.stack.length() >= countTarget) { return possibleObj }
@@ -87,8 +87,8 @@ export class DungeonBuilder {
             rooms: [],
         }
 
-        function recursiveTryPlaceMap(builder: IndexedBuilder, stack: Stack<ABStackEntry>,
-            availableBuilders: Set<IndexedBuilder>): RecReturn {
+        function recursiveTryPlaceMap(builder: MapBuilder, stack: Stack<ABStackEntry>,
+            availableBuilders: Set<MapBuilder>): RecReturn {
 
             let lastEntry: ABStackEntry = stack.peek()
             if (! lastEntry) {
@@ -152,7 +152,7 @@ export class DungeonBuilder {
 
 
 
-        const usedBuilders: IndexedBuilder[] = obj.stack.array.map(e => e.builder!)
+        const usedBuilders: MapBuilder[] = obj.stack.array.map(e => e.builder!)
         await MapBuilder.placeBuilders(usedBuilders)
 
         dngPaths.saveConfig()

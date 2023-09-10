@@ -1,4 +1,4 @@
-import { AreaInfo, IndexedBuilder } from "../area/area-builder"
+import { AreaInfo } from "../area/area-builder"
 import { MapBuilder } from "./map-builder"
 import { SimpleDoubleTunnelRoom, SimpleOpenTunnelRoom, SimpleRoom, SimpleTunnelRoom } from "./simple-room"
 import { Dir, DirUtil, EntityPoint, MapPoint, MapRect } from "../util/pos"
@@ -32,9 +32,9 @@ export class SimpleRoomMapBuilder extends MapBuilder {
     }
 
     static addPreset(builders: MapBuilder[], areaInfo: AreaInfo) {
-        builders.push(IndexedBuilder.create(new SimpleRoomMapBuilder(areaInfo, Dir.SOUTH, Dir.NORTH), builders.length))
-        builders.push(IndexedBuilder.create(new SimpleRoomMapBuilder(areaInfo, Dir.SOUTH, Dir.EAST), builders.length))
-        builders.push(IndexedBuilder.create(new SimpleRoomMapBuilder(areaInfo, Dir.WEST, Dir.EAST), builders.length))
+        builders.push(new SimpleRoomMapBuilder(areaInfo, Dir.SOUTH, Dir.NORTH))
+        builders.push(new SimpleRoomMapBuilder(areaInfo, Dir.SOUTH, Dir.EAST))
+        builders.push(new SimpleRoomMapBuilder(areaInfo, Dir.WEST, Dir.EAST))
     }
 
     static addRandom(builders: MapBuilder[], areaInfo: AreaInfo, num: number, creators: (new (areaInfo: AreaInfo, ent: Dir, exit: Dir) => MapBuilder)[] = [SimpleRoomMapBuilder]) {
@@ -50,7 +50,7 @@ export class SimpleRoomMapBuilder extends MapBuilder {
                 creator = creators[Math.floor(Math.random() * creators.length)]
 
             }
-            builders.push(IndexedBuilder.create(new creator(areaInfo, ent, exit), builders.length))
+            builders.push(new creator(areaInfo, ent, exit))
         }
     }
 }
@@ -80,9 +80,9 @@ export class SimpleSingleTunnelMapBuilder extends MapBuilder {
     }
 
     static addPreset(builders: MapBuilder[], areaInfo: AreaInfo) {
-        builders.push(IndexedBuilder.create(new SimpleSingleTunnelMapBuilder(areaInfo, Dir.SOUTH, Dir.NORTH), builders.length))
-        builders.push(IndexedBuilder.create(new SimpleSingleTunnelMapBuilder(areaInfo, Dir.SOUTH, Dir.EAST), builders.length))
-        builders.push(IndexedBuilder.create(new SimpleSingleTunnelMapBuilder(areaInfo, Dir.WEST, Dir.EAST), builders.length))
+        builders.push(new SimpleSingleTunnelMapBuilder(areaInfo, Dir.SOUTH, Dir.NORTH))
+        builders.push(new SimpleSingleTunnelMapBuilder(areaInfo, Dir.SOUTH, Dir.EAST))
+        builders.push(new SimpleSingleTunnelMapBuilder(areaInfo, Dir.WEST, Dir.EAST))
     }
 }
 
@@ -151,9 +151,10 @@ export class SimpleDoubleRoomMapBuilder extends MapBuilder {
     }
 
     static addPreset(builders: MapBuilder[], areaInfo: AreaInfo) {
-        builders.push(IndexedBuilder.create(new SimpleDoubleRoomMapBuilder(areaInfo, Dir.SOUTH, Dir.NORTH), builders.length))
-        builders.push(IndexedBuilder.create(new SimpleDoubleRoomMapBuilder(areaInfo, Dir.EAST, Dir.WEST), builders.length))
-        builders.push(IndexedBuilder.create(new SimpleDoubleRoomMapBuilder(areaInfo, Dir.EAST, Dir.SOUTH), builders.length))
-        builders.push(IndexedBuilder.create(new SimpleDoubleRoomMapBuilder(areaInfo, Dir.NORTH, Dir.WEST), builders.length))
+        builders.push(new SimpleDoubleRoomMapBuilder(areaInfo, Dir.SOUTH, Dir.NORTH))
+        builders.push(new SimpleDoubleRoomMapBuilder(areaInfo, Dir.NORTH, Dir.SOUTH))
+        builders.push(new SimpleDoubleRoomMapBuilder(areaInfo, Dir.EAST, Dir.WEST))
+        builders.push(new SimpleDoubleRoomMapBuilder(areaInfo, Dir.EAST, Dir.SOUTH))
+        builders.push(new SimpleDoubleRoomMapBuilder(areaInfo, Dir.NORTH, Dir.WEST))
     }
 }

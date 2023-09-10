@@ -246,12 +246,6 @@ export class AreaDrawer extends CCCanvas {
 
                 const pos = AreaPoint.fromVec(obj.rects[0]); Vec2.addC(pos, 0.4, 1)
                 this.drawText(pos.to(MapPoint), icopy.toString())
-
-                if (obj.builder) {
-                    const index = obj.builder.index
-                    const pos = AreaPoint.fromVec(obj.rects[0]); Vec2.addC(pos, 2.2, 1)
-                    this.drawText(pos.to(MapPoint), index.toString())
-                }
             })
             i++
         }

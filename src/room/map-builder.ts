@@ -1,5 +1,5 @@
 import { MapEntity } from '../entity-spawn'
-import { AreaInfo, IndexedBuilder } from '../area/area-builder'
+import { AreaInfo } from '../area/area-builder'
 import DngGen from '../plugin'
 import { RoomTheme, RoomThemeConfig } from './themes'
 import { CCMap, MapLayer } from '../util/map'
@@ -63,7 +63,7 @@ export interface RoomPlaceVars {
 }
 
 export abstract class MapBuilder {
-    static async placeBuilders(builders: IndexedBuilder[]): Promise<void[]> {
+    static async placeBuilders(builders: MapBuilder[]): Promise<void[]> {
         return new Promise<void[]>(async (resolve) => {
             const promises: Promise<void>[] = []
             for (let i = 0; i < builders.length; i++) {

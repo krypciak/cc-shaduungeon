@@ -20,17 +20,8 @@ export class AreaInfo {
     }
 }
 
-
-export namespace IndexedBuilder {
-    export function create(builder: MapBuilder, index: number): IndexedBuilder {
-        const b = builder as IndexedBuilder
-        b.index = index
-        return b
-    }
-}
-export type IndexedBuilder = MapBuilder & { index: number }
 export interface ABStackEntry {
-    builder?: IndexedBuilder
+    builder?: MapBuilder
     exit: AreaPoint
     exitDir: Dir
     level: number
