@@ -2,7 +2,7 @@ import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, PosDir, Rect, bareRect, do
 import { Stamp, loadArea } from '../util/map'
 import { Stack, allLangs, assert, assertBool } from '../util/misc'
 import DngGen from '../plugin'
-import { Room, RoomType } from '../room/room'
+import { Room, RoomPlaceOrder, RoomType } from '../room/room'
 import { MapBuilder } from '../room/map-builder'
 import { DungeonPaths } from '../dungeon-paths'
 import { AreaViewFloorTypes } from './custom-MapAreaContainer'
@@ -186,7 +186,7 @@ export class AreaBuilder {
             rooms = obj.map(e => e[1])
 
             const { min, max } = Rect.getMinMaxPosFromRectArr(rects)
-            const trimmedRecs: (bareRect & { roomType: RoomType, wallSides: boolean[] })[] = rects.map(
+            const trimmedRecs: (bareRect & { roomType: RoomType, placeOrder: RoomPlaceOrder; wallSides: boolean[] })[] = rects.map(
                 (r, i) => ({ 
                     ...(new AreaRect(
                         Math.floor((r.x - min.x) * 8)/8, 
@@ -195,6 +195,7 @@ export class AreaBuilder {
                         Math.floor(r.height * 8)/8,
                     )),
                     roomType: rooms[i].type,
+                    placeOrder: rooms[i].placeOrder,
                     /* if the room has no walls make it have all walls (so it renders) */
                     wallSides: rooms[i].wallSides.every(v => !v) ? [true, true, true, true] : rooms[i].wallSides,
                 })

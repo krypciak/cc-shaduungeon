@@ -1,5 +1,6 @@
+import { RoomType } from '../room/room'
 import { assert } from '../util/misc'
-import { Dir } from '../util/pos'
+import { Dir, bareRect } from '../util/pos'
 
 export enum AreaViewFloorTypes {
     Grid, /* default */
@@ -51,15 +52,15 @@ export function overrideMapAreaContainer() {
                     }
                     const map: sc.AreaLoadable.MapRoomList = hook.gui.floor.maps[hook.gui.room.index!] as sc.AreaLoadable.MapRoomList
                     for (const r of map.rects) {
-                        if (! r.arearect) {
-                            r.arearect = {
+                        if (! r.areaRect) {
+                            r.areaRect = {
                                 x: (r.x + map.min.x) * tilesize,
                                 y: (r.y + map.min.y) * tilesize,
                                 width: r.width * tilesize,
                                 height: r.height * tilesize,
                             }
                         }
-                        const rect = r.arearect
+                        const rect = r.areaRect
                         if (
                             pos.x >= rect.x &&
                             pos.x <= rect.x + rect.width &&
@@ -149,11 +150,12 @@ export function overrideMapAreaContainer() {
         shadow: new ig.SimpleColor('#47566cff'),
     }
     const activeColors: AreaRendererColorScheme = {
-        empty: new ig.SimpleColor('#8c516eff'),
-        border: new ig.SimpleColor('#9f89aaff'),
-        shadow: new ig.SimpleColor('#7c3e61ff'),
+        empty: new ig.SimpleColor('#8c516e'),
+        border: new ig.SimpleColor('#9f89aa'),
+        shadow: new ig.SimpleColor('#7c3e61'),
     }
-    const tunnelClear: number = 2
+    const black = new ig.SimpleColor('#131313')
+    const tunnelClear: number = 4
 
     sc.MapRoom.inject({
         init(room, floor, id) {
@@ -177,41 +179,66 @@ export function overrideMapAreaContainer() {
                         this.hook.size.y,
                         () => {
                             map.rects.forEach(o => {
-                                const rect = {
-                                    x: o.x * tilesize,
-                                    y: o.y * tilesize,
-                                    width: o.width * tilesize,
-                                    height: o.height * tilesize,
-                                    x2: 0, y2: 0 
+                                if (! o.drawRect) {
+                                    o.drawRect = {
+                                        x: o.x * tilesize,
+                                        y: o.y * tilesize,
+                                        width: o.width * tilesize,
+                                        height: o.height * tilesize,
+                                    } as (bareRect & { x2: number; y2: number })
+                                    o.drawEmptyRect = { ...o.drawRect }
+                                    o.drawRect.x2 = o.drawRect.x + o.drawRect.width - 1
+                                    o.drawRect.y2 = o.drawRect.y + o.drawRect.height - 1
                                 }
-                                rect.x2 = rect.x + rect.width - 1
-                                rect.y2 = rect.y + rect.height - 1
+                                const rect = o.drawRect
+                                const eRect = o.drawEmptyRect!
 
-                                c.empty.draw(rect.x, rect.y, rect.width, rect.height)
+                                const borderIncGlobal = o.roomType == RoomType.Tunnel ? 1 : 0
+                                const biPX = o.wallSides[Dir.EAST] ? 0 : borderIncGlobal
+                                const biNX = o.wallSides[Dir.WEST] ? 0 : borderIncGlobal
+                                const biPY = o.wallSides[Dir.SOUTH] ? 0 : borderIncGlobal
+                                const biNY = o.wallSides[Dir.NORTH] ? 0 : borderIncGlobal
+
+                                c.empty.draw(rect.x + 1, rect.y + 1, rect.width - 3, rect.height - 3)
                     
                                 /* draw room boundries */
                                 if (o.wallSides[Dir.NORTH]) {
-                                    c.border.draw(rect.x, rect.y, rect.width, 1)
-                                    c.shadow.draw(rect.x, rect.y + 1, rect.width, 1)
+                                    c.border.draw(rect.x - biNX, rect.y, rect.width + biNX + biPX - 1, 1)
+                                    c.shadow.draw(eRect.x + 1, eRect.y + 1, eRect.width - 3, 1)
                                 } else {
-                                    c.empty.draw(rect.x + 1, rect.y - tunnelClear, rect.width - 2, tunnelClear + 1)
+                                    eRect.y -= tunnelClear
+                                    eRect.height += tunnelClear
                                 }
                                 if (o.wallSides[Dir.SOUTH]) {
-                                    c.border.draw(rect.x, rect.y2, rect.width, 1)
+                                    c.border.draw(rect.x - biNX, rect.y2 - 1, rect.width + biNX + biPX - 1, 1)
+                                    black.draw(rect.x, rect.y2, rect.width, 1)
                                 } else {
-                                    c.empty.draw(rect.x + 1, rect.y2, rect.width - 2, tunnelClear + 1)
+                                    eRect.height += tunnelClear
                                 }
 
                                 if (o.wallSides[Dir.EAST]) {
-                                    c.border.draw(rect.x2, rect.y, 1, rect.height)
+                                    c.border.draw(rect.x2 - 1, rect.y - biNY, 1, rect.height + biNY + biPY - 1)
+                                    black.draw(rect.x2, rect.y, 1, rect.height)
                                 } else {
-                                    c.empty.draw(rect.x2, rect.y + 1, tunnelClear + 1, rect.height - 2)
+                                    eRect.width += tunnelClear
                                 }
                                 if (o.wallSides[Dir.WEST]) {
-                                    c.border.draw(rect.x, rect.y, 1, rect.height)
+                                    c.border.draw(rect.x, rect.y - biNY, 1, rect.height + biNY + biPY - 1)
                                 } else {
-                                    c.empty.draw(rect.x - tunnelClear, rect.y + 1, tunnelClear + 1, rect.height - 2)
+                                    eRect.x -= tunnelClear
+                                    eRect.width += tunnelClear
                                 }
+                            })
+                            map.rects.forEach(o => {
+                                if (o.wallSides[Dir.NORTH]) {
+                                    const rect = o.drawEmptyRect!
+                                    c.shadow.draw(rect.x + 1, rect.y + 1, rect.width - 3, 1)
+                                }
+                            })
+                            map.rects.forEach(o => {
+                                const rect = o.drawEmptyRect!
+                                const shadowOffset = o.wallSides[Dir.NORTH] ? 1 : 0
+                                c.empty.draw(rect.x + 1, rect.y + shadowOffset + 1, rect.width - 3, rect.height - shadowOffset - 3)
                             })
                             this.prerendered = true
                         })

@@ -1,4 +1,4 @@
-import { RoomType } from '../room/room'
+import { RoomPlaceOrder, RoomType } from '../room/room'
 import { bareRect } from '../util/pos'
 
 export {}
@@ -24,8 +24,11 @@ declare global {
                 // arearect is calculated at runtime and cached here
                 rects: (bareRect & {
                     roomType: RoomType
+                    placeOrder: RoomPlaceOrder
                     wallSides: boolean[]
-                    arearect?: bareRect
+                    areaRect?: bareRect /* cache */
+                    drawRect?: bareRect & { x2: number; y2: number } /* cache */
+                    drawEmptyRect?: bareRect /* cache */
                 })[]
                 id: number
                 min: Vec2 
