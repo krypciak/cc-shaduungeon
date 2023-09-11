@@ -178,6 +178,7 @@ export function overrideMapAreaContainer() {
                         this.hook.size.x,
                         this.hook.size.y,
                         () => {
+                            /* draw black on south and east edges */
                             map.rects.forEach(o => {
                                 if (! o.drawRect) {
                                     o.drawRect = {
@@ -191,6 +192,16 @@ export function overrideMapAreaContainer() {
                                     o.drawRect.y2 = o.drawRect.y + o.drawRect.height - 1
                                 }
                                 const rect = o.drawRect
+                                if (o.wallSides[Dir.SOUTH]) {
+                                    black.draw(rect.x, rect.y2, rect.width, 1)
+                                }
+                                if (o.wallSides[Dir.EAST]) {
+                                    black.draw(rect.x2, rect.y, 1, rect.height)
+                                }
+                            })
+                            /* draw borders */
+                            map.rects.forEach(o => {
+                                const rect = o.drawRect!
                                 const eRect = o.drawEmptyRect!
 
                                 const borderIncGlobal = o.roomType == RoomType.Tunnel ? 1 : 0
@@ -199,9 +210,6 @@ export function overrideMapAreaContainer() {
                                 const biPY = o.wallSides[Dir.SOUTH] ? 0 : borderIncGlobal
                                 const biNY = o.wallSides[Dir.NORTH] ? 0 : borderIncGlobal
 
-                                c.empty.draw(rect.x + 1, rect.y + 1, rect.width - 3, rect.height - 3)
-                    
-                                /* draw room boundries */
                                 if (o.wallSides[Dir.NORTH]) {
                                     c.border.draw(rect.x - biNX, rect.y, rect.width + biNX + biPX - 1, 1)
                                     c.shadow.draw(eRect.x + 1, eRect.y + 1, eRect.width - 3, 1)
@@ -211,14 +219,12 @@ export function overrideMapAreaContainer() {
                                 }
                                 if (o.wallSides[Dir.SOUTH]) {
                                     c.border.draw(rect.x - biNX, rect.y2 - 1, rect.width + biNX + biPX - 1, 1)
-                                    black.draw(rect.x, rect.y2, rect.width, 1)
                                 } else {
                                     eRect.height += tunnelClear
                                 }
 
                                 if (o.wallSides[Dir.EAST]) {
                                     c.border.draw(rect.x2 - 1, rect.y - biNY, 1, rect.height + biNY + biPY - 1)
-                                    black.draw(rect.x2, rect.y, 1, rect.height)
                                 } else {
                                     eRect.width += tunnelClear
                                 }
@@ -229,19 +235,21 @@ export function overrideMapAreaContainer() {
                                     eRect.width += tunnelClear
                                 }
                             })
+                            /* draw north shadow */
                             map.rects.forEach(o => {
                                 if (o.wallSides[Dir.NORTH]) {
                                     const rect = o.drawEmptyRect!
                                     c.shadow.draw(rect.x + 1, rect.y + 1, rect.width - 3, 1)
                                 }
                             })
+                            /* fill the rooms */
                             map.rects.forEach(o => {
                                 const rect = o.drawEmptyRect!
                                 const shadowOffset = o.wallSides[Dir.NORTH] ? 1 : 0
                                 c.empty.draw(rect.x + 1, rect.y + shadowOffset + 1, rect.width - 3, rect.height - shadowOffset - 3)
                             })
-                            this.prerendered = true
                         })
+                        this.prerendered = true
                 }
             } else {
                 this.parent()
