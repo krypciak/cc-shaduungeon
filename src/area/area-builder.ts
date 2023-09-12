@@ -1,11 +1,12 @@
-import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, PosDir, Rect, bareRect, doRectsOverlap, doesRectArrayOverlapRectArray } from '../util/pos'
-import { Stamp, loadArea } from '../util/map'
+import { AreaPoint, AreaRect, Dir, DirUtil, MapPoint, MapRect, PosDir, Rect, doRectsOverlap, doesRectArrayOverlapRectArray } from '../util/pos'
+import { loadArea } from '../util/map'
 import { Stack, allLangs, assert, assertBool } from '../util/misc'
 import DngGen from '../plugin'
-import { Room, RoomPlaceOrder, RoomType } from '../room/room'
+import { Room, } from '../room/room'
 import { MapBuilder } from '../room/map-builder'
 import { DungeonPaths } from '../dungeon-paths'
 import { AreaViewFloorTypes } from './custom-MapAreaContainer'
+import { RoomIOTunnelClosed } from '../room/tunnel-room'
 
 declare const dnggen: DngGen
 
@@ -119,8 +120,6 @@ export class AreaBuilder {
     dbEntry?: sc.MapModel.Area
     builtArea?: sc.AreaLoadable.Data
 
-    mapConnectionSize: number = 1
-
     static trimBuilderStack(arr: ABStackEntry[], additionalSpace: number = 2): { offset: AreaPoint; size: AreaPoint } {
         const obj = Rect.getMinMaxPosFromRectArr(arr.flatMap(e => e.rects))
         const minPos: AreaPoint = obj.min as AreaPoint
@@ -166,17 +165,33 @@ export class AreaBuilder {
         this.builtArea = builtArea
     }
 
-    async generateFloor(level: number, name: string, size: AreaPoint, entries: ABStackEntry[]): Promise<sc.AreaLoadable.Floor> {
+    async generateFloor(level: number, name: string, size: AreaPoint, entries: ABStackEntry[]): Promise<sc.AreaLoadable.FloorCustom> {
         entries = entries.filter(e => e.level == level)
-        const connections: sc.AreaLoadable.Connection[] = []
+        const connections: sc.AreaLoadable.ConnectionRoomList[] = []
+        const mapConnectionSize = 3
         const landmarks: sc.AreaLoadable.Landmark[] = []
-        const stamps: Stamp[] = []
+        // const stamps: Stamp[] = []
 
         const maps: sc.AreaLoadable.MapRoomList[] = []
         const mapType: 'DUNGEON' | 'NO_DUNGEON' = this.areaInfo.type == 'DUNGEON' ? 'DUNGEON' : 'NO_DUNGEON'
 
+
+        function addMapConnection(pos: AreaPoint, dir: Dir, map1: number, map2: number) {
+                const connection: sc.AreaLoadable.ConnectionRoomList = {
+                    tx: pos.x,
+                    ty: pos.y,
+                    dir,
+                    size: mapConnectionSize,
+                    map1,
+                    map2,
+                }
+                connections.push(connection)
+        }
+
         let mapIndex = 0
-        function addMap(path: string, displayName: string, rects: AreaRect[], rooms: Room[]) {
+        function addMap(builder: MapBuilder, rects: AreaRect[], rooms: Room[]) {
+            const path = builder.path!
+            const displayName = builder.displayName!
             assertBool(rects.length == rooms.length)
 
             const obj = rects.map((r, i) => [r, rooms[i]] as [AreaRect, Room])
@@ -186,17 +201,15 @@ export class AreaBuilder {
             rooms = obj.map(e => e[1])
 
             const { min, max } = Rect.getMinMaxPosFromRectArr(rects)
-            const trimmedRecs: (bareRect & { roomType: RoomType, placeOrder: RoomPlaceOrder; wallSides: boolean[] })[] = rects.map(
-                (r, i) => ({ 
-                    ...(new AreaRect(
-                        Math.floor((r.x - min.x) * 8)/8, 
-                        Math.floor((r.y - min.y) * 8)/8,
-                        Math.floor(r.width * 8)/8,
-                        Math.floor(r.height * 8)/8,
-                    )),
+            const trimmedRecs: sc.AreaLoadable.MapRoomListRect[] = rects.map(
+                (r, i) => ({
+                    x: (Math.floor((r.x - min.x) * 8)/8),
+                    y: Math.floor((r.y - min.y) * 8)/8,
+                    width: Math.floor(r.width * 8)/8,
+                    height: Math.floor(r.height * 8)/8,
                     roomType: rooms[i].type,
                     placeOrder: rooms[i].placeOrder,
-                    /* if the room has no walls make it have all walls (so it renders) */
+                    /* if the room has no walls make it have all walls (so it renders properly) */
                     wallSides: rooms[i].wallSides.every(v => !v) ? [true, true, true, true] : rooms[i].wallSides,
                 })
             )
@@ -210,6 +223,39 @@ export class AreaBuilder {
                 min: min,
                 max: max,
             })
+
+            /*
+            if (dnggen.debug.areaMapConnections) {
+                const entTpr = builder.entarenceRoom.primaryEntarence.getTpr()
+                if (DirUtil.dir3dIsDir(entTpr.dir)) {
+                    const dir = entTpr.dir as unknown as Dir
+                    const pos = entTpr.pos.to(AreaPoint)
+
+                    const parentRoom =
+                        builder.entarenceRoom.primaryEntarence instanceof RoomIOTunnelClosed ?
+                            builder.entarenceRoom.primaryEntarence.tunnel : builder.entarenceRoom
+                    const areaRect = rects[rooms.indexOf(parentRoom)]
+                    pos.x += Math.floor(min.x*8)/8
+                    pos.y += Math.floor(min.y*8)/8
+                    areaRect.setPosToSide(pos, dir)
+                    // const posCopy = pos.copy()
+                    // parentRoom.to(AreaRect).setPosToSide(posCopy, dir)
+                    // if (pos.x != posCopy.x || pos.y != posCopy.y) {
+                    //     debugger
+                    // }
+                    // pos = posCopy
+                    // assertBool(posCopy == pos)
+                    // const rect: AreaRect = rects[rooms.indexOf(parentRoom)]
+                    switch (dir) {
+                        case Dir.NORTH: pos.y -= 2/8; break
+                        case Dir.EAST: pos.x -= 2/8; break
+                        case Dir.SOUTH: pos.y -= 2/8; break
+                        case Dir.WEST: pos.x -= 2/8; break
+                    }
+                    addMapConnection(pos, dir, mapIndex + 1, mapIndex, areaRect)
+                }
+            }
+            */
         }
         
         for (const entry of entries) {
@@ -218,7 +264,7 @@ export class AreaBuilder {
             builder.path = builder.pathParent + '/' + (mapIndex.toLocaleString('en-US', {minimumIntegerDigits: 3, useGrouping: false}))
             await builder.decideDisplayName(mapIndex)
             assert(builder.displayName)
-            addMap(builder.path, builder.displayName, entry.rects, entry.rooms)
+            addMap(builder, entry.rects, entry.rooms)
             mapIndex++
         }
 
@@ -262,42 +308,8 @@ export class AreaBuilder {
     saveToFile() {
         this.areaInfo.paths.saveArea(this)
     }
-
-
+    
     /*
-    addMapConnection(pos: AreaPoint, dir: Dir, i1: number, i2: number) {
-            const connection: sc.AreaLoadable.Connection = {
-                tx: pos.x,
-                ty: pos.y,
-                dir: (DirUtil.isVertical(dir)) ? 'VERTICAL' : 'HORIZONTAL',
-                size: this.mapConnectionSize,
-                map1: i1,
-                map2: i2,
-            }
-            this.connections.push(connection)
-    }
-    getNextPrevRoomNames(): { prevPath: string; prevMarker: string; nextPath: string; nextMarker: string } {
-        let prevPath, prevMarker, nextPath, nextMarker
-
-        if (this.genIndex == 0) {
-            prevPath = DungeonBuilder.initialMap.path
-            prevMarker = DungeonBuilder.initialMap.exitMarker
-        } else if (this.genIndex == -1) {
-            prevPath = ''
-            prevMarker = ''
-        } else {
-            const obj = DungeonMapBuilder.getGenRoomNames(this.genIndex - 1)
-            prevPath = obj.path
-            prevMarker = DungeonMapBuilder.roomExitMarker
-        }
-        {
-            const obj = DungeonMapBuilder.getGenRoomNames(this.genIndex + 1)
-            nextPath = obj.path
-            nextMarker = DungeonMapBuilder.roomEntarenceMarker
-        }
-        return { prevPath, prevMarker, nextPath, nextMarker }
-    }
-
     addStamps(mapBuilder: DungeonMapBuilder, offset: EntityPoint, exitPoint: AreaPoint) {
         const area: string = mapBuilder.areaInfo.name
         const puzzle = mapBuilder.puzzle

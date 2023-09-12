@@ -1,3 +1,10 @@
+declare global {
+    interface Math {
+        randomSeed(): number
+        seedrandomSeed(seed: string): void
+    }
+}
+
 export class Stack<T> {
     array: T[] = []
 
@@ -52,6 +59,11 @@ export function assertBool(arg: boolean, msg: string = ''): asserts arg {
     if (! arg) {
         throw new Error(`Assertion failed: ${msg}`)
     }
+}
+
+export function setRandomSeed(obj: { toString(): string }) {
+    Math.seedrandomSeed(obj.toString())
+
 }
 
 export function godlikeStats() {

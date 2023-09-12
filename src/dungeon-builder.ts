@@ -1,5 +1,5 @@
 import { Blitzkrieg, Selection, SelectionMapEntry } from './util/blitzkrieg'
-import { Stack, assert, assertBool } from './util/misc'
+import { Stack, assert, assertBool, setRandomSeed } from './util/misc'
 import { AreaPoint, Dir, } from './util/pos'
 import { AreaInfo, AreaBuilder, ABStackEntry } from './area/area-builder'
 import { MapBuilder } from './room/map-builder'
@@ -58,18 +58,25 @@ export class DungeonBuilder {
             builders.push(builder)
         }
 
-        SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleDoubleRoomMapBuilder])
+        setRandomSeed('obama')
+        // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleDoubleRoomMapBuilder])
         // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleDoubleRoomMapBuilder])
 
         // SimpleSingleTunnelMapBuilder.addPreset(builders, areaInfo)
         // SimpleRoomMapBuilder.addPreset(builders, areaInfo)
         // SimpleDoubleRoomMapBuilder.addPreset(builders, areaInfo)
 
+
+        // builders.push(new SimpleRoomMapBuilder(areaInfo, Dir.SOUTH, Dir.NORTH))
+        // builders.push(new SimpleSingleTunnelMapBuilder(areaInfo, Dir.SOUTH, Dir.NORTH))
+        // builders.push(new SimpleDoubleTunnelMapBuilder(areaInfo, Dir.SOUTH, Dir.NORTH))
+        // builders.push(new SimpleDoubleRoomMapBuilder(areaInfo, Dir.SOUTH, Dir.NORTH))
+
         type RecReturn = undefined | { stack: Stack<ABStackEntry>, leftBuilders: Set<MapBuilder> }
 
         let highestRecReturn: { stack: Stack<ABStackEntry>, leftBuilders: Set<MapBuilder> } = { stack: new Stack(), leftBuilders: new Set() }
         const countTarget: number = Math.min(builders.length, 
-            builders.length / 1.5
+            builders.length < 10 ? builders.length : (builders.length / 1.5)
         )
         
         function recursiveTryPlaceMaps(stack: Stack<ABStackEntry>, availableBuilders: Set<MapBuilder>): RecReturn {

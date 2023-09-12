@@ -85,15 +85,6 @@ function addInjects() {
             this.parent(DungeonPaths.loadIfNeeded(mapName) ?? mapName)
         }
     })
-    // ig.Game.inject({
-    //     // @ts-ignore
-    //     preloadLevel(mapName: string) {
-    //         blitzkrieg.util.getMapObject(mapName.split('.').join('/')).then((levelData: sc.MapModel.Map) => {
-    //             // @ts-expect-error
-    //             this.teleporting.levelData = levelData
-    //         })
-    //     }
-    // })
 }
 
 async function startDnggenGame(titleGuiInstance?: sc.TitleScreenButtonGui, roomTp: number = -1) {
@@ -143,7 +134,6 @@ export default class DngGen {
         decorateBattleRoom: true,
         trimAreas: true,
         collisionlessMapArrange: true,
-        disableDebugStamps: false,
         dontDiscoverAllMaps: false,
         areaMapConnections: true,
     }
@@ -188,7 +178,7 @@ export default class DngGen {
         overrideMapAreaContainer()
         registerStyles()
         updateLangLabels()
-        // startDnggenGame()
+        startDnggenGame()
     }
 
     async reloadModAssetList() {

@@ -1,6 +1,7 @@
 import { RoomType } from '../room/room'
-import { assert } from '../util/misc'
+import { assert, assertBool } from '../util/misc'
 import { Dir, bareRect } from '../util/pos'
+import { GuiHookMapRoomList } from './area'
 
 export enum AreaViewFloorTypes {
     Grid, /* default */
@@ -8,10 +9,6 @@ export enum AreaViewFloorTypes {
 }
 
 const tilesize = 8
-type GuiHookMapRoomList = ig.GuiHook & {
-    gui: { floor: sc.AreaLoadable.Floor, room: sc.AreaRoomBounds, unlocked: boolean }
-}
-
 interface AreaRendererColorScheme {
     empty: ig.SimpleColor
     border: ig.SimpleColor
@@ -19,20 +16,23 @@ interface AreaRendererColorScheme {
 }
 
 export function overrideMapAreaContainer() {
+    const addPxSpace: number = 0
     sc.MapAreaContainer.inject({
         findMap(mx: number, my: number, gamepad: boolean, wait: number): boolean | undefined {
             if (sc.menu.mapMapFocus) { return }
             const area = sc.map.getCurrentArea()
             if (area && area.type == AreaViewFloorTypes.RoomList) {
-                let pos: Vec2 = Vec2.createC(0, 0)
+                let pos: Vec2
                 if (gamepad) {
-                    pos = this.area.hook.pos
+                    pos = Vec2.create(this.area.hook.pos)
                 } else {
                     pos = Vec2.createC(
                         mx - sc.menu.mapCamera.x - this.area.hook.pos.x + 1,
                         my - sc.menu.mapCamera.y - this.area.hook.pos.y + 1
                     )
                 }
+                Vec2.subC(pos, addPxSpace)
+                
                 if (this.area.hook.children.length == 0) { return }
 
                 const mapGuis: GuiHookMapRoomList[] = this.area.hook.children[sc.map.getCurrentFloorIndex()].children as GuiHookMapRoomList[]
@@ -87,7 +87,7 @@ export function overrideMapAreaContainer() {
     })
 
     sc.MapFloor.inject({
-        init(floor: sc.AreaLoadable.Floor, callback: any) {
+        init(floor: sc.AreaLoadable.FloorCustom, callback: any) {
             this.type = floor.type = floor.type ?? AreaViewFloorTypes.Grid
             if (floor.type == AreaViewFloorTypes.RoomList) {
                 if (floor.tiles.length == 0) {
@@ -124,6 +124,7 @@ export function overrideMapAreaContainer() {
         }
     })
 
+
     sc.AreaRoomBounds.inject({
         init(map: sc.AreaLoadable.Map, id: number, minX: number, minY: number, tiles: number[][], max?: Vec2) {
             if (max) {
@@ -157,6 +158,26 @@ export function overrideMapAreaContainer() {
     const black = new ig.SimpleColor('#131313')
     const tunnelClear: number = 4
 
+    sc.MapCurrentRoomWrapper.inject({
+        init(hook: ig.GuiHook | { pos: Vec2, size: Vec2 }) {
+            /* here hook is always ig.GuiHook */
+            if ((hook as GuiHookMapRoomList).gui.floor?.type == AreaViewFloorTypes.RoomList) {
+                this.parent({
+                    pos: {
+                        x: hook.pos.x + addPxSpace,
+                        y: hook.pos.y + addPxSpace,
+                    },
+                    size: {
+                        x: hook.size.x - addPxSpace*2,
+                        y: hook.size.y - addPxSpace*2,
+                    },
+                })
+            } else {
+                this.parent(hook)
+            }
+        }
+    })
+
     sc.MapRoom.inject({
         init(room, floor, id) {
             if (floor.type == AreaViewFloorTypes.RoomList) {
@@ -166,6 +187,9 @@ export function overrideMapAreaContainer() {
                 room.max.y = Math.ceil(room.max.y * tilesize)/tilesize
             }
             this.parent(room, floor, id)
+            if (floor.type == AreaViewFloorTypes.RoomList) {
+                this.setSize(this.hook.size.x + addPxSpace*2, this.hook.size.y + addPxSpace*2)
+            }
         },
         preRender() {
             if (this.floor.type == AreaViewFloorTypes.RoomList) {
@@ -174,16 +198,45 @@ export function overrideMapAreaContainer() {
                     assert(map.rects)
                     const c = this.active ? activeColors : inactiveColors
 
+                    /*
+                    function drawConnection(x: number, y: number, connection: sc.AreaLoadable.ConnectionRoomList) {
+                        const h = 4
+                        switch (connection.dir) {
+                            case Dir.NORTH:
+                                inactiveColors.empty.draw(x, y, connection.size, h)
+                                inactiveColors.border.draw(x - 1, y + 1, 1, h - 1)
+                                inactiveColors.border.draw(x + connection.size, y + 1, 1, h - 1)
+                                break
+                            case Dir.EAST:
+                                inactiveColors.empty.draw(x, y, connection.size, h)
+                                inactiveColors.border.draw(x, y - 1, connection.size, 1)
+                                inactiveColors.border.draw(x, y + connection.size, connection.size, 1)
+                                break
+                            case Dir.SOUTH:
+                                inactiveColors.empty.draw(x, y, connection.size, h)
+                                inactiveColors.border.draw(x - 1, y, 1, h - 1)
+                                inactiveColors.border.draw(x + connection.size, y, 1, h - 1)
+                                break
+                            case Dir.WEST:
+                                inactiveColors.empty.draw(x, y, connection.size, h)
+                                inactiveColors.border.draw(x, y - 1, connection.size, 1)
+                                inactiveColors.border.draw(x, y + connection.size, connection.size, 1)
+                                break
+                        }
+                    }
+                    */
+
                     this.buffer = ig.imageAtlas.getFragment(
                         this.hook.size.x,
                         this.hook.size.y,
                         () => {
+                            assertBool(this.floor.type == AreaViewFloorTypes.RoomList)
                             /* draw black on south and east edges */
                             map.rects.forEach(o => {
                                 if (! o.drawRect) {
                                     o.drawRect = {
-                                        x: o.x * tilesize,
-                                        y: o.y * tilesize,
+                                        x: o.x * tilesize + addPxSpace,
+                                        y: o.y * tilesize + addPxSpace,
                                         width: o.width * tilesize,
                                         height: o.height * tilesize,
                                     } as (bareRect & { x2: number; y2: number })
@@ -248,6 +301,35 @@ export function overrideMapAreaContainer() {
                                 const shadowOffset = o.wallSides[Dir.NORTH] ? 1 : 0
                                 c.empty.draw(rect.x + 1, rect.y + shadowOffset + 1, rect.width - 3, rect.height - shadowOffset - 3)
                             })
+
+                            /*
+                            const connections: sc.AreaLoadable.ConnectionRoomList[] = this.floor.connections
+                            let i = connections.length
+                            while (i--) {
+                                const connection = connections[i]
+                                // apperently map connections can have a condition? didnt bother implementing that
+                                if (connection.map1 + 1 == this.room.id || connection.map2 + 1 == this.room.id) {
+                                    const rect: bareRect = 
+                                        // @ts-ignore
+                                        connection.rect
+                                    new ig.SimpleColor('#00ff0055').draw(
+                                        (rect.x - this.room.min.x) * tilesize + addPxSpace,
+                                        (rect.y - this.room.min.y) * tilesize + addPxSpace,
+                                        rect.width * tilesize,
+                                        rect.height * tilesize
+                                    )
+                                    drawConnection(
+                                        (connection.tx - this.room.min.x) * tilesize + addPxSpace,
+                                        (connection.ty - this.room.min.y) * tilesize + addPxSpace,
+                                        connection,
+                                    )
+                                }
+                            }
+                            */
+                            // activeColors.empty.draw(0, 0, addPxSpace, addPxSpace)
+                            // activeColors.empty.draw(this.hook.size.x - addPxSpace, 0, addPxSpace, addPxSpace)
+                            // activeColors.empty.draw(this.hook.size.x - addPxSpace, this.hook.size.y - addPxSpace, addPxSpace, addPxSpace)
+                            // activeColors.empty.draw(0, this.hook.size.y - addPxSpace, addPxSpace, addPxSpace)
                         })
                         this.prerendered = true
                 }
@@ -255,5 +337,6 @@ export function overrideMapAreaContainer() {
                 this.parent()
             }
         }
-    })
+    },
+    )
 }

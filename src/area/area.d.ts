@@ -1,38 +1,71 @@
 import { RoomPlaceOrder, RoomType } from '../room/room'
-import { bareRect } from '../util/pos'
+import { Dir, bareRect } from '../util/pos'
+import { AreaViewFloorTypes } from './custom-MapAreaContainer'
 
 export {}
+
+export type GuiHookMapRoomList = ig.GuiHook & {
+    gui: { floor: sc.AreaLoadable.Floor, room: sc.AreaRoomBounds, unlocked: boolean }
+}
 
 declare global {
     namespace sc {
         namespace AreaLoadable {
             interface Data {
                 type?: AreaViewFloorTypes
+                floors: FloorCustom[]
             }
             interface Floor {
                 type?: AreaViewFloorTypes
-                size?: Vec2
-
-                rooms?: sc.AreaRoomBounds[]
             }
+            type FloorCustom = ({
+                type?: undefined | AreaViewFloorTypes.Grid
+                level: number
+                name: ig.LangLabel.Data
+                tiles: number[][]
+                maps: Map[]
+                connections: Connection[]
+                icons: Icon[]
+                landmarks: Landmark[]
+            } | {
+                type: AreaViewFloorTypes.RoomList
+                level: number
+                name: ig.LangLabel.Data
+                tiles: number[][]
+                maps: sc.AreaLoadable.MapRoomList[]
+                connections: sc.AreaLoadable.ConnectionRoomList[]
+                icons: Icon[]
+                landmarks: Landmark[]
+                size?: Vec2
+                rooms?: sc.AreaRoomBounds[]
+                connections: sc.AreaLoadable.ConnectionRoomList[]
+            })
             interface Map {
                 // unused??
                 minZ?: number
                 maxZ?: number
             }
+            type MapRoomListRect = bareRect & {
+                roomType: RoomType
+                placeOrder: RoomPlaceOrder
+                wallSides: boolean[]
+                areaRect?: bareRect /* cache */
+                drawRect?: bareRect & { x2: number; y2: number } /* cache */
+                drawEmptyRect?: bareRect /* cache */
+            }
             interface MapRoomList extends sc.AreaLoadable.Map {
-                // arearect is calculated at runtime and cached here
-                rects: (bareRect & {
-                    roomType: RoomType
-                    placeOrder: RoomPlaceOrder
-                    wallSides: boolean[]
-                    areaRect?: bareRect /* cache */
-                    drawRect?: bareRect & { x2: number; y2: number } /* cache */
-                    drawEmptyRect?: bareRect /* cache */
-                })[]
+                rects: MapRoomListRect[]
                 id: number
                 min: Vec2 
                 max: Vec2
+            }
+            interface ConnectionRoomList {
+                tx: number
+                ty: number
+                size: number
+                dir: Dir
+                map1: number
+                map2: number
             }
         }
 
@@ -61,11 +94,11 @@ declare global {
         /* AreaRoomBounds end */
         /* MapFloor */
         interface MapFloor extends ig.GuiElementBase {
-            floor: sc.AreaLoadable.Floor
+            floor: sc.AreaLoadable.FloorCustom
             name: string 
             nameGui: string
             rooms: sc.AreaRoomBounds[]
-            activeRoom: null
+            activeRoom: sc.AreaRoomBounds | null
             callback: any
             bounds: bareRect
             type: AreaViewFloorTypes /* my custom type */
@@ -76,7 +109,7 @@ declare global {
             _createRooms(this: this): void
         }
         interface MapFloorConstructor extends ImpactClass<MapFloor> {
-            new (floor: sc.AreaLoadable.Floor, callback: any): MapFloor
+            new (floor: sc.AreaLoadable.FloorCustom, callback: any): MapFloor
         }
         var MapFloor: MapFloorConstructor
         /* MapFloor end */
@@ -122,7 +155,7 @@ declare global {
             gfx: ig.Image
             room: sc.AreaRoomBounds
             buffer: ig.ImageAtlasFragment
-            floor: sc.AreaLoadable.Floor
+            floor: sc.AreaLoadable.FloorCustom
             name: string
             id: number
             roomAlpha: number
@@ -135,7 +168,7 @@ declare global {
             preRender(this: this): void
         }
         interface MapRoomConstructor extends ImpactClass<MapRoom> {
-            new (room: sc.AreaRoomBounds, floor: sc.AreaLoadable.Floor, id: number): MapRoom
+            new (room: sc.AreaRoomBounds, floor: sc.AreaLoadable.FloorCustom, id: number): MapRoom
         }
         var MapRoom: MapRoomConstructor
         /* MapRoom end */
@@ -146,6 +179,26 @@ declare global {
             mapCursor: Vec2
         }
         /* MenuModel end */
+        /* MapCurrentRoomWrapper */
+        interface MapCurrentRoomWrapper extends ig.GuiElementBase { }
+        interface MapCurrentRoomWrapperConstructor extends ImpactClass<MapCurrentRoomWrapper> {
+            new(hook: ig.GuiHook | { pos: Vec2, size: Vec2 }): MapCurrentRoomWrapper
+        }
+        var MapCurrentRoomWrapper: MapCurrentRoomWrapperConstructor
+
+        interface AREA_CONNECTIONS_TYPE1 {
+            x: number; y: number; w: number; h: number; ox: number; oy: number; w2: number; h2: number
+        }
+        interface AREA_CONNECTIONS_TYPE {
+            first: sc.AREA_CONNECTIONS_TYPE1
+            second: sc.AREA_CONNECTIONS_TYPE1
+            step: { x: number; y: number; x2: number; y2: number }
+        }
+        interface AREA_CONNECTIONS {
+            VERTICAL: sc.AREA_CONNECTIONS_TYPE
+            HORIZONTAL: sc.AREA_CONNECTIONS_TYPE
+        }
+        var AREA_CONNECTIONS: AREA_CONNECTIONS = AREA_CONNECTIONS
     }
 
     namespace ig {
@@ -167,7 +220,6 @@ declare global {
                 filtered?: unknown
             ): void;
         }
-
     }
 }
 

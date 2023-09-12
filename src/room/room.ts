@@ -59,13 +59,18 @@ export interface RoomIO {
 }
 
 export class RoomIOTpr implements RoomIO {
-    constructor(public tpr: Tpr) {}
+    tpr: Tpr
+    constructor(tpr: Tpr) {
+        this.tpr = tpr
+    }
 
     getTpr(): Tpr { return this.tpr }
 }
 export class RoomIODoorLike extends RoomIOTpr {
+    tpr: TprDoorLike
     constructor(tpr: TprDoorLike) {
         super(tpr)
+        this.tpr = tpr
     }
     static fromRoom(type: MapDoorLike.Types, room: Room, name: string, dir: Dir, prefPos?: EntityPoint): RoomIODoorLike {
         return new RoomIODoorLike(room.getDoorLikeTpr(type, name, dir, prefPos))

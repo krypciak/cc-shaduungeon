@@ -39,16 +39,15 @@ export class SimpleRoomMapBuilder extends MapBuilder {
 
     static addRandom(builders: MapBuilder[], areaInfo: AreaInfo, num: number, creators: (new (areaInfo: AreaInfo, ent: Dir, exit: Dir) => MapBuilder)[] = [SimpleRoomMapBuilder]) {
         for (let i = 0; i < num; i++) {
-            let ent = Math.floor(Math.random() * 4)
-            const exit = Math.floor(Math.random() * 4)
+            let ent = Math.floor(Math.randomSeed() * 4)
+            const exit = Math.floor(Math.randomSeed() * 4)
             if (ent == exit) { ent++; if (ent >= 4) { ent = 0 } }
 
             let creator
             if (creators.length == 1) {
                 creator = creators[0]
             } else {
-                creator = creators[Math.floor(Math.random() * creators.length)]
-
+                creator = creators[Math.floor(Math.randomSeed() * creators.length)]
             }
             builders.push(new creator(areaInfo, ent, exit))
         }
