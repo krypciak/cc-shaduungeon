@@ -1,11 +1,11 @@
-import { MapEntity } from '@util/entity'
-import { AreaInfo } from '@area/area-builder'
-import { RoomTheme, RoomThemeConfig } from '@room/themes'
-import { CCMap, MapLayer } from '@util/map'
-import { Dir, MapPoint, MapRect, PosDir } from '@util/pos'
-import { assert } from '@util/misc'
-import { Room } from '@room/room'
-import { getPosDirFromRoomIO } from '@room/tunnel-room'
+import { MapEntity } from '@root/util/entity'
+import { AreaInfo } from '@root/area/area-builder'
+import { RoomTheme, RoomThemeConfig } from '@root/room/themes'
+import { CCMap, MapLayer } from '@root/util/map'
+import { Dir, MapPoint, MapRect, PosDir } from '@root/util/pos'
+import { assert } from '@root/util/misc'
+import { Room } from '@root/room/room'
+import { getPosDirFromRoomIO } from '@root/room/tunnel-room'
 
 export namespace RoomPlaceVars {
     export function fromRawMap(map: sc.MapModel.Map, theme: RoomTheme, areaInfo: AreaInfo): RoomPlaceVars {

@@ -1,9 +1,9 @@
-import { MapEnemyCounter, MapEventTrigger, MapGlowingLine, MapHiddenBlock, MapTouchTrigger, MapWall } from '@util/entity'
-import { assert } from '@util/misc'
-import { DirUtil, EntityPoint, EntityRect, MapPoint, MapRect } from '@util/pos'
-import { RoomPlaceVars } from '@room/map-builder'
-import { Room, RoomIO, RoomIODoorLike, RoomIOTpr } from '@room/room'
-import { RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen, TunnelRoom, } from '@room/tunnel-room'
+import { MapEnemyCounter, MapEventTrigger, MapGlowingLine, MapHiddenBlock, MapTouchTrigger, MapWall } from '@root/util/entity'
+import { assert } from '@root/util/misc'
+import { DirUtil, EntityPoint, EntityRect, MapPoint, MapRect } from '@root/util/pos'
+import { RoomPlaceVars } from '@root/room/map-builder'
+import { Room, RoomIO, RoomIODoorLike, RoomIOTpr } from '@root/room/room'
+import { RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen, TunnelRoom, } from '@root/room/tunnel-room'
 
 export class BattleRoom extends Room {
     primaryEntarence!: RoomIOTunnel

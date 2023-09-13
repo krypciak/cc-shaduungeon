@@ -1,10 +1,10 @@
-import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, PosDir, Rect, doRectsOverlap, doesRectArrayOverlapRectArray } from '@util/pos'
-import { loadArea } from '@util/map'
-import { Stack, allLangs, assert, assertBool } from '@util/misc'
-import { Room, } from '@room/room'
-import { MapBuilder } from '@room/map-builder'
-import { DungeonPaths } from '@dungeon/dungeon-paths'
-import { AreaViewFloorTypes } from '@area/custom-MapAreaContainer'
+import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, PosDir, Rect, doRectsOverlap, doesRectArrayOverlapRectArray } from '@root/util/pos'
+import { loadArea } from '@root/util/map'
+import { Stack, allLangs, assert, assertBool } from '@root/util/misc'
+import { Room, } from '@root/room/room'
+import { MapBuilder } from '@root/room/map-builder'
+import { DungeonPaths } from '@root/dungeon/dungeon-paths'
+import { AreaViewFloorTypes } from '@root/area/custom-MapAreaContainer'
 
 export class AreaInfo {
     name: string

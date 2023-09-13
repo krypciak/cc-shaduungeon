@@ -1,8 +1,8 @@
-import { AreaBuilder } from '@area/area-builder'
-import { MapBuilder } from '@room/map-builder'
+import { AreaBuilder } from '@root/area/area-builder'
+import { MapBuilder } from '@root/room/map-builder'
 import { Selection, Selections } from '@root/types'
-import { FsUtil } from '@util/fsutil'
-import { assert } from '@util/misc'
+import { FsUtil } from '@root/util/fsutil'
+import { assert } from '@root/util/misc'
 
 export type SelectionPools = 'puzzle' | 'battle'
 
@@ -16,6 +16,14 @@ export class DungeonPaths {
     static baseName: string = 'dnggen'
     static registeredIds: Set<string> = new Set()
 
+
+    static registerAutoLoadDungeon() {
+        ig.Game.inject({
+            preloadLevel(mapName: string) {
+                this.parent(DungeonPaths.loadIfNeeded(mapName) ?? mapName)
+            }
+        })
+    }
     /* example: getIdFromName('dnggen-0') -> '0' */
     static getIdFromName(name: string): string {
         return name.substring(DungeonPaths.baseName.length + 1)

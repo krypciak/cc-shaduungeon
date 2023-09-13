@@ -1,11 +1,11 @@
 import { Selection, SelectionMapEntry } from '@root/types'
-import { Stack, assert, assertBool, setRandomSeed } from '@util/misc'
-import { AreaPoint, Dir, } from '@util/pos'
-import { AreaInfo, AreaBuilder, ABStackEntry } from '@area/area-builder'
-import { MapBuilder } from '@room/map-builder'
-import { SimpleDoubleRoomMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder } from '@room/simple-map-builder'
-import { DungeonPaths } from '@dungeon/dungeon-paths'
-import { BattlePuzzleMapBuilder } from '@room/dungeon-map-builder'
+import { Stack, assert, assertBool, setRandomSeed } from '@root/util/misc'
+import { AreaPoint, Dir, } from '@root/util/pos'
+import { AreaInfo, AreaBuilder, ABStackEntry } from '@root/area/area-builder'
+import { MapBuilder } from '@root/room/map-builder'
+import { SimpleDoubleRoomMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder } from '@root/room/simple-map-builder'
+import { DungeonPaths } from '@root/dungeon/dungeon-paths'
+import { BattlePuzzleMapBuilder } from '@root/room/dungeon-map-builder'
 
 export class DungeonBuilder {
     static puzzleMap: Map<string, Selection[]>
@@ -27,7 +27,7 @@ export class DungeonBuilder {
         }
     }
 
-    async build(id: string, roomTp: number) {
+    async build(id: string) {
         await this.preloadPuzzleList()
         console.log(blitzkrieg.puzzleSelections.selHashMap)
 
@@ -167,10 +167,9 @@ export class DungeonBuilder {
         blitzkrieg.puzzleSelections.save()
         blitzkrieg.battleSelections.save()
 
-        if (roomTp) {}
         ig.game.varsChangedDeferred()
-        ig.game.teleport(usedBuilders[0].path!, ig.TeleportPosition.createFromJson({
-            marker: usedBuilders[0].entarenceRoom.primaryEntarence.getTpr().name,
+        ig.game.teleport(usedBuilders[dnggen.debug.roomTp].path!, ig.TeleportPosition.createFromJson({
+            marker: usedBuilders[dnggen.debug.roomTp].entarenceRoom.primaryEntarence.getTpr().name,
             level: 0,
             baseZPos: 0,
             size: {x: 0, y: 0}

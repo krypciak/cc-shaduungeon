@@ -1,11 +1,11 @@
-import { AreaInfo } from "@area/area-builder"
-import { MapBuilder } from "@room/map-builder"
-import { SimpleDoubleTunnelRoom, SimpleOpenTunnelRoom, SimpleRoom, SimpleTunnelRoom } from "@room/simple-room"
-import { Dir, DirUtil, EntityPoint, MapPoint, MapRect } from "@util/pos"
-import { Room } from "@room/room"
-import { assertBool } from "@util/misc"
-import { RoomIOTunnelClosed } from "@room/tunnel-room"
-import { RoomTheme } from "@room/themes"
+import { AreaInfo } from "@root/area/area-builder"
+import { MapBuilder } from "@root/room/map-builder"
+import { SimpleDoubleTunnelRoom, SimpleOpenTunnelRoom, SimpleRoom, SimpleTunnelRoom } from "@root/room/simple-room"
+import { Dir, DirUtil, EntityPoint, MapPoint, MapRect } from "@root/util/pos"
+import { Room } from "@root/room/room"
+import { assertBool } from "@root/util/misc"
+import { RoomIOTunnelClosed } from "@root/room/tunnel-room"
+import { RoomTheme } from "@root/room/themes"
 
 export class SimpleRoomMapBuilder extends MapBuilder {
     simpleRoom: SimpleRoom

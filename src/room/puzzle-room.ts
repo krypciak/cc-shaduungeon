@@ -1,10 +1,10 @@
-import { Dir, MapPoint, EntityRect, Rect, setToClosestSelSide, EntityPoint, DirUtil, MapRect } from '@util/pos'
+import { Dir, MapPoint, EntityRect, Rect, setToClosestSelSide, EntityPoint, DirUtil, MapRect } from '@root/util/pos'
 import { Selection } from '@root/types'
-import { Room, RoomIO, RoomIODoorLike, } from '@room/room'
-import { assert } from '@util/misc'
-import { MapDoorLike, MapEntity, MapEventTrigger, MapFloorSwitch, MapTransporter } from '@util/entity'
-import { RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen } from '@room/tunnel-room'
-import { RoomPlaceVars } from '@room/map-builder'
+import { Room, RoomIO, RoomIODoorLike, } from '@root/room/room'
+import { assert } from '@root/util/misc'
+import { MapDoorLike, MapEntity, MapEventTrigger, MapFloorSwitch, MapTransporter } from '@root/util/entity'
+import { RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen } from '@root/room/tunnel-room'
+import { RoomPlaceVars } from '@root/room/map-builder'
 
 enum PuzzleRoomType {
     WholeRoom,

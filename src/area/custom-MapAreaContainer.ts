@@ -1,6 +1,6 @@
-import { RoomType } from '@room/room'
-import { assert, assertBool } from '@util/misc'
-import { Dir, bareRect } from '@util/pos'
+import { RoomType } from '@root/room/room'
+import { assert, assertBool } from '@root/util/misc'
+import { Dir, bareRect } from '@root/util/pos'
 import { GuiHookMapRoomList } from '@root/types'
 
 export enum AreaViewFloorTypes {
@@ -310,7 +310,7 @@ export function overrideMapAreaContainer() {
                                 // apperently map connections can have a condition? didnt bother implementing that
                                 if (connection.map1 + 1 == this.room.id || connection.map2 + 1 == this.room.id) {
                                     const rect: bareRect = 
-                                        // @ts-ignore
+                                        // @root/ts-ignore
                                         connection.rect
                                     new ig.SimpleColor('#00ff0055').draw(
                                         (rect.x - this.room.min.x) * tilesize + addPxSpace,

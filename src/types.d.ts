@@ -1,7 +1,7 @@
 import { Mod } from 'ultimate-crosscode-typedefs/modloader/mod'
-import { RoomPlaceOrder, RoomType } from '@room/room'
-import { Dir, bareRect } from '@util/pos'
-import { AreaViewFloorTypes } from '@area/custom-MapAreaContainer'
+import { RoomPlaceOrder, RoomType } from '@root/room/room'
+import { Dir, bareRect } from '@root/util/pos'
+import { AreaViewFloorTypes } from '@root/area/custom-MapAreaContainer'
 
 export {}
 

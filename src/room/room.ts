@@ -1,10 +1,10 @@
-import { MapDoor, MapDoorLike, MapTransporter } from '@util/entity'
+import { MapDoor, MapDoorLike, MapTransporter } from '@root/util/entity'
 import { Selection } from '@root/types'
-import { Coll } from '@util/map'
-import { Point, Rect, Dir, DirUtil, MapPoint, MapRect, EntityRect, EntityPoint, Dir3d } from '@util/pos'
-import { assert, round } from '@util/misc'
-import { RoomPlaceVars } from '@room/map-builder'
-import { SelectionPools } from '@dungeon/dungeon-paths'
+import { Coll } from '@root/util/map'
+import { Point, Rect, Dir, DirUtil, MapPoint, MapRect, EntityRect, EntityPoint, Dir3d } from '@root/util/pos'
+import { assert, round } from '@root/util/misc'
+import { RoomPlaceVars } from '@root/room/map-builder'
+import { SelectionPools } from '@root/dungeon/dungeon-paths'
 
 const tilesize: number = 16
 

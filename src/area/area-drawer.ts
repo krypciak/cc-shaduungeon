@@ -1,8 +1,8 @@
-import { ABStackEntry } from '@area/area-builder'
-import { Room } from '@room/room'
-import { TunnelRoom } from '@room/tunnel-room'
-import { Stack } from '@util/misc'
-import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, Point, Rect } from '@util/pos'
+import { ABStackEntry } from '@root/area/area-builder'
+import { Room } from '@root/room/room'
+import { TunnelRoom } from '@root/room/tunnel-room'
+import { Stack } from '@root/util/misc'
+import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, Point, Rect } from '@root/util/pos'
 
 const canvasIndex = 0
 

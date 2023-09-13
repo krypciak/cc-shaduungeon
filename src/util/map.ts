@@ -1,8 +1,8 @@
-import { AreaInfo } from '@area/area-builder'
-import { RoomPlaceVars } from '@room/map-builder'
-import { RoomTheme } from '@room/themes'
-import { assert } from '@util/misc'
-import { Dir, MapPoint } from '@util/pos'
+import { AreaInfo } from '@root/area/area-builder'
+import { RoomPlaceVars } from '@root/room/map-builder'
+import { RoomTheme } from '@root/room/themes'
+import { assert } from '@root/util/misc'
+import { Dir, MapPoint } from '@root/util/pos'
 
 const tilesize: number = 16
 
