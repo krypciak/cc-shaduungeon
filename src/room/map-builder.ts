@@ -1,13 +1,11 @@
 import { MapEntity } from '@util/entity'
 import { AreaInfo } from '@area/area-builder'
-import DngGen from '@root/plugin'
 import { RoomTheme, RoomThemeConfig } from '@room/themes'
 import { CCMap, MapLayer } from '@util/map'
 import { Dir, MapPoint, MapRect, PosDir } from '@util/pos'
 import { assert } from '@util/misc'
 import { Room } from '@room/room'
 import { getPosDirFromRoomIO } from '@room/tunnel-room'
-declare const dnggen: DngGen
 
 export namespace RoomPlaceVars {
     export function fromRawMap(map: sc.MapModel.Map, theme: RoomTheme, areaInfo: AreaInfo): RoomPlaceVars {

@@ -1,4 +1,4 @@
-import { Blitzkrieg, Selection, SelectionMapEntry } from '@root/types'
+import { Selection, SelectionMapEntry } from '@root/types'
 import { Stack, assert, assertBool, setRandomSeed } from '@util/misc'
 import { AreaPoint, Dir, } from '@util/pos'
 import { AreaInfo, AreaBuilder, ABStackEntry } from '@area/area-builder'
@@ -6,8 +6,6 @@ import { MapBuilder } from '@room/map-builder'
 import { SimpleDoubleRoomMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder } from '@room/simple-map-builder'
 import { DungeonPaths } from '@dungeon/dungeon-paths'
 import { BattlePuzzleMapBuilder } from '@room/dungeon-map-builder'
-
-declare const blitzkrieg: Blitzkrieg
 
 export class DungeonBuilder {
     static puzzleMap: Map<string, Selection[]>

@@ -1,5 +1,5 @@
 import { MapDoor, MapDoorLike, MapTransporter } from '@util/entity'
-import { Blitzkrieg, Selection } from '@root/types'
+import { Selection } from '@root/types'
 import { Coll } from '@util/map'
 import { Point, Rect, Dir, DirUtil, MapPoint, MapRect, EntityRect, EntityPoint, Dir3d } from '@util/pos'
 import { assert, round } from '@util/misc'
@@ -7,7 +7,6 @@ import { RoomPlaceVars } from '@room/map-builder'
 import { SelectionPools } from '@dungeon/dungeon-paths'
 
 const tilesize: number = 16
-declare const blitzkrieg: Blitzkrieg
 
 export function getPosOnRectSide<T extends Point>(init: new (x: number, y: number) => T, dir: Dir, rect: Rect, prefPos?: T): T {
     const pos: T = new init(0, 0)

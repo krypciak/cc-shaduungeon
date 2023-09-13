@@ -6,9 +6,15 @@ import { Blitzkrieg } from '@root/types'
 import { overrideMapAreaContainer } from '@area/custom-MapAreaContainer'
 import { DungeonPaths } from '@dungeon/dungeon-paths'
 
-declare const blitzkrieg: Blitzkrieg
-declare const dnggen: DngGen
 declare const vim: VimLogic
+
+declare global {
+    const blitzkrieg: Blitzkrieg
+    const dnggen: DngGen
+    interface Window {
+        dnggen: DngGen
+    }
+}
 
 const ngOptionName = 'dnggen'
 const ngOptionDisplayName = 'Generate Dungeon'
@@ -110,7 +116,6 @@ export default class DngGen {
     constructor(mod: Mod1) {
         this.dir = mod.baseDirectory
         this.mod = mod
-        // @ts-ignore
         window.dnggen = this
         // @ts-expect-error
         this.mod.isCCL3 = mod.findAllAssets ? true : false
