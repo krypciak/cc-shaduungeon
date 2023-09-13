@@ -147,21 +147,12 @@ export class Rect {
             this.constructor['multiplier']
 
         return new ins(
-            // Math.floor(this.x * multi),
-            // Math.floor(this.y * multi),
-            // Math.floor(this.width * multi),
-            // Math.floor(this.height * multi),
             this.x * multi,
             this.y * multi,
             this.width * multi,
             this.height * multi,
         ) as InstanceType<T>
     }
-
-    /* equals(rect: Rect): boolean {
-        return this.x == rect.x && this.y == rect.y
-            && this.width == rect.width && this.height == rect.height
-    } */
 
     static getMinMaxPosFromRectArr(rects: Rect[]): { min: Point; max: Point } {
         const min: AreaPoint = new AreaPoint(100000, 100000)
@@ -246,8 +237,6 @@ export class Point {
             this.constructor['multiplier']
 
         return new ins(
-            // Math.floor(this.x * multi),
-            // Math.floor(this.y * multi),
             this.x * multi,
             this.y * multi,
         ) as InstanceType<T>
@@ -320,12 +309,12 @@ export class AreaPoint extends Point {
 }
 
 export function doRectsOverlap<T extends Rect>(rect1: T, rect2: T): boolean {
-  return (
-    rect1.x < rect2.x2() &&
-    rect1.x2() > rect2.x &&
-    rect1.y < rect2.y2() &&
-    rect1.y2() > rect2.y
-  )
+    return (
+        rect1.x < rect2.x2() &&
+        rect1.x2() > rect2.x &&
+        rect1.y < rect2.y2() &&
+        rect1.y2() > rect2.y
+    )
 }
 
 export function doesRectArrayOverlapRectArray<T extends Rect>(arr1: T[], arr2: T[]): boolean {
