@@ -1,5 +1,5 @@
 import { MapDoor, MapDoorLike, MapTransporter } from '@util/entity'
-import { Blitzkrieg, Selection } from '@util/blitzkrieg'
+import { Blitzkrieg, Selection } from '@root/types'
 import { Coll } from '@util/map'
 import { Point, Rect, Dir, DirUtil, MapPoint, MapRect, EntityRect, EntityPoint, Dir3d } from '@util/pos'
 import { assert, round } from '@util/misc'

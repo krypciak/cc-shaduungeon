@@ -1,5 +1,5 @@
 import { AreaInfo } from '@area/area-builder'
-import { Selection } from '@util/blitzkrieg'
+import { Selection } from '@root/types'
 import { getMapDisplayName } from '@util/map'
 import { assertBool } from '@util/misc'
 import { Dir, DirUtil, EntityPoint, MapPoint } from '@util/pos'

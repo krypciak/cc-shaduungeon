@@ -1,4 +1,4 @@
-import { Blitzkrieg, Selection, SelectionMapEntry } from '@util/blitzkrieg'
+import { Blitzkrieg, Selection, SelectionMapEntry } from '@root/types'
 import { Stack, assert, assertBool, setRandomSeed } from '@util/misc'
 import { AreaPoint, Dir, } from '@util/pos'
 import { AreaInfo, AreaBuilder, ABStackEntry } from '@area/area-builder'

@@ -1,10 +1,3 @@
-declare global {
-    interface Math {
-        randomSeed(): number
-        seedrandomSeed(seed: string): void
-    }
-}
-
 export class Stack<T> {
     array: T[] = []
 

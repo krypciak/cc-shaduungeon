@@ -1,7 +1,7 @@
 import { RoomType } from '@room/room'
 import { assert, assertBool } from '@util/misc'
 import { Dir, bareRect } from '@util/pos'
-import { GuiHookMapRoomList } from '@area/area'
+import { GuiHookMapRoomList } from '@root/types'
 
 export enum AreaViewFloorTypes {
     Grid, /* default */

@@ -1,6 +1,6 @@
 import { MapEnemyCounter, MapEventTrigger, MapGlowingLine, MapHiddenBlock, MapTouchTrigger, MapWall } from '@util/entity'
 import DngGen from '@root/plugin'
-import { Blitzkrieg } from '@util/blitzkrieg'
+import { Blitzkrieg } from '@root/types'
 import { assert } from '@util/misc'
 import { DirUtil, EntityPoint, EntityRect, MapPoint, MapRect } from '@util/pos'
 import { RoomPlaceVars } from '@room/map-builder'

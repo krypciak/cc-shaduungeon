@@ -1,4 +1,4 @@
-import { Selection } from './blitzkrieg'
+import { Selection } from "@root/types"
 
 const tilesize: number = 16
 

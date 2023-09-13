@@ -1,5 +1,5 @@
 import { Dir, MapPoint, EntityRect, Rect, setToClosestSelSide, EntityPoint, DirUtil, MapRect } from '@util/pos'
-import { Blitzkrieg, Selection } from '@util/blitzkrieg'
+import { Blitzkrieg, Selection } from '@root/types'
 import { Room, RoomIO, RoomIODoorLike, } from '@room/room'
 import { assert } from '@util/misc'
 import { MapDoorLike, MapEntity, MapEventTrigger, MapFloorSwitch, MapTransporter } from '@util/entity'

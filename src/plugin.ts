@@ -2,7 +2,7 @@ import { godlikeStats, assert } from '@util/misc'
 import { DungeonBuilder } from '@dungeon/dungeon-builder'
 import { VimLogic } from '../node_modules/cc-vim/src/logic'
 import { AreaDrawer } from '@area/area-drawer'
-import { Blitzkrieg } from '@util/blitzkrieg'
+import { Blitzkrieg } from '@root/types'
 import { overrideMapAreaContainer } from '@area/custom-MapAreaContainer'
 import { DungeonPaths } from '@dungeon/dungeon-paths'
 
