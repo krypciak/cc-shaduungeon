@@ -8,7 +8,9 @@ export {}
 declare global {
     type Mod1 = {
         -readonly [K in keyof Mod]: Mod[K]
-    } & ({
+    } & {
+        isCCModPacked: boolean
+    }& ({
         isCCL3: true
         id: string
         findAllAssets(): void

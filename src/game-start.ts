@@ -92,7 +92,7 @@ export async function startDnggenGame(titleGuiInstance?: sc.TitleScreenButtonGui
     sc.newgame.active = true
     sc.newgame.options[ngOptionName] = true
     ig.game.start(sc.START_MODE.NEW_GAME_PLUS, 0)
-    ig.game.setPaused(false);
+    ig.game.setPaused(false)
 
     godlikeStats()
 }
