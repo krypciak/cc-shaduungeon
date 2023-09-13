@@ -1,6 +1,6 @@
-import { RoomPlaceOrder, RoomType } from '../room/room'
-import { Dir, bareRect } from '../util/pos'
-import { AreaViewFloorTypes } from './custom-MapAreaContainer'
+import { RoomPlaceOrder, RoomType } from '@room/room'
+import { Dir, bareRect } from '@util/pos'
+import { AreaViewFloorTypes } from '@area/custom-MapAreaContainer'
 
 export {}
 

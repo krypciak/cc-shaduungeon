@@ -1,6 +1,6 @@
-import { Dir, DirUtil, EntityPoint, MapPoint, MapRect } from '../util/pos'
-import { Room, RoomIODoorLike } from './room'
-import { RoomIOTunnelClosed, RoomIOTunnelOpen } from './tunnel-room'
+import { Dir, DirUtil, EntityPoint, MapPoint, MapRect } from '@util/pos'
+import { Room, RoomIODoorLike } from '@room/room'
+import { RoomIOTunnelClosed, RoomIOTunnelOpen } from '@room/tunnel-room'
 
 export class SimpleRoom extends Room {
     primaryEntarence: RoomIODoorLike

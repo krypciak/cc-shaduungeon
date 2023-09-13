@@ -1,11 +1,11 @@
-import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, PosDir, Rect, doRectsOverlap, doesRectArrayOverlapRectArray } from '../util/pos'
-import { loadArea } from '../util/map'
-import { Stack, allLangs, assert, assertBool } from '../util/misc'
-import DngGen from '../plugin'
-import { Room, } from '../room/room'
-import { MapBuilder } from '../room/map-builder'
-import { DungeonPaths } from '../dungeon/dungeon-paths'
-import { AreaViewFloorTypes } from './custom-MapAreaContainer'
+import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, PosDir, Rect, doRectsOverlap, doesRectArrayOverlapRectArray } from '@util/pos'
+import { loadArea } from '@util/map'
+import { Stack, allLangs, assert, assertBool } from '@util/misc'
+import DngGen from '@root/plugin'
+import { Room, } from '@room/room'
+import { MapBuilder } from '@room/map-builder'
+import { DungeonPaths } from '@dungeon/dungeon-paths'
+import { AreaViewFloorTypes } from '@area/custom-MapAreaContainer'
 
 declare const dnggen: DngGen
 

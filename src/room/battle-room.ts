@@ -1,11 +1,11 @@
-import { MapEnemyCounter, MapEventTrigger, MapGlowingLine, MapHiddenBlock, MapTouchTrigger, MapWall } from '../entity-spawn'
-import DngGen from '../plugin'
-import { Blitzkrieg } from '../util/blitzkrieg'
-import { assert } from '../util/misc'
-import { DirUtil, EntityPoint, EntityRect, MapPoint, MapRect } from '../util/pos'
-import { RoomPlaceVars } from './map-builder'
-import { Room, RoomIO, RoomIODoorLike, RoomIOTpr } from './room'
-import { RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen, TunnelRoom, } from './tunnel-room'
+import { MapEnemyCounter, MapEventTrigger, MapGlowingLine, MapHiddenBlock, MapTouchTrigger, MapWall } from '@util/entity'
+import DngGen from '@root/plugin'
+import { Blitzkrieg } from '@util/blitzkrieg'
+import { assert } from '@util/misc'
+import { DirUtil, EntityPoint, EntityRect, MapPoint, MapRect } from '@util/pos'
+import { RoomPlaceVars } from '@room/map-builder'
+import { Room, RoomIO, RoomIODoorLike, RoomIOTpr } from '@room/room'
+import { RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen, TunnelRoom, } from '@room/tunnel-room'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen

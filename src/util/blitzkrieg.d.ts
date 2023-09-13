@@ -1,4 +1,4 @@
-import { EntityRect } from './pos'
+import { EntityRect } from '@util/pos'
 
 export interface Blitzkrieg extends Record<string, Selections> {
     puzzleSelections: Selections

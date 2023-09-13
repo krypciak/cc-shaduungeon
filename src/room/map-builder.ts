@@ -1,12 +1,12 @@
-import { MapEntity } from '../entity-spawn'
-import { AreaInfo } from '../area/area-builder'
-import DngGen from '../plugin'
-import { RoomTheme, RoomThemeConfig } from './themes'
-import { CCMap, MapLayer } from '../util/map'
-import { Dir, MapPoint, MapRect, PosDir } from '../util/pos'
-import { assert } from '../util/misc'
-import { Room } from './room'
-import { getPosDirFromRoomIO } from './tunnel-room'
+import { MapEntity } from '@util/entity'
+import { AreaInfo } from '@area/area-builder'
+import DngGen from '@root/plugin'
+import { RoomTheme, RoomThemeConfig } from '@room/themes'
+import { CCMap, MapLayer } from '@util/map'
+import { Dir, MapPoint, MapRect, PosDir } from '@util/pos'
+import { assert } from '@util/misc'
+import { Room } from '@room/room'
+import { getPosDirFromRoomIO } from '@room/tunnel-room'
 declare const dnggen: DngGen
 
 export namespace RoomPlaceVars {

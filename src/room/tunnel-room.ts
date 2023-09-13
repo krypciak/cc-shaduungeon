@@ -1,6 +1,6 @@
-import { assert } from '../util/misc'
-import { Dir, DirUtil, EntityPoint, EntityRect, MapPoint, MapRect, PosDir } from '../util/pos'
-import { Room, RoomIO, RoomIODoorLike, RoomPlaceOrder, RoomType, Tpr } from './room'
+import { assert } from '@util/misc'
+import { Dir, DirUtil, EntityPoint, EntityRect, MapPoint, MapRect, PosDir } from '@util/pos'
+import { Room, RoomIO, RoomIODoorLike, RoomPlaceOrder, RoomType, Tpr } from '@room/room'
 
 export class RoomIOTunnel implements RoomIO {
     protected constructor(public tunnel: TunnelRoom) {}

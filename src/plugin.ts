@@ -1,11 +1,10 @@
-import { godlikeStats, assert } from './util/misc'
-import { DungeonBuilder } from './dungeon/dungeon-builder'
+import { godlikeStats, assert } from '@util/misc'
+import { DungeonBuilder } from '@dungeon/dungeon-builder'
 import { VimLogic } from '../node_modules/cc-vim/src/logic'
-import { AreaDrawer } from './area/area-drawer'
-import { Blitzkrieg } from './util/blitzkrieg'
-import { overrideMapAreaContainer } from './area/custom-MapAreaContainer'
-import { Mod } from 'ultimate-crosscode-typedefs/modloader/mod'
-import { DungeonPaths } from './dungeon/dungeon-paths'
+import { AreaDrawer } from '@area/area-drawer'
+import { Blitzkrieg } from '@util/blitzkrieg'
+import { overrideMapAreaContainer } from '@area/custom-MapAreaContainer'
+import { DungeonPaths } from '@dungeon/dungeon-paths'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
@@ -16,36 +15,6 @@ const ngOptionDisplayName = 'Generate Dungeon'
 const ngOptionDesc = 'Generate a dungeon'
 
 const blitzkriegMissingMsg: string = '\n!!!!!!!!!!!!!!!!!!!!!\nInstall https://github.com/krypciak/cc-blitzkrieg\n!!!!!!!!!!!!!!!!!!!!!'
-
-declare global {
-    namespace sc {
-        interface NEW_GAME_OPTIONS {
-            dnggen: sc.NewGameOption;
-        }
-    }
-    namespace ig {
-        interface Game {
-            preloadLevel(this: this, mapName: string): void
-        }
-    }
-}
-
-type Mod1 = {
-    -readonly [K in keyof Mod]: Mod[K]
-} & ({
-    isCCL3: true
-    id: string
-    findAllAssets(): void
-} | {
-    isCCL3: false
-    name: string
-    filemanager: {
-        findFiles(dir: string, exts: string[]): Promise<string[]>
-    }
-    getAsset(path: string): string
-    runtimeAssets: Record<string, string>
-})
-
 
 function updateLangLabels() {
     ig.lang.labels.sc.gui.menu['new-game'].options.names[ngOptionName] = ngOptionDisplayName

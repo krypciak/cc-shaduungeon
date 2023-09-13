@@ -1,10 +1,10 @@
-import { MapDoor, MapDoorLike, MapTransporter } from '../entity-spawn'
-import { Blitzkrieg, Selection } from '../util/blitzkrieg'
-import { Coll } from '../util/map'
-import { Point, Rect, Dir, DirUtil, MapPoint, MapRect, EntityRect, EntityPoint, Dir3d } from '../util/pos'
-import { assert, round } from '../util/misc'
-import { RoomPlaceVars } from './map-builder'
-import { SelectionPools } from '../dungeon/dungeon-paths'
+import { MapDoor, MapDoorLike, MapTransporter } from '@util/entity'
+import { Blitzkrieg, Selection } from '@util/blitzkrieg'
+import { Coll } from '@util/map'
+import { Point, Rect, Dir, DirUtil, MapPoint, MapRect, EntityRect, EntityPoint, Dir3d } from '@util/pos'
+import { assert, round } from '@util/misc'
+import { RoomPlaceVars } from '@room/map-builder'
+import { SelectionPools } from '@dungeon/dungeon-paths'
 
 const tilesize: number = 16
 declare const blitzkrieg: Blitzkrieg
