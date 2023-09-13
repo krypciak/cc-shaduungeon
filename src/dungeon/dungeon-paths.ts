@@ -1,9 +1,9 @@
-import { AreaBuilder } from './area/area-builder'
-import DngGen from './plugin'
-import { MapBuilder } from './room/map-builder'
-import { Blitzkrieg, Selection, Selections } from './util/blitzkrieg'
-import { FsUtil } from './util/fsutil'
-import { assert } from './util/misc'
+import { AreaBuilder } from '../area/area-builder'
+import DngGen from '../plugin'
+import { MapBuilder } from '../room/map-builder'
+import { Blitzkrieg, Selection, Selections } from '../util/blitzkrieg'
+import { FsUtil } from '../util/fsutil'
+import { assert } from '../util/misc'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen

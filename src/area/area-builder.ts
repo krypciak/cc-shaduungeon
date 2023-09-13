@@ -1,12 +1,11 @@
-import { AreaPoint, AreaRect, Dir, DirUtil, MapPoint, MapRect, PosDir, Rect, doRectsOverlap, doesRectArrayOverlapRectArray } from '../util/pos'
+import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, PosDir, Rect, doRectsOverlap, doesRectArrayOverlapRectArray } from '../util/pos'
 import { loadArea } from '../util/map'
 import { Stack, allLangs, assert, assertBool } from '../util/misc'
 import DngGen from '../plugin'
 import { Room, } from '../room/room'
 import { MapBuilder } from '../room/map-builder'
-import { DungeonPaths } from '../dungeon-paths'
+import { DungeonPaths } from '../dungeon/dungeon-paths'
 import { AreaViewFloorTypes } from './custom-MapAreaContainer'
-import { RoomIOTunnelClosed } from '../room/tunnel-room'
 
 declare const dnggen: DngGen
 
@@ -176,6 +175,7 @@ export class AreaBuilder {
         const mapType: 'DUNGEON' | 'NO_DUNGEON' = this.areaInfo.type == 'DUNGEON' ? 'DUNGEON' : 'NO_DUNGEON'
 
 
+        /*
         function addMapConnection(pos: AreaPoint, dir: Dir, map1: number, map2: number) {
                 const connection: sc.AreaLoadable.ConnectionRoomList = {
                     tx: pos.x,
@@ -187,6 +187,7 @@ export class AreaBuilder {
                 }
                 connections.push(connection)
         }
+        */
 
         let mapIndex = 0
         function addMap(builder: MapBuilder, rects: AreaRect[], rooms: Room[]) {

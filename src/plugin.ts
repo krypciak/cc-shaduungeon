@@ -1,11 +1,11 @@
 import { godlikeStats, assert } from './util/misc'
-import { DungeonBuilder } from './dungeon-builder'
+import { DungeonBuilder } from './dungeon/dungeon-builder'
 import { VimLogic } from '../node_modules/cc-vim/src/logic'
 import { AreaDrawer } from './area/area-drawer'
 import { Blitzkrieg } from './util/blitzkrieg'
 import { overrideMapAreaContainer } from './area/custom-MapAreaContainer'
 import { Mod } from 'ultimate-crosscode-typedefs/modloader/mod'
-import { DungeonPaths } from './dungeon-paths'
+import { DungeonPaths } from './dungeon/dungeon-paths'
 
 declare const blitzkrieg: Blitzkrieg
 declare const dnggen: DngGen
