@@ -3,11 +3,9 @@ old
 old.txt
 plugin.js
 src/util/old.txt
-assets/data/maps/dnggen/unused
-assets/data/maps/dnggen-*
-assets/data/areas/gendng.json1
 json/special-enemies.txt
 json/genBattle.json
 json/genPuzzle.json
+*.ccmod
 dist
 node_modules
