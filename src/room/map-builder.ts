@@ -4,7 +4,7 @@ import { RoomTheme, RoomThemeConfig } from '@root/room/themes'
 import { CCMap, MapLayer } from '@root/util/map'
 import { Dir, MapPoint, MapRect, PosDir } from '@root/util/pos'
 import { assert } from '@root/util/misc'
-import { Room } from '@root/room/room'
+import { Room, RoomIO } from '@root/room/room'
 import { getPosDirFromRoomIO } from '@root/room/tunnel-room'
 
 export namespace RoomPlaceVars {
@@ -93,8 +93,10 @@ export abstract class MapBuilder {
     abstract entarenceRoom: Room
     abstract exitRoom: Room
 
-    exitOnWall!: PosDir<MapPoint> | null
+    // exitOnWall!: PosDir<MapPoint> | null
     entarenceOnWall!: PosDir<MapPoint> | null
+    mapIOs: { io: RoomIO; room: Room }[] = []
+    mapIOsOnWall!: (PosDir<MapPoint> | null)[]
 
     /* place vars */
     size?: MapPoint
@@ -118,9 +120,12 @@ export abstract class MapBuilder {
     }
 
     setOnWallPositions() {
-        assert(this.exitRoom.primaryExit); assert(this.exitRoom.primaryEntarence)
+        assert(this.exitRoom.primaryEntarence)
         this.entarenceOnWall = getPosDirFromRoomIO(this.entarenceRoom, this.entarenceRoom.primaryEntarence)
-        this.exitOnWall = getPosDirFromRoomIO(this.exitRoom, this.exitRoom.primaryExit)
+        this.mapIOsOnWall = []
+        for (const io of this.mapIOs) {
+            this.mapIOsOnWall.push(getPosDirFromRoomIO(io.room, io.io))
+        }
     }
 
     abstract prepareToArrange(dir: Dir): boolean

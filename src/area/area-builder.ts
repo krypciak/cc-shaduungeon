@@ -1,10 +1,11 @@
-import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, PosDir, Rect, doRectsOverlap, doesRectArrayOverlapRectArray } from '@root/util/pos'
+import { AreaPoint, AreaRect, Dir, MapPoint, PosDir, Rect, doesRectArrayOverlapRectArray } from '@root/util/pos'
 import { loadArea } from '@root/util/map'
-import { Stack, allLangs, assert, assertBool } from '@root/util/misc'
+import { allLangs, assert, assertBool } from '@root/util/misc'
 import { Room, } from '@root/room/room'
 import { MapBuilder } from '@root/room/map-builder'
 import { DungeonPaths } from '@root/dungeon/dungeon-paths'
 import { AreaViewFloorTypes } from '@root/area/custom-MapAreaContainer'
+import { ArmEnd, ArmRuntime, ArmRuntimeStackEntry, flatOutArmTopDown } from '@root/dungeon/dungeon-arrange'
 
 export class AreaInfo {
     name: string
@@ -18,88 +19,52 @@ export class AreaInfo {
     }
 }
 
-export interface ABStackEntry {
-    builder?: MapBuilder
-    exit: AreaPoint
-    exitDir: Dir
-    level: number
-    rects: AreaRect[]
-    rooms: Room[]
-}
-
 export class AreaBuilder {
-    static roomToAreaRect(room: Room, offset: AreaPoint, overlapRect?: AreaRect): AreaRect {
-        const rect: MapRect = room
-        if (! overlapRect) {
-            return new AreaRect(
-                rect.x / AreaRect.div + offset.x,
-                rect.y / AreaRect.div + offset.y,
-                rect.width / AreaRect.div,
-                rect.height / AreaRect.div)
-        } else {
-            // assert(room.door)
-            const mul = 4
-            const newRect: AreaRect = new MapRect(
-                rect.x,
-                rect.y,
-                Math.ceil(rect.width/mul)*mul,
-                Math.ceil(rect.height/mul)*mul,
-            ).to(AreaRect)
-            Vec2.add(newRect, offset)
+    static tryGetAreaRects(builder: MapBuilder, lastExit: AreaPoint, arm: ArmRuntime):
+        { exits: (PosDir<AreaPoint> | null)[], rects: AreaRect[], rooms: Room[] } | undefined {
 
-            for (let i = 0; i < 3; i++) {
-                if (doRectsOverlap(newRect, overlapRect)) {
-                    // Point.moveInDirection(newRect, room.door.dir)
-                } else {
-                    return newRect
-                }
-            }
-            throw new Error('what')
-        }
-    }
-
-    static tryGetAreaRects(builder: MapBuilder, lastExit: AreaPoint, stackEntries: ABStackEntry[]):
-        { exit: AreaPoint, rects: AreaRect[], rooms: Room[] } | undefined {
-
-        assert(builder.entarenceRoom);
-        assert(builder.exitRoom); assert(builder.exitRoom.primaryExit)
+        assert(builder.entarenceRoom)
         
         let entPosDir: PosDir<MapPoint> | null = builder.entarenceOnWall
-        const exitPosDir: PosDir<MapPoint> | null = builder.exitOnWall
-
         if (entPosDir == null) {
-            entPosDir = { dir: Dir.SOUTH, pos: new MapPoint(0, 0) }
+            entPosDir = Object.assign(new MapPoint(0, 0), { dir: Dir.SOUTH })
         }
-        if (exitPosDir == null) {
-            throw new Error('dead end not supported')
-        }
-
-        const exit: AreaPoint = exitPosDir.pos.to(AreaPoint)
-        const ent: AreaPoint = entPosDir.pos.to(AreaPoint)
+        const ent: AreaPoint = entPosDir.to(AreaPoint)
 
         const offset: AreaPoint = new AreaPoint(lastExit.x - ent.x, lastExit.y - ent.y)
-        
-        exit.x += offset.x
-        exit.y += offset.y
 
         const rects: AreaRect[] = []
         
         builder.rooms.forEach(r => {
-            rects.push(AreaBuilder.roomToAreaRect(r, offset))
+            const ar = r.to(AreaRect)
+            Vec2.add(ar, offset)
+            rects.push(ar)
         })
 
         if (dnggen.debug.collisionlessMapArrange) {
-            for (let i = stackEntries.length - 1; i >= 0; i--) {
-                const e = stackEntries[i]
-                if (doesRectArrayOverlapRectArray(e.rects, rects)) {
-                    return
+            function doesArmCollide(arm: ArmRuntime): boolean {
+                arm.stack.array.forEach((e: ArmRuntimeStackEntry) => {
+                    if (doesRectArrayOverlapRectArray(e.areaRects, rects)) { return true }
+                })
+                if (arm.parentArm) {
+                    if (doesArmCollide(arm.parentArm)) { return true }
                 }
+                return false
             }
+            if (doesArmCollide(arm)) { return }
         }
         
+        const exits: (PosDir<AreaPoint> | null)[] = builder.mapIOsOnWall.map(e => {
+            if (e) {
+                const pos = e.to(AreaPoint)
+                Vec2.add(pos, offset)
+                return Object.assign(pos, { dir: e.dir })
+            } else { return null }
+        })
+
         return {
             rects,
-            exit,
+            exits,
             rooms: builder.rooms,
         }
     }
@@ -116,8 +81,9 @@ export class AreaBuilder {
     dbEntry?: sc.MapModel.Area
     builtArea?: sc.AreaLoadable.Data
 
-    static trimBuilderStack(arr: ABStackEntry[], additionalSpace: number = 2): { offset: AreaPoint; size: AreaPoint } {
-        const obj = Rect.getMinMaxPosFromRectArr(arr.flatMap(e => e.rects))
+    static trimArm(arm: ArmRuntime, additionalSpace: number = 2): { offset: AreaPoint; size: AreaPoint } {
+        const rects = flatOutArmTopDown(arm).flatMap(e => e.areaRects)
+        const obj = Rect.getMinMaxPosFromRectArr(rects)
         const minPos: AreaPoint = obj.min as AreaPoint
         const maxPos: AreaPoint = obj.max as AreaPoint
 
@@ -126,18 +92,27 @@ export class AreaBuilder {
         Vec2.sub(newSize, minPos)
         Vec2.addC(newSize, additionalSpace)
 
-        for (const entry of arr) {
-            for (const rect of entry.rects) {
-                Vec2.sub(rect, minPos)
+        function offsetArmTopDown(arm: ArmRuntime, offset: AreaPoint) {
+            arm.stack.array.forEach(e => {
+                e.areaRects.forEach(rect => Vec2.sub(rect, offset))
+                for (const exit of Array.isArray(e.lastExit) ? e.lastExit : [e.lastExit]) {
+                    Vec2.sub(exit, offset)
+                }
+            })
+            if (arm.end == ArmEnd.Arm) {
+                arm.arms.forEach(a => {
+                    offsetArmTopDown(a, offset)
+                })
             }
-            Vec2.sub(entry.exit, minPos)
         }
+        offsetArmTopDown(arm, minPos)
+
         return { offset: minPos, size: newSize }
     }
 
     constructor(
         public areaInfo: AreaInfo, 
-        public stack: Stack<ABStackEntry>,
+        public arm: ArmRuntime,
         public size: AreaPoint,
     ) {
         this.size = new AreaPoint(Math.ceil(size.x), Math.ceil(size.y))
@@ -154,17 +129,18 @@ export class AreaBuilder {
             chests: chestCount,
             defaultFloor: 0,
             floors: [
-                await this.generateFloor(0, 'G', this.size, this.stack.array),
+                await this.generateFloor(0, 'G', this.size, this.arm)
             ],
             type: AreaViewFloorTypes.RoomList,
         }
         this.builtArea = builtArea
     }
 
-    async generateFloor(level: number, name: string, size: AreaPoint, entries: ABStackEntry[]): Promise<sc.AreaLoadable.FloorCustom> {
-        entries = entries.filter(e => e.level == level)
+    async generateFloor(level: number, name: string, size: AreaPoint, arm: ArmRuntime): Promise<sc.AreaLoadable.FloorCustom> {
+        /* level filtering not implemented */
+        const entries = flatOutArmTopDown(arm)
         const connections: sc.AreaLoadable.ConnectionRoomList[] = []
-        const mapConnectionSize = 3
+        // const mapConnectionSize = 3
         const landmarks: sc.AreaLoadable.Landmark[] = []
         // const stamps: Stamp[] = []
 
@@ -257,12 +233,12 @@ export class AreaBuilder {
         }
         
         for (const entry of entries) {
-            const builder = entry.builder!
+            const builder = entry.builder
             builder.pathParent = this.areaInfo.name
             builder.path = builder.pathParent + '/' + (mapIndex.toLocaleString('en-US', {minimumIntegerDigits: 3, useGrouping: false}))
             await builder.decideDisplayName(mapIndex)
             assert(builder.displayName)
-            addMap(builder, entry.rects, entry.rooms)
+            addMap(builder, entry.areaRects, entry.rooms)
             mapIndex++
         }
 

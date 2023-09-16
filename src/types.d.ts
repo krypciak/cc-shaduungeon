@@ -6,9 +6,11 @@ import { AreaViewFloorTypes } from '@root/area/custom-MapAreaContainer'
 export {}
 
 declare global {
-    type Mod1 = {
-        -readonly [K in keyof Mod]: Mod[K]
-    } & {
+    type Writable<T> = {
+        -readonly [K in keyof T]: T[K]
+    }
+
+    type Mod1 = Writable<Mod> & {
         isCCModPacked: boolean
     }& ({
         isCCL3: true
@@ -40,7 +42,6 @@ declare global {
         }
     }
 }
-
 /* custom area related */
 export type GuiHookMapRoomList = ig.GuiHook & {
     gui: { floor: sc.AreaLoadable.Floor, room: sc.AreaRoomBounds, unlocked: boolean }

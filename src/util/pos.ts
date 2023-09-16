@@ -3,19 +3,19 @@ import { Selection } from "@root/types"
 const tilesize: number = 16
 
 export enum Dir {
-    NORTH,
-    EAST,
-    SOUTH,
-    WEST,
+    NORTH = 0,
+    EAST = 1,
+    SOUTH = 2,
+    WEST = 3,
 }
 
 export enum Dir3d {
-    NORTH,
-    EAST,
-    SOUTH,
-    WEST,
-    UP,
-    DOWN,
+    NORTH = 0,
+    EAST = 1,
+    SOUTH = 2,
+    WEST = 3,
+    UP = 4,
+    DOWN = 5,
 }
 
 export class DirUtil {
@@ -53,10 +53,16 @@ export class DirUtil {
     static dir3dIsDir(dir3d: Dir3d): boolean {
         return dir3d != Dir3d.UP && dir3d != Dir3d.DOWN
     }
+
+    static forEachDir(action: ((dir: Dir) => void)) {
+        for (let dir: Dir = 0; dir < 4; dir++) {
+            action(dir)
+        }
+    }
 }
 
-export type PosDir<T extends Point> = { pos: T, dir: Dir }
-export type PosDir3d<T extends Point> = { pos: T, dir: Dir3d }
+export type PosDir<T extends Point> =  T & { dir: Dir }
+export type PosDir3d<T extends Point> = T & { dir: Dir3d }
 
 export type bareRect = { x: number; y: number; width: number; height: number }
 
@@ -213,7 +219,6 @@ export class MapRect extends Rect {
 export class AreaRect extends Rect {
     private _arearect: boolean = true
     static multiplier: number = 1
-    static div: number = MapRect.multiplier / AreaRect.multiplier 
 
     static fromxy2(x: number, y: number, x2: number, y2: number): AreaRect {
         return new AreaRect(x, y, x2 - x, y2 - y)

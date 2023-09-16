@@ -1,7 +1,6 @@
-import { ABStackEntry } from '@root/area/area-builder'
+import { ArmRuntime, DungeonGenerateConfig, flatOutArmTopDown } from '@root/dungeon/dungeon-arrange'
 import { Room } from '@root/room/room'
 import { TunnelRoom } from '@root/room/tunnel-room'
-import { Stack } from '@root/util/misc'
 import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, Point, Rect } from '@root/util/pos'
 
 const canvasIndex = 0
@@ -179,13 +178,21 @@ export class CCCanvas {
     }
 
     copyToClipboard() {
-        const dataURL = this.canvas.toDataURL('image/png');
-        (this.external ? this.window!.navigator : navigator).clipboard.writeText(dataURL).then(() => {
-            console.log('Image copied to clipboard')
-        })
-        .catch((error) => {
-            console.error('Error copying image to clipboard:', error)
-        })
+        const copy = () => {
+            const dataURL = this.canvas.toDataURL('image/png');
+            (this.external ? this.window!.navigator : navigator).clipboard.writeText(dataURL).then(() => {
+                console.log('Image copied to clipboard')
+            })
+            .catch((error) => {
+                console.error('Error copying image to clipboard:', error)
+            })
+        }
+        if (this.window) { 
+            this.window.focus()
+            this.window.addEventListener('focus', copy)
+        } else {
+            copy() 
+        }
     }
 }
 
@@ -222,33 +229,37 @@ export class AreaDrawer extends CCCanvas {
         return '#00000000'
     }
 
-    async drawArea(stack: Stack<ABStackEntry>, size: AreaPoint) {
+    async drawArea(dngConfig: DungeonGenerateConfig<ArmRuntime>, size: AreaPoint) {
+        if (! dngConfig.arm) { return }
         this.show()
         this.colorIndex = 0
 
-        const drawLater: (() => void)[] = []
         this.clear(size.to(MapPoint))
-        let i = 0
-        for (const obj of stack.array) {
+
+        const startColor = this.color
+        const colorIndex = this.colorIndex
+        const arr = flatOutArmTopDown(dngConfig.arm)
+        for (let i = 0; i < arr.length; i++) {
+            const e = arr[i]
             this.nextColor()
-            for (let i = 0; i < obj.rects.length; i++) {
-                const rect = obj.rects[i]
+            for (let i = 0; i < e.areaRects.length; i++) {
+                const rect = e.areaRects[i]
                 // copy the rect
                 const drawRect = rect.to(AreaRect)
-                this.drawRect(drawRect, AreaDrawer.getBgColorFromRoom(obj.rooms[i]))
+                this.drawRect(drawRect, AreaDrawer.getBgColorFromRoom(e.rooms[i]))
             }
-            const exitCopy = obj.exit.copy()
-            const color = this.color
-            const icopy = i
-            drawLater.push(() => {
-                this.setColor(color)
-                this.drawArrow(exitCopy.to(MapPoint), obj.exitDir)
-
-                const pos = AreaPoint.fromVec(obj.rects[0]); Vec2.addC(pos, 0.4, 1)
-                this.drawText(pos.to(MapPoint), icopy.toString())
-            })
-            i++
         }
-        for (const func of drawLater) { func() }
+        this.colorIndex = colorIndex
+        this.setColor(startColor)
+        for (let i = 0; i < arr.length; i++) {
+            const e = arr[i]
+            this.nextColor()
+            for (const exit of Array.isArray(e.lastExit) ? e.lastExit : [e.lastExit]) {
+                this.drawArrow(exit.to(MapPoint), exit.dir)
+
+                const pos = AreaPoint.fromVec(e.areaRects[0]); Vec2.addC(pos, 0.4, 1)
+                this.drawText(pos.to(MapPoint), i.toString())
+            }
+        }
     }
 }

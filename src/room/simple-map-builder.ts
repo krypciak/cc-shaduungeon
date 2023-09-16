@@ -1,6 +1,6 @@
 import { AreaInfo } from "@root/area/area-builder"
 import { MapBuilder } from "@root/room/map-builder"
-import { SimpleDoubleTunnelRoom, SimpleOpenTunnelRoom, SimpleRoom, SimpleTunnelRoom } from "@root/room/simple-room"
+import { SimpleDoubleExitRoom, SimpleDoubleTunnelRoom, SimpleOpenTunnelRoom, SimpleRoom, SimpleTunnelRoom } from "@root/room/simple-room"
 import { Dir, DirUtil, EntityPoint, MapPoint, MapRect } from "@root/util/pos"
 import { Room } from "@root/room/room"
 import { assertBool } from "@root/util/misc"
@@ -15,10 +15,10 @@ export class SimpleRoomMapBuilder extends MapBuilder {
 
     constructor(areaInfo: AreaInfo, public entDir: Dir, public exitDir: Dir) {
         super(3, areaInfo, RoomTheme.default)
-        this.simpleRoom = new SimpleRoom(new MapPoint(0, 0), new MapPoint(16, 16), entDir, exitDir)
+        this.simpleRoom = this.entarenceRoom = this.exitRoom =
+            new SimpleRoom(new MapPoint(0, 0), new MapPoint(16, 16), entDir, exitDir)
         this.simpleRoom.pushAllRooms(this.rooms)
-        this.entarenceRoom = this.simpleRoom
-        this.exitRoom = this.simpleRoom
+        this.mapIOs.push({ io: this.exitRoom.primaryExit, room: this.exitRoom })
         this.setOnWallPositions()
     }
 
@@ -62,10 +62,10 @@ export class SimpleSingleTunnelMapBuilder extends MapBuilder {
 
     constructor(areaInfo: AreaInfo, public entDir: Dir, public exitDir: Dir) {
         super(3, areaInfo, RoomTheme.default)
-        this.simpleRoom = new SimpleTunnelRoom(new MapPoint(0, 0), new MapPoint(16, 16), entDir, exitDir)
+        this.simpleRoom = this.entarenceRoom = this.exitRoom =
+            new SimpleTunnelRoom(new MapPoint(0, 0), new MapPoint(16, 16), entDir, exitDir)
         this.simpleRoom.pushAllRooms(this.rooms)
-        this.entarenceRoom = this.simpleRoom
-        this.exitRoom = this.simpleRoom
+        this.mapIOs.push({ io: this.exitRoom.primaryExit, room: this.exitRoom })
         this.setOnWallPositions()
     }
 
@@ -93,10 +93,10 @@ export class SimpleDoubleTunnelMapBuilder extends MapBuilder {
 
     constructor(areaInfo: AreaInfo, public entDir: Dir, public exitDir: Dir) {
         super(3, areaInfo, RoomTheme.default)
-        this.simpleRoom = new SimpleDoubleTunnelRoom(new MapPoint(0, 0), new MapPoint(16, 16), entDir, exitDir)
+        this.simpleRoom = this.entarenceRoom = this.exitRoom =
+            new SimpleDoubleTunnelRoom(new MapPoint(0, 0), new MapPoint(16, 16), entDir, exitDir)
         this.simpleRoom.pushAllRooms(this.rooms)
-        this.entarenceRoom = this.simpleRoom
-        this.exitRoom = this.simpleRoom
+        this.mapIOs.push({ io: this.exitRoom.primaryExit, room: this.exitRoom })
         this.setOnWallPositions()
     }
 
@@ -122,6 +122,7 @@ export class SimpleDoubleRoomMapBuilder extends MapBuilder {
         const pos: MapPoint = this.exitRoom.primaryEntarence.tunnel.getRoomPosThatConnectsToTheMiddle(entarenceRoomSize)
         this.entarenceRoom = new Room('simple', MapRect.fromTwoPoints(pos, entarenceRoomSize), [true, true, true, true], true)
         this.exitRoom.pushAllRooms(this.rooms)
+        this.mapIOs.push({ io: this.exitRoom.primaryExit, room: this.exitRoom })
     }
 
     prepareToArrange(dir: Dir): boolean {
@@ -154,5 +155,33 @@ export class SimpleDoubleRoomMapBuilder extends MapBuilder {
         builders.push(new SimpleDoubleRoomMapBuilder(areaInfo, Dir.EAST, Dir.WEST))
         builders.push(new SimpleDoubleRoomMapBuilder(areaInfo, Dir.EAST, Dir.SOUTH))
         builders.push(new SimpleDoubleRoomMapBuilder(areaInfo, Dir.NORTH, Dir.WEST))
+    }
+}
+
+export class SimpleDoubleExitMapBuilder extends MapBuilder {
+    simpleRoom: SimpleDoubleExitRoom
+
+    entarenceRoom: SimpleDoubleExitRoom
+    exitRoom: SimpleDoubleExitRoom
+
+    constructor(areaInfo: AreaInfo, public entDir: Dir, public exitDir1: Dir, public exitDir2: Dir) {
+        super(3, areaInfo, RoomTheme.default)
+        this.entarenceRoom = this.exitRoom = this.simpleRoom =
+            new SimpleDoubleExitRoom(new MapPoint(0, 0), new MapPoint(16, 16), entDir, exitDir1, exitDir2)
+        this.simpleRoom.pushAllRooms(this.rooms)
+        this.mapIOs.push(
+            { io: this.simpleRoom.exit1, room: this.simpleRoom },
+            { io: this.simpleRoom.exit2, room: this.simpleRoom },
+        )
+        this.setOnWallPositions()
+    }
+
+    prepareToArrange(dir: Dir): boolean {
+        return this.entDir == DirUtil.flip(dir)
+    }
+
+    async decideDisplayName(index: number): Promise<string> {
+        this.displayName = `SimpleDoubleExitMapBuilder ${index}`
+        return this.displayName
     }
 }

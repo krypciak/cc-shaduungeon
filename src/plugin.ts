@@ -49,7 +49,7 @@ export default class DngGen {
     debug: DngGenDebug = {
         /* if all all true everything should be as intended */
         pastePuzzle: true,
-        decorateBattleRoom: true,
+        decorateBattleRoom: false,
         trimAreas: true,
         collisionlessMapArrange: true,
         dontDiscoverAllMaps: false,
@@ -81,5 +81,7 @@ export default class DngGen {
     async poststart() {
         overrideMapAreaContainer()
         poststartGameStart()
+
+        startDnggenGame()
     }
 }

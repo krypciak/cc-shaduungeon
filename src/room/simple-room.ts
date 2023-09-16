@@ -57,3 +57,20 @@ export class SimpleOpenTunnelRoom extends Room {
         this.ios.push(this.primaryEntarence, this.primaryExit)
     }
 }
+export class SimpleDoubleExitRoom extends Room {
+    primaryEntarence: RoomIOTunnelClosed
+    exit1: RoomIODoorLike
+    exit2: RoomIODoorLike
+
+    constructor(pos: MapPoint, size: MapPoint, entDir: Dir, public exitDir1: Dir, public exitDir2: Dir) {
+        if (entDir == exitDir1 || entDir == exitDir2 || exitDir1 == exitDir2) { throw new Error('invalid dir inputs') }
+        super('simpledoubleexitroom', MapRect.fromTwoPoints(pos, size), [true, true, true, true], true)
+
+        const tunnelSize: MapPoint = new MapPoint(4, 4)
+        this.primaryEntarence = new RoomIOTunnelClosed(this, entDir, tunnelSize, this.middlePoint(MapPoint).to(EntityPoint), true)
+
+        this.exit1 = RoomIODoorLike.fromRoom('Door', this, 'simple-exit1', exitDir1)
+        this.exit2 = RoomIODoorLike.fromRoom('Door', this, 'simple-exit2', exitDir2)
+        this.ios.push(this.primaryEntarence, this.exit1, this.exit2)
+    }
+}

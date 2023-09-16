@@ -34,7 +34,7 @@ export function getPosDirFromRoomIO(baseRoom: Room, io: RoomIO): PosDir<MapPoint
 
     const room: Room = io instanceof RoomIOTunnel ? io.tunnel : baseRoom
     room.setPosToSide(pos, dir)
-    return { dir, pos }
+    return Object.assign(pos, { dir })
 }
 
 export class TunnelRoom extends Room {

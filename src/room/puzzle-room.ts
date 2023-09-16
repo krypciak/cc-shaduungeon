@@ -1,5 +1,5 @@
 import { Dir, MapPoint, EntityRect, Rect, setToClosestSelSide, EntityPoint, DirUtil, MapRect } from '@root/util/pos'
-import { Selection } from '@root/types'
+import { Selection, SelectionMapEntry } from '@root/types'
 import { Room, RoomIO, RoomIODoorLike, } from '@root/room/room'
 import { assert } from '@root/util/misc'
 import { MapDoorLike, MapEntity, MapEventTrigger, MapFloorSwitch, MapTransporter } from '@root/util/entity'
@@ -39,6 +39,29 @@ interface PuzzleData {
 }
 
 export class PuzzleRoom extends Room {
+    static puzzleMap: ReadonlyMap<string, Readonly<Readonly<Selection>[]>>
+    static puzzleList: Readonly<Readonly<Selection>[]>
+
+    static async preloadPuzzleList() {
+        if (! PuzzleRoom.puzzleMap) {
+            const puzzleMap = new Map<string, Readonly<Selection>[]>
+            const puzzleList: Readonly<Selection>[] = []
+            PuzzleRoom.puzzleList = []
+            for (const mapName in blitzkrieg.puzzleSelections.selHashMap) {
+                const entry: SelectionMapEntry = blitzkrieg.puzzleSelections.selHashMap[mapName]
+                /* entry is from blitzkrieg puzzle list */
+                if (entry.fileIndex == 0 && entry.sels.length > 0) {
+                    const filtered: Readonly<Selection>[] = entry.sels.filter((sel) => sel.data.type != 'dis').map(e => Object.freeze(e))
+                    puzzleMap.set(mapName, filtered)
+                    for (const sel of filtered) { puzzleList.push(Object.freeze(sel)) }
+                }
+            }
+            PuzzleRoom.puzzleMap = Object.freeze(puzzleMap)
+            PuzzleRoom.puzzleList = Object.freeze(puzzleList)
+        }
+    }
+
+
     puzzle: PuzzleData
     primaryExit!: RoomIODoorLike
     primaryEntarence!: RoomIO

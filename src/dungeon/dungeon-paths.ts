@@ -6,7 +6,7 @@ import { assert } from '@root/util/misc'
 
 export type SelectionPools = 'puzzle' | 'battle'
 
-interface DungeonConfig {
+interface DungeonSaveConfig {
     paths: Record<string, string>
     areaDbEntries: Record<string, sc.MapModel.Area>
     sels: Record<SelectionPools, string>
@@ -48,7 +48,7 @@ export class DungeonPaths {
     baseDir: string
     nameAndId: string
 
-    config: DungeonConfig
+    config: DungeonSaveConfig
     configFile: string
 
     mapsDirGame: string = 'data/maps'

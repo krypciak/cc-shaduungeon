@@ -5,8 +5,8 @@ export class Stack<T> {
         this.array = [...array]
     }
 
-    push(element: T) {
-        this.array.push(element)
+    push(elements: T) {
+        this.array.push(elements)
     }
     pop(): T {
         return this.array.splice(this.array.length - 1, 1)[0]
@@ -56,7 +56,10 @@ export function assertBool(arg: boolean, msg: string = ''): asserts arg {
 
 export function setRandomSeed(obj: { toString(): string }) {
     Math.seedrandomSeed(obj.toString())
+}
 
+export function randomSeedInt(min: number, max: number) {
+    return Math.floor(Math.randomSeed() * (max - min) + min)
 }
 
 export function godlikeStats() {
