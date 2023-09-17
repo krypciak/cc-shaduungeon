@@ -1,11 +1,11 @@
 import { AreaPoint, AreaRect, Dir, MapPoint, PosDir, Rect, doesRectArrayOverlapRectArray } from '@root/util/pos'
 import { loadArea } from '@root/util/map'
 import { allLangs, assert, assertBool } from '@root/util/misc'
-import { Room, } from '@root/room/room'
+import { Room, Tpr, } from '@root/room/room'
 import { MapBuilder } from '@root/room/map-builder'
 import { DungeonPaths } from '@root/dungeon/dungeon-paths'
 import { AreaViewFloorTypes } from '@root/area/custom-MapAreaContainer'
-import { ArmEnd, ArmRuntime, flatOutArmTopDown } from '@root/dungeon/dungeon-arrange'
+import { ArmEnd, ArmRuntime, ArmRuntimeEntry, flatOutArmTopDown, forEveryArmEntry } from '@root/dungeon/dungeon-arrange'
 
 export class AreaInfo {
     name: string
@@ -158,9 +158,11 @@ export class AreaBuilder {
         this.builtArea = builtArea
     }
 
-    async generateFloor(level: number, name: string, size: AreaPoint, arm: ArmRuntime): Promise<sc.AreaLoadable.FloorCustom> {
+    async generateFloor(level: number, name: string, size: AreaPoint, rootArm: ArmRuntime): Promise<sc.AreaLoadable.FloorCustom> {
         /* level filtering not implemented */
-        const entries = flatOutArmTopDown(arm)
+        const entries: { entry: ArmRuntimeEntry, parentArm: ArmRuntime, index: number }[] = []
+        forEveryArmEntry(rootArm, (entry: ArmRuntimeEntry, parentArm: ArmRuntime, index: number) => { entries.push({ entry, parentArm, index }) })
+        
         const connections: sc.AreaLoadable.ConnectionRoomList[] = []
         // const mapConnectionSize = 3
         const landmarks: sc.AreaLoadable.Landmark[] = []
@@ -254,15 +256,83 @@ export class AreaBuilder {
             */
         }
         
-        for (const entry of entries) {
-            const builder = entry.builder
+        for (const obj of entries) {
+            const builder = obj.entry.builder
             builder.pathParent = this.areaInfo.name
-            // assertBool(builder.path === undefined, 'ohmygodwhy')
+            assertBool(builder.path === undefined, 'MapBuilder copy fail')
             builder.path = builder.pathParent + '/' + (mapIndex.toLocaleString('en-US', {minimumIntegerDigits: 3, useGrouping: false}))
+
             await builder.decideDisplayName(mapIndex)
             assert(builder.displayName)
-            addMap(builder, entry.areaRects, entry.rooms)
+            addMap(builder, obj.entry.areaRects, obj.entry.rooms)
             mapIndex++
+        }
+        /* set map in/out tpr paths and markers */
+        for (const obj of entries) {
+            const builder: MapBuilder = obj.entry.builder
+            const pa: ArmRuntime = obj.parentArm
+            /* set entarence path and marker */ {
+                let prevTpr: Tpr, prevBuilder: MapBuilder
+                if (obj.index == 0) {
+                    const pp = pa.parentArm
+                    if (pp) {
+                        prevBuilder = pp.stack.last().builder
+                        prevTpr = prevBuilder.mapIOs[pp.arms.indexOf(pa)].io.getTpr()
+                    } else {
+                        /* first first room */
+                        prevTpr = builder.entarenceRoom.primaryEntarence.getTpr()
+                        prevBuilder = builder
+                    }
+                } else {
+                    prevBuilder = obj.parentArm.stack[obj.index - 1].builder
+                    assert(prevBuilder.exitCount == 1)
+                    prevTpr = prevBuilder.mapIOs[0].io.getTpr()
+                }
+                assert(prevTpr); assert(prevBuilder)
+                const entTpr: Tpr = builder.entarenceRoom.primaryEntarence.getTpr()
+                assertBool(entTpr.destMap === undefined, 'MapBuilder copy fail'); assertBool(entTpr.destMarker === undefined, 'MapBuilder copy fail')
+                assert(prevBuilder.path); assert(prevTpr.name)
+                entTpr.destMap = prevBuilder.path
+                entTpr.destMarker = prevTpr.name
+            }
+
+            /* set exit paths and markers */ {
+                assertBool(builder.mapIOs.length == builder.exitCount)
+                if (obj.index == pa.length) {
+                    if (pa.end == ArmEnd.Arm) {
+                        assertBool(builder.exitCount > 1)
+                        builder.mapIOs.forEach((obj1, i) => {
+                            const nextArm: ArmRuntime = pa.arms[i]
+                            const nextEntry: ArmRuntimeEntry = nextArm.stack[0]
+                            const destMap: string = nextEntry.builder.path!
+                            const destMarker: string = nextEntry.builder.entarenceRoom.primaryEntarence.getTpr().name
+                            assert(destMap); assert(destMarker)
+
+                            const tpr: Tpr = obj1.io.getTpr()
+                            assertBool(tpr.destMap === undefined, 'MapBuilder copy fail'); assertBool(tpr.destMarker === undefined, 'MapBuilder copy fail')
+                            tpr.destMap = destMap
+                            tpr.destMarker = destMarker
+                        })
+                    } else {
+                        assertBool(builder.exitCount == 1)
+                        /* dead end */
+                        /* temp: set loop the exit */
+                        const tpr: Tpr = builder.mapIOs[0].io.getTpr()
+                        assertBool(tpr.destMap === undefined, 'MapBuilder copy fail'); assertBool(tpr.destMarker === undefined, 'MapBuilder copy fail')
+                        tpr.destMap = builder.path
+                        tpr.destMarker = tpr.name
+                    }
+                } else {
+                    assertBool(builder.exitCount == 1)
+                    const currTpr: Tpr = builder.mapIOs[0].io.getTpr()
+                    const nextBuilder: MapBuilder = obj.parentArm.stack[obj.index + 1].builder
+                    assertBool(currTpr.destMap === undefined, 'MapBuilder copy fail'); assertBool(currTpr.destMarker === undefined, 'MapBuilder copy fail')
+                    currTpr.destMap = nextBuilder.path!
+
+                    const nextTpr: Tpr = nextBuilder.entarenceRoom.primaryEntarence.getTpr()
+                    currTpr.destMarker = nextTpr.name
+                }
+            }
         }
 
         return {

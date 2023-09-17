@@ -17,6 +17,7 @@ export class PuzzleMapBuilder extends MapBuilder {
     static closedTunnelSize = new MapPoint(5, 4)
     static openTunnelSize = new MapPoint(5, 8)
 
+    exitCount: number = 1
     entarenceRoom: Room
     exitRoom: PuzzleRoom
     
@@ -51,6 +52,7 @@ export class PuzzleMapBuilder extends MapBuilder {
 }
 
 export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
+    exitCount: number = 1
     battleRoom: BattleRoom
 
     entarenceRoom: BattleRoom

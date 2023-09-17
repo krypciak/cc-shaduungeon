@@ -3,7 +3,7 @@ import { AreaInfo } from '@root/area/area-builder'
 import { RoomTheme, RoomThemeConfig } from '@root/room/themes'
 import { CCMap, MapLayer } from '@root/util/map'
 import { Dir, MapPoint, MapRect, PosDir } from '@root/util/pos'
-import { assert } from '@root/util/misc'
+import { assert, assertBool, deepCopy } from '@root/util/misc'
 import { Room, RoomIO } from '@root/room/room'
 import { getPosDirFromRoomIO } from '@root/room/tunnel-room'
 
@@ -64,17 +64,7 @@ export abstract class MapBuilder {
         return new Promise<void[]>(async (resolve) => {
             const promises: Promise<void>[] = []
             for (let i = 0; i < builders.length; i++) {
-                /* workaround */
                 const b = builders[i]
-                const pb = i == 0 ? null : builders[i - 1]
-                const nb = i == builders.length - 1 ? null : builders[i + 1]
-                b.setTprVariables(
-                    pb?.path! ?? b.path!,
-                    pb?.exitRoom.primaryExit!.getTpr().name! ?? b.entarenceRoom.primaryEntarence.getTpr().name,
-                    nb?.path! ?? b.path!,
-                    nb?.entarenceRoom.primaryEntarence.getTpr().name! ?? b.exitRoom.primaryExit?.getTpr().name ?? 'fallbackExit',
-                )
-                /* workaround end */
                 promises.push(new Promise<void>((resolve) => {
                     b.place().then(() => {
                         b.save().then(() => {
@@ -91,9 +81,9 @@ export abstract class MapBuilder {
     rooms: Room[] = []
 
     abstract entarenceRoom: Room
-    abstract exitRoom: Room
 
-    // exitOnWall!: PosDir<MapPoint> | null
+    abstract exitCount: number
+
     entarenceOnWall!: PosDir<MapPoint> | null
     mapIOs: { io: RoomIO; room: Room }[] = []
     mapIOsOnWall!: (PosDir<MapPoint> | null)[]
@@ -120,12 +110,16 @@ export abstract class MapBuilder {
     }
 
     setOnWallPositions() {
-        assert(this.exitRoom.primaryEntarence)
         this.entarenceOnWall = getPosDirFromRoomIO(this.entarenceRoom, this.entarenceRoom.primaryEntarence)
         this.mapIOsOnWall = []
+        assertBool(this.mapIOs.length == this.exitCount)
         for (const io of this.mapIOs) {
             this.mapIOsOnWall.push(getPosDirFromRoomIO(io.room, io.io))
         }
+    }
+
+    copy(): MapBuilder {
+        return deepCopy(this, new Set(['areaInfo', 'theme']))
     }
 
     abstract prepareToArrange(dir: Dir): boolean
@@ -133,17 +127,6 @@ export abstract class MapBuilder {
     abstract decideDisplayName(index: number): Promise<string>
 
     /* place functions*/
-    
-    setTprVariables(entMap: string, entMarker: string, exitMap?: string, exitMarker?: string): void {
-        const entTpr = this.entarenceRoom.primaryEntarence.getTpr()
-        entTpr.destMap = entMap
-        entTpr.destMarker = entMarker
-        if (this.exitRoom && this.exitRoom.primaryExit) {
-            const exitTpr = this.exitRoom.primaryExit.getTpr()
-            exitTpr.destMap = exitMap!
-            exitTpr.destMarker = exitMarker!
-        }
-    }
 
     trimRoomPositions(additionalSpace: MapRect) {
         const newSize: MapRect = new MapRect(10000, 10000, 0, 0)

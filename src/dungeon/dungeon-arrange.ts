@@ -44,7 +44,7 @@ export type ArmRuntimeEntry = {
 }
 
 export type ArmRuntime = {
-    parentArm?: ArmRuntime
+    parentArm?: ArmRuntime & TEMP$ArmArm<ArmRuntime>
 
     stack: ArmRuntimeEntry[]
     rootArm: boolean
@@ -57,9 +57,9 @@ function copyArmRuntime(arm: ArmRuntime): ArmRuntime {
     return newArm
 }
 
-function forEveryArmEntry(arm: ArmRuntime, func: (entry: ArmRuntimeEntry, arm: ArmRuntime) => void) {
+export function forEveryArmEntry(arm: ArmRuntime, func: (entry: ArmRuntimeEntry, arm: ArmRuntime, index: number) => void) {
     const entries: ArmRuntimeEntry[] = []
-    if (arm.stack) { arm.stack.forEach(e => func(e, arm)) }
+    if (arm.stack) { arm.stack.forEach((e, i) => func(e, arm, i)) }
     if (arm.end == ArmEnd.Arm) {
         arm.arms.forEach(a => {
             forEveryArmEntry(a, func)
@@ -234,7 +234,18 @@ export class DungeonArranger {
         const obj = this.recursiveTryPlaceArmEntry(this.c.arm, lastEntry as ArmRuntimeEntry)
         if (obj) {
             /* make sure no builders are linked */
-            flatOutArmTopDown(obj.arm).forEach(e => e.builder = Object.create(e.builder))
+            const arr = flatOutArmTopDown(obj.arm)
+            const set: Set<MapBuilder> = new Set()
+            let copyCount = 0
+            for (let i = 0; i < arr.length; i++) {
+                const e = arr[i]
+                if (set.has(e.builder)) {
+                    e.builder = e.builder.copy()
+                    copyCount++
+                } else {
+                    set.add(e.builder)
+                }
+            }
         }
         this.c.arm = obj?.arm
         return this.c

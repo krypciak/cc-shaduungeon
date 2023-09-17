@@ -3,6 +3,7 @@ import { AreaBuilder, AreaInfo } from '@root/area/area-builder'
 import { DungeonPaths } from '@root/dungeon/dungeon-paths'
 import { ArmEnd, ArmItemType, DungeonArranger, DungeonGenerateConfig, MapBuilderArrayGenerate, flatOutArmTopDown } from '@root/dungeon/dungeon-arrange'
 import { SimpleDoubleExitMapBuilder, SimpleSingleTunnelMapBuilder } from '@root/room/simple-map-builder'
+import { MapBuilder } from '@root/room/map-builder'
 
 export class DungeonBuilder {
     private getExampleConfig(areaInfo: AreaInfo, seed: string): DungeonGenerateConfig {
@@ -96,37 +97,28 @@ export class DungeonBuilder {
         areaBuilder.createDbEntry()
         areaBuilder.saveToFile()
 
-        dnggen.areaDrawer.drawArea(dngConfig, size)
-        dnggen.areaDrawer.copyToClipboard()
+        // dnggen.areaDrawer.drawArea(dngConfig, size)
+        // dnggen.areaDrawer.copyToClipboard()
 
         const flatEntries = flatOutArmTopDown(dngConfig.arm)
-        /* temp */
-        console.log(flatEntries.map(e => e.builder.path).sort())
+
+        const usedBuilders: MapBuilder[] = flatEntries.flatMap(e => e.builder)
+        await MapBuilder.placeBuilders(usedBuilders)
 
         dngPaths.saveConfig()
+
+        blitzkrieg.puzzleSelections.save()
+        blitzkrieg.battleSelections.save()
+
         dngPaths.registerFiles()
-        flatEntries.forEach(e => ig.vars.storage.maps[e.builder.path!] = {})
+
         ig.game.varsChangedDeferred()
-        /* temp end */
-        AreaBuilder.openAreaViewerGui(areaInfo.name, flatEntries[0].builder.name!, 0)
-
-        // const usedBuilders: MapBuilder[] = flatEntries.flatMap(e => e.builder)
-        // await MapBuilder.placeBuilders(usedBuilders)
-
-        // dngPaths.saveConfig()
-
-        // blitzkrieg.puzzleSelections.save()
-        // blitzkrieg.battleSelections.save()
-
-        // dngPaths.registerFiles()
-
-        // ig.game.varsChangedDeferred()
-        // ig.game.teleport(usedBuilders[dnggen.debug.roomTp].path!, ig.TeleportPosition.createFromJson({
-        //     marker: usedBuilders[dnggen.debug.roomTp].entarenceRoom.primaryEntarence.getTpr().name,
-        //     level: 0,
-        //     baseZPos: 0,
-        //     size: {x: 0, y: 0}
-        // }))
+        ig.game.teleport(usedBuilders[dnggen.debug.roomTp].path!, ig.TeleportPosition.createFromJson({
+            marker: usedBuilders[dnggen.debug.roomTp].entarenceRoom.primaryEntarence.getTpr().name,
+            level: 0,
+            baseZPos: 0,
+            size: {x: 0, y: 0}
+        }))
         // AreaBuilder.openAreaViewerGui(areaInfo.name, flatEntries[0].builder.name!, 0)
     }
 }

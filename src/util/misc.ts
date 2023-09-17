@@ -54,6 +54,37 @@ export function assertBool(arg: boolean, msg: string = ''): asserts arg {
     }
 }
 
+export function deepCopy<T>(obj: T, ignoreSet: Set<string> = new Set(), seen = new WeakMap()): T {
+    if (Array.isArray(obj)) {
+        const arr = obj.map(e => deepCopy(e, ignoreSet, seen)) as T
+        seen.set(obj, arr)
+        return arr
+    }
+    if (obj === null || typeof obj !== 'object' || typeof obj === 'function') { return obj }
+
+    /* Handle circular references */
+    if (seen.has(obj)) {
+        return seen.get(obj)
+    }
+
+    /* Create a new object with the same prototype as the original */
+    const newObj: T = Object.create(Object.getPrototypeOf(obj))
+
+    /* Add the new object to the seen map to handle circular references */
+    seen.set(obj, newObj)
+
+    for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            let badKey: boolean = false
+            for (const ignoreKey of ignoreSet) {
+                if (key === ignoreKey) { badKey = true; break }
+            }
+            newObj[key] = badKey ? obj[key] : deepCopy(obj[key], ignoreSet, seen)
+        }
+    }
+    return newObj
+}
+
 export function setRandomSeed(obj: { toString(): string }) {
     Math.seedrandomSeed(obj.toString())
 }
