@@ -300,7 +300,7 @@ export class AreaBuilder {
                 assertBool(builder.mapIOs.length == builder.exitCount)
                 if (obj.index == pa.length) {
                     if (pa.end == ArmEnd.Arm) {
-                        assertBool(builder.exitCount > 1)
+                        assertBool(builder.exitCount == pa.arms.length)
                         builder.mapIOs.forEach((obj1, i) => {
                             const nextArm: ArmRuntime = pa.arms[i]
                             const nextEntry: ArmRuntimeEntry = nextArm.stack[0]

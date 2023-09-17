@@ -1,6 +1,6 @@
 import { AreaInfo } from "@root/area/area-builder"
 import { MapBuilder } from "@root/room/map-builder"
-import { SimpleDoubleExitRoom, SimpleDoubleTunnelRoom, SimpleOpenTunnelRoom, SimpleRoom, SimpleTunnelRoom } from "@root/room/simple-room"
+import { SimpleDoubleTunnelRoom, SimpleMultipleExitRoom, SimpleMultipleExitTunnelRoom, SimpleOpenTunnelRoom, SimpleRoom, SimpleTunnelRoom } from "@root/room/simple-room"
 import { Dir, DirUtil, EntityPoint, MapPoint, MapRect } from "@root/util/pos"
 import { Room } from "@root/room/room"
 import { assertBool } from "@root/util/misc"
@@ -159,21 +159,19 @@ export class SimpleDoubleRoomMapBuilder extends MapBuilder {
     }
 }
 
-export class SimpleDoubleExitMapBuilder extends MapBuilder {
-    exitCount: number = 2
-    simpleRoom: SimpleDoubleExitRoom
+export class SimpleMultipleExitMapBuilder extends MapBuilder {
+    exitCount: number
+    simpleRoom: SimpleMultipleExitRoom | SimpleMultipleExitTunnelRoom
 
-    entarenceRoom: SimpleDoubleExitRoom
+    entarenceRoom: SimpleMultipleExitRoom | SimpleMultipleExitTunnelRoom
 
-    constructor(areaInfo: AreaInfo, public entDir: Dir, public exitDir1: Dir, public exitDir2: Dir) {
+    constructor(areaInfo: AreaInfo, public exitsAsTunnels: boolean, public entDir: Dir, ...exits: Dir[]) {
         super(3, areaInfo, RoomTheme.default)
+        this.exitCount = exits.length
         this.entarenceRoom = this.simpleRoom =
-            new SimpleDoubleExitRoom(new MapPoint(0, 0), new MapPoint(24, 24), entDir, exitDir1, exitDir2)
+            new (exitsAsTunnels ? SimpleMultipleExitTunnelRoom : SimpleMultipleExitRoom)(new MapPoint(0, 0), new MapPoint(24, 24), entDir, ...exits)
         this.simpleRoom.pushAllRooms(this.rooms)
-        this.mapIOs.push(
-            { io: this.simpleRoom.exit1, room: this.simpleRoom },
-            { io: this.simpleRoom.exit2, room: this.simpleRoom },
-        )
+        this.simpleRoom.exits.forEach(io => this.mapIOs.push({ io, room: this.simpleRoom }))
         this.setOnWallPositions()
     }
 

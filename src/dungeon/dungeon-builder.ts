@@ -2,7 +2,7 @@ import { AreaPoint, DirUtil } from '@root/util/pos'
 import { AreaBuilder, AreaInfo } from '@root/area/area-builder'
 import { DungeonPaths } from '@root/dungeon/dungeon-paths'
 import { ArmEnd, ArmItemType, DungeonArranger, DungeonGenerateConfig, MapBuilderArrayGenerate, flatOutArmTopDown } from '@root/dungeon/dungeon-arrange'
-import { SimpleDoubleExitMapBuilder, SimpleSingleTunnelMapBuilder } from '@root/room/simple-map-builder'
+import { SimpleMultipleExitMapBuilder, SimpleSingleTunnelMapBuilder } from '@root/room/simple-map-builder'
 import { MapBuilder } from '@root/room/map-builder'
 
 export class DungeonBuilder {
@@ -21,11 +21,11 @@ export class DungeonBuilder {
 
         function getDoubleBuilders(): MapBuilderArrayGenerate {
             const obj: MapBuilderArrayGenerate = { arr: [], randomize: true }
-            DirUtil.forEachDir(dir1 => { DirUtil.forEachDir(dir2 => { DirUtil.forEachDir(dir3 => {
+            DirUtil.forEachDir(dir1 => { DirUtil.forEachDir(dir2 => { DirUtil.forEachDir(dir3 => { DirUtil.forEachDir(dir4 => {
                 try {
-                    obj.arr.push(Object.assign(new SimpleDoubleExitMapBuilder(areaInfo, dir1, dir2, dir3), { exclusive: true }))
+                    obj.arr.push(Object.assign(new SimpleMultipleExitMapBuilder(areaInfo, true, dir1, dir2, dir3, dir4), { exclusive: true }))
                 } catch (err) { }
-            })})})
+            })})})})
             return obj
         }
 
@@ -41,7 +41,13 @@ export class DungeonBuilder {
                 endBuilders: doubleBuilders,
                 end: ArmEnd.Arm,
                 arms: [{
-                    length: 6,
+                    length: 3,
+                    builders: singleBuilders,
+                    endBuilders: singleBuilders,
+                    end: ArmEnd.Item,
+                    itemType: ArmItemType.DungeonKey,
+                }, {
+                    length: 3,
                     builders: singleBuilders,
                     endBuilders: singleBuilders,
                     end: ArmEnd.Item,
@@ -52,13 +58,19 @@ export class DungeonBuilder {
                     endBuilders: doubleBuilders,
                     end: ArmEnd.Arm,
                     arms: [{
-                        length: 6,
+                        length: 3,
                         builders: singleBuilders,
                         endBuilders: singleBuilders,
                         end: ArmEnd.Item,
                         itemType: ArmItemType.DungeonKey,
                     }, {
-                        length: 6,
+                        length: 3,
+                        builders: singleBuilders,
+                        endBuilders: singleBuilders,
+                        end: ArmEnd.Item,
+                        itemType: ArmItemType.DungeonKey,
+                    }, {
+                        length: 3,
                         builders: singleBuilders,
                         endBuilders: singleBuilders,
                         end: ArmEnd.Item,
