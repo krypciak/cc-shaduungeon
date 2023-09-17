@@ -1,7 +1,7 @@
 import { AreaBuilder, AreaInfo } from "@root/area/area-builder"
 import { MapBuilder } from "@root/room/map-builder"
 import { Room } from "@root/room/room"
-import { Stack, assert, assertBool, randomSeedInt, setRandomSeed } from "@root/util/misc"
+import { assert, assertBool, randomSeedInt, setRandomSeed, shuffleArray } from "@root/util/misc"
 import { AreaPoint, AreaRect, Dir, PosDir } from "@root/util/pos"
 
 export enum ArmEnd {
@@ -13,11 +13,15 @@ export enum ArmItemType {
     Tresure,
 }
 
-export type ExclusiveMapBuilder = MapBuilder & { exclusive: boolean }
+type ExclusiveMapBuilder = MapBuilder & { exclusive: boolean }
+export interface MapBuilderArrayGenerate {
+    arr: ExclusiveMapBuilder[]
+    randomize: boolean
+}
 interface TEMP$BaseArm {
     length: number | [number, number]
-    builders: Set<ExclusiveMapBuilder>
-    endBuilders: Set<ExclusiveMapBuilder>
+    builders: MapBuilderArrayGenerate
+    endBuilders: MapBuilderArrayGenerate
 }
 
 interface TEMP$ItemArm extends TEMP$BaseArm {
@@ -31,36 +35,49 @@ interface TEMP$ArmArm<T extends Arm> extends TEMP$BaseArm {
 
 type Arm = TEMP$ItemArm | TEMP$ArmArm<Arm>
 
-export type ArmRuntimeStackEntry = {
+export type ArmRuntimeEntry = {
     builder: MapBuilder
     areaRects: AreaRect[]
     rooms: Room[]
     lastExit: PosDir<AreaPoint> | PosDir<AreaPoint>[] /* set for all builders expect for the last one if its an arm */
-    avBuilders: Set<ExclusiveMapBuilder>
+    avBuilders: MapBuilderArrayGenerate
 }
 
 export type ArmRuntime = {
     parentArm?: ArmRuntime
 
-    stack: Stack<ArmRuntimeStackEntry>
+    stack: ArmRuntimeEntry[]
+    rootArm: boolean
+    flatRuntimeCache?: ArmRuntimeEntry[]
 } & TEMP$BaseArm & (TEMP$ItemArm | TEMP$ArmArm<ArmRuntime>)
 
 function copyArmRuntime(arm: ArmRuntime): ArmRuntime {
     const newArm: ArmRuntime = {...arm}
-    newArm.stack = new Stack(newArm.stack.array)
+    newArm.stack = [...newArm.stack]
     return newArm
 }
 
-export function flatOutArmTopDown(arm: ArmRuntime): ArmRuntimeStackEntry[] {
-    const entries: ArmRuntimeStackEntry[] = []
-    entries.push(...arm.stack.array)
+function forEveryArmEntry(arm: ArmRuntime, func: (entry: ArmRuntimeEntry, arm: ArmRuntime) => void) {
+    const entries: ArmRuntimeEntry[] = []
+    if (arm.stack) { arm.stack.forEach(e => func(e, arm)) }
     if (arm.end == ArmEnd.Arm) {
         arm.arms.forEach(a => {
-            entries.push(...flatOutArmTopDown(a))
+            forEveryArmEntry(a, func)
         })
     }
     return entries
+}
 
+export function flatOutArmTopDown(arm: ArmRuntime, allowCache: boolean = true): ArmRuntimeEntry[] {
+    if (allowCache && arm.flatRuntimeCache) { return arm.flatRuntimeCache }
+    const entries: ArmRuntimeEntry[] = []
+    forEveryArmEntry(arm, (entry: ArmRuntimeEntry) => {
+        entries.push(entry)
+    })
+    if (arm.rootArm) {
+        arm.flatRuntimeCache = entries
+    }
+    return entries
 }
 
 export interface DungeonGenerateConfig<T extends Arm = Arm> {
@@ -76,15 +93,14 @@ export class DungeonArranger {
         this.normalConfig = Object.freeze(normalConfig)
         setRandomSeed(normalConfig.seed)
 
-        function recursivePrepArm(arm: Arm, parent?: ArmRuntime): ArmRuntime {
+        function recursivePrepArm(arm: Arm): ArmRuntime {
             const armr: Partial<ArmRuntime> = { ...arm } as ArmRuntime
-            armr.parentArm = parent
             if (Array.isArray(arm.length)) {
                 arm.length = randomSeedInt(arm.length[0], arm.length[1])
             }
             if (arm.end == ArmEnd.Arm) {
                 arm.arms = arm.arms.map((childArm: Arm) => {
-                    return recursivePrepArm(childArm, armr as ArmRuntime)
+                    return recursivePrepArm(childArm)
                 })
             }
             return armr as ArmRuntime
@@ -99,41 +115,43 @@ export class DungeonArranger {
     }
 
 
-    private recursiveTryPlaceArmEntry(arm: ArmRuntime, lastEntry: ArmRuntimeStackEntry, armIndex?: number):
+    private recursiveTryPlaceArmEntry(arm: ArmRuntime, lastEntry: ArmRuntimeEntry, armIndex?: number):
         { arm: ArmRuntime; finishedArm: boolean } | null {
 
-        let avBuilders: Set<ExclusiveMapBuilder>
+        let avBuilders: MapBuilderArrayGenerate
         assertBool(typeof arm.length === 'number')
-        if (arm.stack.length() == arm.length + 1) {
+        if (arm.stack.length == arm.length + 1) {
             /* completed arm */
             if (arm.end == ArmEnd.Arm) {
                 /* try place all arm ends */
                 assertBool(Array.isArray(lastEntry.lastExit))
-                arm.arms.forEach((armEnd, i) => {
-                    armEnd.stack = new Stack()
+                for (let i = 0; i < arm.arms.length; i++) {
+                    const armEnd = arm.arms[i]
+                    armEnd.stack = []
+                    armEnd.parentArm = arm
                     const obj = this.recursiveTryPlaceArmEntry(armEnd, lastEntry, i)
                     if (obj && obj.finishedArm) {
                         arm.arms[i] = obj.arm
                     } else {
                         return null
                     }
-                })
+                }
             }
             return { arm, finishedArm: true }
-        } else if (arm.stack.length() == arm.length) {
+        } else if (arm.stack.length == arm.length) {
             /* reached the end of the arm, time to place the end room */
             avBuilders = arm.endBuilders
         } else {
-            avBuilders = arm.stack.length() > 0 ? arm.stack.peek().avBuilders : arm.builders
+            avBuilders = arm.stack.length > 0 ? arm.stack.last().avBuilders : arm.builders
         }
-        for (const possibleBuilder of avBuilders) {
+        for (const possibleBuilder of avBuilders.arr) {
             const obj = this.recursiveTryArmBuilder(possibleBuilder, arm, lastEntry, armIndex)
             if (obj && obj.finishedArm) { return obj }
         }
         return null /* hit end, popping */
     }
 
-    private recursiveTryArmBuilder(builder: ExclusiveMapBuilder, arm: ArmRuntime, lastEntry: ArmRuntimeStackEntry, armIndex?: number) {
+    private recursiveTryArmBuilder(builder: ExclusiveMapBuilder, arm: ArmRuntime, lastEntry: ArmRuntimeEntry, armIndex?: number) {
         let lastExit: PosDir<AreaPoint>
         if (armIndex !== undefined) {
             assertBool(Array.isArray(lastEntry.lastExit))
@@ -150,10 +168,19 @@ export class DungeonArranger {
      
         // shallow copy
         arm = copyArmRuntime(arm)
-        const avBuilders = new Set(lastEntry.avBuilders ?? arm.builders)
-        if (builder.exclusive) {
-            avBuilders.delete(builder)
+        let avBuilders: MapBuilderArrayGenerate
+        if (lastEntry.avBuilders) {
+            avBuilders = { arr: [...lastEntry.avBuilders.arr], randomize: lastEntry.avBuilders.randomize }
+        } else {
+            avBuilders = {
+                arr: arm.builders.randomize ? shuffleArray(arm.builders.arr) : [...arm.builders.arr],
+                randomize: arm.builders.randomize,
+            }
         }
+        if (builder.exclusive) {
+            avBuilders.arr.splice(avBuilders.arr.indexOf(builder), 1)
+        }
+
         arm.stack.push({
             builder,
             areaRects: obj.rects,
@@ -161,7 +188,7 @@ export class DungeonArranger {
             lastExit: obj.exits.length == 1 ? obj.exits[0]! : obj.exits.map(e => e!),
             avBuilders,
         })
-        lastEntry = arm.stack.array.last()
+        lastEntry = arm.stack.last()
      
         return this.recursiveTryPlaceArmEntry(arm, lastEntry)
     }
@@ -199,11 +226,16 @@ export class DungeonArranger {
         // builders.push(new SimpleDoubleRoomMapBuilder(areaInfo, Dir.SOUTH, Dir.NORTH))
 
         assert(this.c.arm)
-        this.c.arm.stack = new Stack()
-        const lastEntry: Partial<ArmRuntimeStackEntry> = {
+        this.c.arm.stack = []
+        this.c.arm.rootArm = true
+        const lastEntry: Partial<ArmRuntimeEntry> = {
             lastExit: Object.assign(new AreaPoint(0, 0), { dir: Dir.NORTH }),
         }
-        const obj = this.recursiveTryPlaceArmEntry(this.c.arm, lastEntry as ArmRuntimeStackEntry)
+        const obj = this.recursiveTryPlaceArmEntry(this.c.arm, lastEntry as ArmRuntimeEntry)
+        if (obj) {
+            /* make sure no builders are linked */
+            flatOutArmTopDown(obj.arm).forEach(e => e.builder = Object.create(e.builder))
+        }
         this.c.arm = obj?.arm
         return this.c
     }

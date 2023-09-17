@@ -5,7 +5,7 @@ import { Room, } from '@root/room/room'
 import { MapBuilder } from '@root/room/map-builder'
 import { DungeonPaths } from '@root/dungeon/dungeon-paths'
 import { AreaViewFloorTypes } from '@root/area/custom-MapAreaContainer'
-import { ArmEnd, ArmRuntime, ArmRuntimeStackEntry, flatOutArmTopDown } from '@root/dungeon/dungeon-arrange'
+import { ArmEnd, ArmRuntime, flatOutArmTopDown } from '@root/dungeon/dungeon-arrange'
 
 export class AreaInfo {
     name: string
@@ -42,16 +42,37 @@ export class AreaBuilder {
         })
 
         if (dnggen.debug.collisionlessMapArrange) {
-            function doesArmCollide(arm: ArmRuntime): boolean {
-                arm.stack.array.forEach((e: ArmRuntimeStackEntry) => {
+            // let rootArm = arm
+            // while (rootArm.parentArm) { rootArm = rootArm.parentArm }
+            // assertBool(rootArm.rootArm)
+            // console.log('rootArm:', rootArm)
+            // const arr = flatOutArmTopDown(rootArm).flatMap(e => e.areaRects)
+            // if (arr.length == 0) {
+            //     const arr1 = flatOutArmTopDown(rootArm).flatMap(e => e.areaRects)
+            // }
+            // console.log(arr)
+            // if (doesRectArrayOverlapRectArray(arr, rects)) {
+            //     return
+            // }
+            let hitRoot = false
+            const armsChecked: Set<ArmRuntime> = new Set()
+            function doesCollide(arm: ArmRuntime): boolean {
+                if (arm.rootArm) { hitRoot = true }
+                for (const e of (arm.stack ?? [])) {
                     if (doesRectArrayOverlapRectArray(e.areaRects, rects)) { return true }
-                })
-                if (arm.parentArm) {
-                    if (doesArmCollide(arm.parentArm)) { return true }
+                }
+                armsChecked.add(arm)
+                if (arm.end == ArmEnd.Arm) {
+                    for (const childArm of arm.arms) {
+                        if (! armsChecked.has(childArm) && doesCollide(childArm)) { return true }
+                    }
+                }
+                if (arm.parentArm && ! armsChecked.has(arm.parentArm)) {
+                    if (doesCollide(arm.parentArm)) { return true }
                 }
                 return false
             }
-            if (doesArmCollide(arm)) { return }
+            if (doesCollide(arm)) { return } else { assertBool(hitRoot) }
         }
         
         const exits: (PosDir<AreaPoint> | null)[] = builder.mapIOsOnWall.map(e => {
@@ -93,7 +114,8 @@ export class AreaBuilder {
         Vec2.addC(newSize, additionalSpace)
 
         function offsetArmTopDown(arm: ArmRuntime, offset: AreaPoint) {
-            arm.stack.array.forEach(e => {
+            /* arm.stack can be undefined in this context */
+            arm.stack?.forEach(e => {
                 e.areaRects.forEach(rect => Vec2.sub(rect, offset))
                 for (const exit of Array.isArray(e.lastExit) ? e.lastExit : [e.lastExit]) {
                     Vec2.sub(exit, offset)
@@ -235,6 +257,7 @@ export class AreaBuilder {
         for (const entry of entries) {
             const builder = entry.builder
             builder.pathParent = this.areaInfo.name
+            // assertBool(builder.path === undefined, 'ohmygodwhy')
             builder.path = builder.pathParent + '/' + (mapIndex.toLocaleString('en-US', {minimumIntegerDigits: 3, useGrouping: false}))
             await builder.decideDisplayName(mapIndex)
             assert(builder.displayName)

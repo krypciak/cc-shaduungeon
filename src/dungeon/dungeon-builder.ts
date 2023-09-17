@@ -1,46 +1,68 @@
 import { AreaPoint, DirUtil } from '@root/util/pos'
 import { AreaBuilder, AreaInfo } from '@root/area/area-builder'
 import { DungeonPaths } from '@root/dungeon/dungeon-paths'
-import { ArmEnd, ArmItemType, DungeonArranger, DungeonGenerateConfig, ExclusiveMapBuilder } from '@root/dungeon/dungeon-arrange'
+import { ArmEnd, ArmItemType, DungeonArranger, DungeonGenerateConfig, MapBuilderArrayGenerate, flatOutArmTopDown } from '@root/dungeon/dungeon-arrange'
 import { SimpleDoubleExitMapBuilder, SimpleSingleTunnelMapBuilder } from '@root/room/simple-map-builder'
 
 export class DungeonBuilder {
-    private getExampleConfig(areaInfo: AreaInfo): DungeonGenerateConfig {
-        let armBuilders: Set<ExclusiveMapBuilder> = new Set()
-        DirUtil.forEachDir(dir1 => { DirUtil.forEachDir(dir2 => {
-            try {
-                armBuilders.add(Object.assign(new SimpleSingleTunnelMapBuilder(areaInfo, dir1, dir2), { exclusive: false }))
-            } catch (err) {}
-        })})
+    private getExampleConfig(areaInfo: AreaInfo, seed: string): DungeonGenerateConfig {
+        function getSingleBuilders(): MapBuilderArrayGenerate {
+            const obj: MapBuilderArrayGenerate = { arr: [], randomize: true }
+            DirUtil.forEachDir(dir1 => { DirUtil.forEachDir(dir2 => {
+                try {
+                    obj.arr.push(Object.assign(new SimpleSingleTunnelMapBuilder(areaInfo, dir1, dir2), { exclusive: true }))
+                    obj.arr.push(Object.assign(new SimpleSingleTunnelMapBuilder(areaInfo, dir1, dir2), { exclusive: true }))
+                    obj.arr.push(Object.assign(new SimpleSingleTunnelMapBuilder(areaInfo, dir1, dir2), { exclusive: true }))
+                } catch (err) {}
+            })})
+            return obj
+        }
 
-        let armEndBuilders: Set<ExclusiveMapBuilder> = new Set()
-        DirUtil.forEachDir(dir1 => { DirUtil.forEachDir(dir2 => { DirUtil.forEachDir(dir3 => {
-            try {
-                armEndBuilders.add(Object.assign(new SimpleDoubleExitMapBuilder(areaInfo, dir1, dir2, dir3), { exclusive: false }))
-            } catch (err) { }
-        })})})
+        function getDoubleBuilders(): MapBuilderArrayGenerate {
+            const obj: MapBuilderArrayGenerate = { arr: [], randomize: true }
+            DirUtil.forEachDir(dir1 => { DirUtil.forEachDir(dir2 => { DirUtil.forEachDir(dir3 => {
+                try {
+                    obj.arr.push(Object.assign(new SimpleDoubleExitMapBuilder(areaInfo, dir1, dir2, dir3), { exclusive: true }))
+                } catch (err) { }
+            })})})
+            return obj
+        }
 
-        const endBuilders: Set<ExclusiveMapBuilder> = armBuilders
+        const singleBuilders = getSingleBuilders()
+        const doubleBuilders = getDoubleBuilders()
+
         const dngGenConfig: DungeonGenerateConfig = {
-            seed: 'obama',
+            seed,
             areaInfo,
             arm: {
-                length: 2,
-                builders: armBuilders,
-                endBuilders: armEndBuilders,
+                length: 1,
+                builders: singleBuilders,
+                endBuilders: doubleBuilders,
                 end: ArmEnd.Arm,
                 arms: [{
-                    length: 1,
-                    builders: armBuilders,
-                    endBuilders: endBuilders,
+                    length: 6,
+                    builders: singleBuilders,
+                    endBuilders: singleBuilders,
                     end: ArmEnd.Item,
                     itemType: ArmItemType.DungeonKey,
                 }, {
-                    length: 1,
-                    builders: armBuilders,
-                    endBuilders: endBuilders,
-                    end: ArmEnd.Item,
-                    itemType: ArmItemType.DungeonKey,
+                    length: 6,
+                    builders: singleBuilders,
+                    endBuilders: doubleBuilders,
+                    end: ArmEnd.Arm,
+                    arms: [{
+                        length: 6,
+                        builders: singleBuilders,
+                        endBuilders: singleBuilders,
+                        end: ArmEnd.Item,
+                        itemType: ArmItemType.DungeonKey,
+                    }, {
+                        length: 6,
+                        builders: singleBuilders,
+                        endBuilders: singleBuilders,
+                        end: ArmEnd.Item,
+                        itemType: ArmItemType.DungeonKey,
+                    }]
                 }]
             },
         }
@@ -48,14 +70,14 @@ export class DungeonBuilder {
         return dngGenConfig
     }
 
-    async build(id: string) {
+    async build(id: string, seed: string) {
         const dngPaths = new DungeonPaths(id)
         dngPaths.registerSelections()
         dngPaths.clearDir()
 
         const areaInfo: AreaInfo = new AreaInfo(dngPaths, 'Generated Dungeon', 'generic description, ' + dngPaths.nameAndId, 'DUNGEON', Vec2.createC(150, 70))
         
-        const dngGenConfig: DungeonGenerateConfig = this.getExampleConfig(areaInfo)
+        const dngGenConfig: DungeonGenerateConfig = this.getExampleConfig(areaInfo, seed)
  
         const arranger: DungeonArranger = new DungeonArranger(dngGenConfig)
         let dngConfig = await arranger.arrangeDungeon()
@@ -77,8 +99,18 @@ export class DungeonBuilder {
         dnggen.areaDrawer.drawArea(dngConfig, size)
         dnggen.areaDrawer.copyToClipboard()
 
+        const flatEntries = flatOutArmTopDown(dngConfig.arm)
+        /* temp */
+        console.log(flatEntries.map(e => e.builder.path).sort())
 
-        // const usedBuilders: MapBuilder[] = obj.stack.array.map(e => e.builder!)
+        dngPaths.saveConfig()
+        dngPaths.registerFiles()
+        flatEntries.forEach(e => ig.vars.storage.maps[e.builder.path!] = {})
+        ig.game.varsChangedDeferred()
+        /* temp end */
+        AreaBuilder.openAreaViewerGui(areaInfo.name, flatEntries[0].builder.name!, 0)
+
+        // const usedBuilders: MapBuilder[] = flatEntries.flatMap(e => e.builder)
         // await MapBuilder.placeBuilders(usedBuilders)
 
         // dngPaths.saveConfig()
@@ -95,7 +127,7 @@ export class DungeonBuilder {
         //     baseZPos: 0,
         //     size: {x: 0, y: 0}
         // }))
-        // AreaBuilder.openAreaViewerGui(areaInfo.name, obj.stack.array[0].builder!.name!, 0)
+        // AreaBuilder.openAreaViewerGui(areaInfo.name, flatEntries[0].builder.name!, 0)
     }
 }
 

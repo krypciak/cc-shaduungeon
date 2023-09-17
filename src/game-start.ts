@@ -46,7 +46,8 @@ function registerNewgamePlusOptionsPrestart() { /* runs in prestart */
             this.parent(mode, transitionTime)
 
             if (mode == sc.START_MODE.NEW_GAME_PLUS && sc.newgame.get(ngOptionName)) {
-                dnggen.dungeonBuilder.build('0')
+                const seed = dnggen.debug.seed
+                dnggen.dungeonBuilder.build('0', seed)
             }
         },
         transitionEnded() {

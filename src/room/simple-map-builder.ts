@@ -167,7 +167,7 @@ export class SimpleDoubleExitMapBuilder extends MapBuilder {
     constructor(areaInfo: AreaInfo, public entDir: Dir, public exitDir1: Dir, public exitDir2: Dir) {
         super(3, areaInfo, RoomTheme.default)
         this.entarenceRoom = this.exitRoom = this.simpleRoom =
-            new SimpleDoubleExitRoom(new MapPoint(0, 0), new MapPoint(16, 16), entDir, exitDir1, exitDir2)
+            new SimpleDoubleExitRoom(new MapPoint(0, 0), new MapPoint(24, 24), entDir, exitDir1, exitDir2)
         this.simpleRoom.pushAllRooms(this.rooms)
         this.mapIOs.push(
             { io: this.simpleRoom.exit1, room: this.simpleRoom },

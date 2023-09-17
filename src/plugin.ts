@@ -19,9 +19,10 @@ declare global {
 function addVimBindings() {
     if (vim) { /* optional dependency https://github.com/krypciak/cc-vim */
         const isInGenMap = (ingame: boolean) => ingame && ig.game.mapName.startsWith('dnggen')
-        vim.addAlias('dnggen', 'generate-dungeon', 'Generate dungeon', 'global', (roomTp: string = '0') => {
+        vim.addAlias('dnggen', 'generate-dungeon', 'Generate dungeon', 'global', (seed = 'obama', roomTp: string = '0') => {
             vim.executeString('title-screen')
             dnggen.debug.roomTp = parseInt(roomTp)
+            dnggen.debug.seed = seed
             startDnggenGame()
         }, [{
             type: 'number', description: 'room to teleport to'
@@ -37,7 +38,9 @@ interface DngGenDebug {
     collisionlessMapArrange: boolean
     dontDiscoverAllMaps: boolean
     areaMapConnections: boolean
+    /* used only in debug functions */
     roomTp: number
+    seed: string
 }
 
 export default class DngGen {
@@ -55,6 +58,7 @@ export default class DngGen {
         dontDiscoverAllMaps: false,
         areaMapConnections: true,
         roomTp: 0,
+        seed: '',
     }
 
     constructor(mod: Mod1) {
