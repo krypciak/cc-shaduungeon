@@ -1,84 +1,8 @@
 import { AreaBuilder, AreaInfo } from "@root/area/area-builder"
 import { MapBuilder } from "@root/room/map-builder"
-import { Room } from "@root/room/room"
 import { assert, assertBool, randomSeedInt, setRandomSeed, shuffleArray } from "@root/util/misc"
-import { AreaPoint, AreaRect, Dir, PosDir } from "@root/util/pos"
-
-export enum ArmEnd {
-    Item,
-    Arm,
-}
-export enum ArmItemType {
-    DungeonKey,
-    Tresure,
-}
-
-type ExclusiveMapBuilder = MapBuilder & { exclusive: boolean }
-export interface MapBuilderArrayGenerate {
-    arr: ExclusiveMapBuilder[]
-    randomize: boolean
-}
-interface TEMP$BaseArm {
-    length: number | [number, number]
-    builders: MapBuilderArrayGenerate
-    endBuilders: MapBuilderArrayGenerate
-}
-
-interface TEMP$ItemArm extends TEMP$BaseArm {
-    end: ArmEnd.Item
-    itemType: ArmItemType
-}
-interface TEMP$ArmArm<T extends Arm> extends TEMP$BaseArm {
-    end: ArmEnd.Arm
-    arms: T[]
-}
-
-type Arm = TEMP$ItemArm | TEMP$ArmArm<Arm>
-
-export type ArmRuntimeEntry = {
-    builder: MapBuilder
-    areaRects: AreaRect[]
-    rooms: Room[]
-    lastExit: PosDir<AreaPoint> | PosDir<AreaPoint>[] /* set for all builders expect for the last one if its an arm */
-    avBuilders: MapBuilderArrayGenerate
-}
-
-export type ArmRuntime = {
-    parentArm?: ArmRuntime & TEMP$ArmArm<ArmRuntime>
-
-    stack: ArmRuntimeEntry[]
-    rootArm: boolean
-    flatRuntimeCache?: ArmRuntimeEntry[]
-} & TEMP$BaseArm & (TEMP$ItemArm | TEMP$ArmArm<ArmRuntime>)
-
-function copyArmRuntime(arm: ArmRuntime): ArmRuntime {
-    const newArm: ArmRuntime = {...arm}
-    newArm.stack = [...newArm.stack]
-    return newArm
-}
-
-export function forEveryArmEntry(arm: ArmRuntime, func: (entry: ArmRuntimeEntry, arm: ArmRuntime, index: number) => void) {
-    const entries: ArmRuntimeEntry[] = []
-    if (arm.stack) { arm.stack.forEach((e, i) => func(e, arm, i)) }
-    if (arm.end == ArmEnd.Arm) {
-        arm.arms.forEach(a => {
-            forEveryArmEntry(a, func)
-        })
-    }
-    return entries
-}
-
-export function flatOutArmTopDown(arm: ArmRuntime, allowCache: boolean = true): ArmRuntimeEntry[] {
-    if (allowCache && arm.flatRuntimeCache) { return arm.flatRuntimeCache }
-    const entries: ArmRuntimeEntry[] = []
-    forEveryArmEntry(arm, (entry: ArmRuntimeEntry) => {
-        entries.push(entry)
-    })
-    if (arm.rootArm) {
-        arm.flatRuntimeCache = entries
-    }
-    return entries
-}
+import { AreaPoint, Dir, PosDir } from "@root/util/pos"
+import { Arm, ArmEnd, ArmRuntime, ArmRuntimeEntry, ExclusiveMapBuilder, MapBuilderArrayGenerate, MapBuilderArrayGenerateInheritanceMode, copyArmRuntime, flatOutArmTopDown } from "./dungeon-arm"
 
 export interface DungeonGenerateConfig<T extends Arm = Arm> {
     arm?: T
@@ -94,29 +18,48 @@ export class DungeonArranger {
         setRandomSeed(normalConfig.seed)
 
         function recursivePrepArm(arm: Arm): ArmRuntime {
-            const armr: Partial<ArmRuntime> = { ...arm } as ArmRuntime
+            const armr: ArmRuntime = arm as ArmRuntime
             if (Array.isArray(arm.length)) {
-                arm.length = randomSeedInt(arm.length[0], arm.length[1])
+                armr.length = randomSeedInt(arm.length[0], arm.length[1])
             }
-            if (arm.end == ArmEnd.Arm) {
-                arm.arms = arm.arms.map((childArm: Arm) => {
+            armr.builders = {...armr.builders}
+            armr.endBuilders = {...armr.endBuilders}
+
+            const defExitCount = 1
+            for (const b of armr.builders.arr) { assertBool(b.exitCount == defExitCount, 'invalid dng config: builder in builders exit count exit count has to be 1, it isnt') }
+            const exitCount = armr.end == ArmEnd.Arm ? armr.arms.length : defExitCount
+            for (const b of armr.endBuilders.arr) { assertBool(b.exitCount == exitCount, 'invalid dng config: builder in endBuilders exit count exit count has match the arm count, it doesnt') }
+
+            if (armr.end == ArmEnd.Arm) {
+                armr.arms = armr.arms.map((childArm: Arm) => {
                     return recursivePrepArm(childArm)
                 })
             }
             return armr as ArmRuntime
         }
-        const newArm = recursivePrepArm(normalConfig.arm!)
+        const newArm: ArmRuntime = recursivePrepArm(normalConfig.arm!)
         const cr: DungeonGenerateConfig<ArmRuntime> = {
             seed: normalConfig.seed,
             areaInfo: normalConfig.areaInfo,
             arm: newArm,
         }
+        cr.arm!.rootArm = true
         this.c = cr
     }
 
+    private inheritBuilders(builders: MapBuilderArrayGenerate, parentArm: ArmRuntime | undefined): MapBuilderArrayGenerate {
+        switch (builders.inheritance) {
+            case MapBuilderArrayGenerateInheritanceMode.None:
+                return builders
+            case MapBuilderArrayGenerateInheritanceMode.Override:
+                assert(parentArm)
+                return (builders.inheritanceIsEnd ? parentArm.stack.last() : parentArm.stack[parentArm.stack.length - 2]).avBuilders
+            default: throw new Error('not implemented')
+        }
+    }
 
     private recursiveTryPlaceArmEntry(arm: ArmRuntime, lastEntry: ArmRuntimeEntry, armIndex?: number):
-        { arm: ArmRuntime; finishedArm: boolean } | null {
+        ArmRuntime | null {
 
         let avBuilders: MapBuilderArrayGenerate
         assertBool(typeof arm.length === 'number')
@@ -129,29 +72,38 @@ export class DungeonArranger {
                     const armEnd = arm.arms[i]
                     armEnd.stack = []
                     armEnd.parentArm = arm
-                    const obj = this.recursiveTryPlaceArmEntry(armEnd, lastEntry, i)
-                    if (obj && obj.finishedArm) {
-                        arm.arms[i] = obj.arm
+                    const retArm = this.recursiveTryPlaceArmEntry(armEnd, lastEntry, i)
+                    if (retArm) {
+                        arm.arms[i] = retArm
                     } else {
                         return null
                     }
                 }
             }
-            return { arm, finishedArm: true }
-        } else if (arm.stack.length == arm.length) {
+            return arm
+        }
+        const isEndRoom: boolean = arm.stack.length == arm.length
+        const isStartRoom: boolean = arm.stack.length == 0
+
+        if (isEndRoom) {
             /* reached the end of the arm, time to place the end room */
-            avBuilders = arm.endBuilders
+            avBuilders = this.inheritBuilders(arm.endBuilders, arm.parentArm)
+        } else if (isStartRoom) {
+            avBuilders = this.inheritBuilders(arm.builders, arm.parentArm)
         } else {
-            avBuilders = arm.stack.length > 0 ? arm.stack.last().avBuilders : arm.builders
+            avBuilders = arm.stack.last().avBuilders
         }
         for (const possibleBuilder of avBuilders.arr) {
-            const obj = this.recursiveTryArmBuilder(possibleBuilder, arm, lastEntry, armIndex)
-            if (obj && obj.finishedArm) { return obj }
+            const ignoreLastEntry = isStartRoom || isEndRoom
+            const retArm = this.recursiveTryArmBuilder(possibleBuilder, arm, lastEntry, armIndex, ignoreLastEntry ? avBuilders : arm.builders, ignoreLastEntry)
+            if (retArm) { return retArm }
         }
         return null /* hit end, popping */
     }
 
-    private recursiveTryArmBuilder(builder: ExclusiveMapBuilder, arm: ArmRuntime, lastEntry: ArmRuntimeEntry, armIndex?: number) {
+    private recursiveTryArmBuilder(builder: ExclusiveMapBuilder, arm: ArmRuntime, lastEntry: ArmRuntimeEntry,
+        armIndex: number | undefined, builders: MapBuilderArrayGenerate, ignoreLastEntry: boolean) {
+
         let lastExit: PosDir<AreaPoint>
         if (armIndex !== undefined) {
             assertBool(Array.isArray(lastEntry.lastExit))
@@ -169,12 +121,17 @@ export class DungeonArranger {
         // shallow copy
         arm = copyArmRuntime(arm)
         let avBuilders: MapBuilderArrayGenerate
-        if (lastEntry.avBuilders) {
-            avBuilders = { arr: [...lastEntry.avBuilders.arr], randomize: lastEntry.avBuilders.randomize }
+        if (! ignoreLastEntry && lastEntry.avBuilders) {
+            avBuilders = {
+                arr: [...lastEntry.avBuilders.arr],
+                randomize: lastEntry.avBuilders.randomize,
+                inheritance: lastEntry.avBuilders.inheritance,
+            }
         } else {
             avBuilders = {
-                arr: arm.builders.randomize ? shuffleArray(arm.builders.arr) : [...arm.builders.arr],
-                randomize: arm.builders.randomize,
+                arr: builders.randomize ? shuffleArray(builders.arr) : [...builders.arr],
+                randomize: builders.randomize,
+                inheritance: builders.inheritance,
             }
         }
         if (builder.exclusive) {
@@ -227,14 +184,13 @@ export class DungeonArranger {
 
         assert(this.c.arm)
         this.c.arm.stack = []
-        this.c.arm.rootArm = true
         const lastEntry: Partial<ArmRuntimeEntry> = {
             lastExit: Object.assign(new AreaPoint(0, 0), { dir: Dir.NORTH }),
         }
-        const obj = this.recursiveTryPlaceArmEntry(this.c.arm, lastEntry as ArmRuntimeEntry)
-        if (obj) {
+        const retArm = this.recursiveTryPlaceArmEntry(this.c.arm, lastEntry as ArmRuntimeEntry)
+        if (retArm) {
             /* make sure no builders are linked */
-            const arr = flatOutArmTopDown(obj.arm)
+            const arr = flatOutArmTopDown(retArm)
             const set: Set<MapBuilder> = new Set()
             let copyCount = 0
             for (let i = 0; i < arr.length; i++) {
@@ -247,7 +203,7 @@ export class DungeonArranger {
                 }
             }
         }
-        this.c.arm = obj?.arm
+        this.c.arm = retArm ? retArm : undefined
         return this.c
     }
 }

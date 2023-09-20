@@ -1,4 +1,5 @@
-import { ArmRuntime, DungeonGenerateConfig, flatOutArmTopDown } from '@root/dungeon/dungeon-arrange'
+import { ArmRuntime, flatOutArmTopDown } from '@root/dungeon/dungeon-arm'
+import { DungeonGenerateConfig, } from '@root/dungeon/dungeon-arrange'
 import { Room } from '@root/room/room'
 import { TunnelRoom } from '@root/room/tunnel-room'
 import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, Point, Rect } from '@root/util/pos'

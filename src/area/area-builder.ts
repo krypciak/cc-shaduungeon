@@ -5,7 +5,7 @@ import { Room, Tpr, } from '@root/room/room'
 import { MapBuilder } from '@root/room/map-builder'
 import { DungeonPaths } from '@root/dungeon/dungeon-paths'
 import { AreaViewFloorTypes } from '@root/area/custom-MapAreaContainer'
-import { ArmEnd, ArmRuntime, ArmRuntimeEntry, flatOutArmTopDown, forEveryArmEntry } from '@root/dungeon/dungeon-arrange'
+import { ArmEnd, ArmRuntime, ArmRuntimeEntry, flatOutArmTopDown, forEveryArmEntry } from '@root/dungeon/dungeon-arm'
 
 export class AreaInfo {
     name: string
