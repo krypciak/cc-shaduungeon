@@ -16,6 +16,7 @@ export type ExclusiveMapBuilder = MapBuilder & { exclusive: boolean }
 export enum MapBuilderArrayGenerateInheritanceMode {
     None = 0,
     Override = 1,
+    Previous = 2,
 }
 
 export interface MapBuilderArrayGenerate {
@@ -61,12 +62,19 @@ export type ArmRuntime = {
 } & TEMP$BaseArm & (TEMP$ItemArm | TEMP$ArmArm<ArmRuntime>)
 
 export namespace MapBuilderArrayGenerate {
+    export function copy(b: MapBuilderArrayGenerate) {
+        return {
+            randomize: b.randomize,
+            inheritance: MapBuilderArrayGenerateInheritanceMode.None,
+            arr: [...b.arr],
+        }
+    }
     export function inheritNone(b: Omit<MapBuilderArrayGenerate, 'inheritance'>) : MapBuilderArrayGenerate {
         const copy: Partial<MapBuilderArrayGenerate> = {
             randomize: b.randomize,
             inheritance: MapBuilderArrayGenerateInheritanceMode.None,
+            arr: [...b.arr]
         }
-        copy.arr = [...b.arr]
         return copy as MapBuilderArrayGenerate
     }
 
@@ -76,6 +84,13 @@ export namespace MapBuilderArrayGenerate {
             arr: [],
             inheritance: MapBuilderArrayGenerateInheritanceMode.Override,
             inheritanceIsEnd,
+        }
+    }
+    export function inheritPrevious(): MapBuilderArrayGenerate {
+        return {
+            randomize: false,
+            arr: [],
+            inheritance: MapBuilderArrayGenerateInheritanceMode.Previous,
         }
     }
 }

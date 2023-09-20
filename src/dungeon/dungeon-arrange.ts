@@ -47,13 +47,15 @@ export class DungeonArranger {
         this.c = cr
     }
 
-    private inheritBuilders(builders: MapBuilderArrayGenerate, parentArm: ArmRuntime | undefined): MapBuilderArrayGenerate {
+    private inheritBuilders(builders: MapBuilderArrayGenerate, arm: ArmRuntime): MapBuilderArrayGenerate {
         switch (builders.inheritance) {
             case MapBuilderArrayGenerateInheritanceMode.None:
                 return builders
             case MapBuilderArrayGenerateInheritanceMode.Override:
-                assert(parentArm)
-                return (builders.inheritanceIsEnd ? parentArm.stack.last() : parentArm.stack[parentArm.stack.length - 2]).avBuilders
+                assert(arm.parentArm)
+                return (builders.inheritanceIsEnd ? arm.parentArm.stack.last() : arm.parentArm.stack[arm.parentArm.stack.length - 2]).avBuilders
+            case MapBuilderArrayGenerateInheritanceMode.Previous:
+                return arm.stack.last().avBuilders
             default: throw new Error('not implemented')
         }
     }
@@ -87,9 +89,9 @@ export class DungeonArranger {
 
         if (isEndRoom) {
             /* reached the end of the arm, time to place the end room */
-            avBuilders = this.inheritBuilders(arm.endBuilders, arm.parentArm)
+            avBuilders = this.inheritBuilders(arm.endBuilders, arm)
         } else if (isStartRoom) {
-            avBuilders = this.inheritBuilders(arm.builders, arm.parentArm)
+            avBuilders = this.inheritBuilders(arm.builders, arm)
         } else {
             avBuilders = arm.stack.last().avBuilders
         }
@@ -151,37 +153,6 @@ export class DungeonArranger {
     }
 
     async arrangeDungeon(): Promise<DungeonGenerateConfig<ArmRuntime>> {
-        
-        // await PuzzleRoom.preloadPuzzleList()
-        // let puzzleList = PuzzleRoom.puzzleList
-
-        // const puzzles: Readonly<Selection>[] = []
-        // // puzzleList = puzzleList.sort(() => Math.random() - 0.5)
-        // for (let i = 0; i < puzzleList.length; i++) {
-        //     puzzles.push(puzzleList[i])
-        // }
-
-        // console.log('puzzles:', puzzles)
-        // for (let builderIndex = builders.length, i = 0; i < puzzles.length; builderIndex++, i++) {
-        //     const sel = puzzles[builderIndex]
-        //     const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
-        //     const builder: MapBuilder = new BattlePuzzleMapBuilder(this.c.areaInfo, sel, puzzleMap)
-        //     builders.push(builder)
-        // }
-
-        // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleRoomMapBuilder, SimpleSingleTunnelMapBuilder, SimpleDoubleTunnelMapBuilder, SimpleDoubleRoomMapBuilder])
-        // SimpleRoomMapBuilder.addRandom(builders, areaInfo, 100, [SimpleDoubleRoomMapBuilder])
-
-        // SimpleSingleTunnelMapBuilder.addPreset(builders, areaInfo)
-        // SimpleRoomMapBuilder.addPreset(builders, areaInfo)
-        // SimpleDoubleRoomMapBuilder.addPreset(builders, areaInfo)
-
-
-        // builders.push(new SimpleRoomMapBuilder(areaInfo, Dir.SOUTH, Dir.NORTH))
-        // builders.push(new SimpleSingleTunnelMapBuilder(areaInfo, Dir.SOUTH, Dir.NORTH))
-        // builders.push(new SimpleDoubleTunnelMapBuilder(areaInfo, Dir.SOUTH, Dir.NORTH))
-        // builders.push(new SimpleDoubleRoomMapBuilder(areaInfo, Dir.SOUTH, Dir.NORTH))
-
         assert(this.c.arm)
         this.c.arm.stack = []
         const lastEntry: Partial<ArmRuntimeEntry> = {
