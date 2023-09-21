@@ -25,7 +25,9 @@ function addVimBindings() {
             dnggen.debug.seed = seed
             startDnggenGame()
         }, [{
-            type: 'number', description: 'room to teleport to'
+            type: 'string', description: 'seed',
+        }, {
+            type: 'number', description: 'room to teleport to',
         }])
         vim.addAlias('dnggen', 'skip-battle', 'Skips the battle', isInGenMap, () => { ig.vars.set('map.battle1done', true) })
     }

@@ -33,6 +33,7 @@ export class PuzzleMapBuilder extends MapBuilder {
     ) {
         super(3, areaInfo, RoomTheme.getFromArea(puzzleMap.attributes.area))
         this.puzzleRoom = new PuzzleRoom(puzzleSel, puzzleMap, entarenceCondition)
+        this.mapIOs.push({ io: this.puzzleRoom.primaryExit, room: this.puzzleRoom })
         this.puzzleRoom.setEntarenceTunnel(closedTunnel, closedTunnel ? PuzzleMapBuilder.closedTunnelSize : PuzzleMapBuilder.openTunnelSize)
         this.puzzleRoom.pushAllRooms(this.rooms)
 

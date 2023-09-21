@@ -141,9 +141,9 @@ export class DungeonArranger {
         }
 
         arm.stack.push({
-            builder,
-            areaRects: obj.rects,
-            rooms: obj.rooms,
+            builder: builder.copy(),
+            areaRects: obj.rects.map(e => e),
+            rooms: obj.rooms.map(e => e),
             lastExit: obj.exits.length == 1 ? obj.exits[0]! : obj.exits.map(e => e!),
             avBuilders,
         })
@@ -159,21 +159,6 @@ export class DungeonArranger {
             lastExit: Object.assign(new AreaPoint(0, 0), { dir: Dir.NORTH }),
         }
         const retArm = this.recursiveTryPlaceArmEntry(this.c.arm, lastEntry as ArmRuntimeEntry)
-        if (retArm) {
-            /* make sure no builders are linked */
-            const arr = flatOutArmTopDown(retArm)
-            const set: Set<MapBuilder> = new Set()
-            let copyCount = 0
-            for (let i = 0; i < arr.length; i++) {
-                const e = arr[i]
-                if (set.has(e.builder)) {
-                    e.builder = e.builder.copy()
-                    copyCount++
-                } else {
-                    set.add(e.builder)
-                }
-            }
-        }
         this.c.arm = retArm ? retArm : undefined
         return this.c
     }

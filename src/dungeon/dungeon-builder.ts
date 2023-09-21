@@ -3,23 +3,27 @@ import { AreaBuilder, AreaInfo } from '@root/area/area-builder'
 import { DungeonPaths } from '@root/dungeon/dungeon-paths'
 import { DungeonArranger, DungeonGenerateConfig, } from '@root/dungeon/dungeon-arrange'
 import { MapBuilder } from '@root/room/map-builder'
-import { flatOutArmTopDown } from './dungeon-arm'
-import { DungeonConfigSimpleFactory } from './configs/simple'
+import { flatOutArmTopDown } from '@root/dungeon/dungeon-arm'
+import { DungeonConfigMainFactory } from '@root/dungeon/configs/main'
+import { DungeonConfigSimpleFactory } from '@root/dungeon/configs/simple'
 
 export interface DungeonConfigFactory {
-    get(areaInfo: AreaInfo, seed: string): DungeonGenerateConfig
+    get(areaInfo: AreaInfo, seed: string): Promise<DungeonGenerateConfig>
 }
 
 export class DungeonBuilder {
-    async build(id: string, seed: string, configFactory: DungeonConfigFactory = new DungeonConfigSimpleFactory()) {
+    async build(id: string, seed: string,
+        // configFactory: DungeonConfigFactory = new DungeonConfigSimpleFactory()
+        configFactory: DungeonConfigFactory = new DungeonConfigMainFactory()
+        ) {
         const dngPaths = new DungeonPaths(id)
         dngPaths.registerSelections()
         dngPaths.clearDir()
 
         const areaInfo: AreaInfo = new AreaInfo(dngPaths, 'Generated Dungeon', 'generic description, ' + dngPaths.nameAndId, 'DUNGEON', Vec2.createC(150, 70))
         
-        // const dngGenConfig: DungeonGenerateConfig = getSimpleConfig(areaInfo, seed)
-        const dngGenConfig: DungeonGenerateConfig = configFactory.get(areaInfo, seed)
+        const dngGenConfig: DungeonGenerateConfig = await configFactory.get(areaInfo, seed)
+        console.log('dngGenConfig:', dngGenConfig)
  
         const arranger: DungeonArranger = new DungeonArranger(dngGenConfig)
         let dngConfig = await arranger.arrangeDungeon()

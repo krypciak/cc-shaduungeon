@@ -3,21 +3,21 @@ import { AreaInfo } from '@root/area/area-builder'
 import { DungeonGenerateConfig, } from '@root/dungeon/dungeon-arrange'
 import { SimpleMultipleExitMapBuilder, SimpleSingleTunnelMapBuilder } from '@root/room/simple-map-builder'
 import { ArmEnd, ArmItemType, MapBuilderArrayGenerate } from '@root/dungeon/dungeon-arm'
-import { DungeonConfigFactory } from '../dungeon-builder'
+import { DungeonConfigFactory } from '@root/dungeon/dungeon-builder'
 
 export class DungeonConfigSimpleFactory implements DungeonConfigFactory {
-    get(areaInfo: AreaInfo, seed: string): DungeonGenerateConfig {
+    get(areaInfo: AreaInfo, seed: string): Promise<DungeonGenerateConfig> {
         const _sb: Omit<MapBuilderArrayGenerate, 'inheritance'> = { arr: [], randomize: true }
         DirUtil.forEachDir(dir1 => { DirUtil.forEachDir(dir2 => {
             try {
                 _sb.arr!.push(Object.assign(new SimpleSingleTunnelMapBuilder(areaInfo, dir1, dir2), { exclusive: true }))
                 _sb.arr!.push(Object.assign(new SimpleSingleTunnelMapBuilder(areaInfo, dir1, dir2), { exclusive: true }))
-                _sb.arr!.push(Object.assign(new SimpleSingleTunnelMapBuilder(areaInfo, dir1, dir2), { exclusive: true }))
-                _sb.arr!.push(Object.assign(new SimpleSingleTunnelMapBuilder(areaInfo, dir1, dir2), { exclusive: true }))
-                _sb.arr!.push(Object.assign(new SimpleSingleTunnelMapBuilder(areaInfo, dir1, dir2), { exclusive: true }))
-                _sb.arr!.push(Object.assign(new SimpleSingleTunnelMapBuilder(areaInfo, dir1, dir2), { exclusive: true }))
-                _sb.arr!.push(Object.assign(new SimpleSingleTunnelMapBuilder(areaInfo, dir1, dir2), { exclusive: true }))
-                _sb.arr!.push(Object.assign(new SimpleSingleTunnelMapBuilder(areaInfo, dir1, dir2), { exclusive: true }))
+                // _sb.arr!.push(Object.assign(new SimpleSingleTunnelMapBuilder(areaInfo, dir1, dir2), { exclusive: true }))
+                // _sb.arr!.push(Object.assign(new SimpleSingleTunnelMapBuilder(areaInfo, dir1, dir2), { exclusive: true }))
+                // _sb.arr!.push(Object.assign(new SimpleSingleTunnelMapBuilder(areaInfo, dir1, dir2), { exclusive: true }))
+                // _sb.arr!.push(Object.assign(new SimpleSingleTunnelMapBuilder(areaInfo, dir1, dir2), { exclusive: true }))
+                // _sb.arr!.push(Object.assign(new SimpleSingleTunnelMapBuilder(areaInfo, dir1, dir2), { exclusive: true }))
+                // _sb.arr!.push(Object.assign(new SimpleSingleTunnelMapBuilder(areaInfo, dir1, dir2), { exclusive: true }))
             } catch (err) {}
         })})
         
@@ -32,50 +32,56 @@ export class DungeonConfigSimpleFactory implements DungeonConfigFactory {
             seed,
             areaInfo,
             arm: {
-                length: 1,
+                length: _sb.arr.length / 1.2,
                 builders: MapBuilderArrayGenerate.inheritNone(_sb),
-                endBuilders: MapBuilderArrayGenerate.inheritNone(_db),
-                end: ArmEnd.Arm,
-                arms: [{
-                    length: 3,
-                    builders: MapBuilderArrayGenerate.inheritOverride(false),
-                    endBuilders: MapBuilderArrayGenerate.inheritPrevious(),
-                    end: ArmEnd.Item,
-                    itemType: ArmItemType.DungeonKey,
-                }, {
-                    length: 3,
-                    builders: MapBuilderArrayGenerate.inheritOverride(false),
-                    endBuilders: MapBuilderArrayGenerate.inheritPrevious(),
-                    end: ArmEnd.Item,
-                    itemType: ArmItemType.DungeonKey,
-                }, {
-                    length: 6,
-                    builders: MapBuilderArrayGenerate.inheritOverride(false),
-                    endBuilders: MapBuilderArrayGenerate.inheritOverride(true),
-                    end: ArmEnd.Arm,
-                    arms: [{
-                        length: 3,
-                        builders: MapBuilderArrayGenerate.inheritOverride(false),
-                        endBuilders: MapBuilderArrayGenerate.inheritPrevious(),
-                        end: ArmEnd.Item,
-                        itemType: ArmItemType.DungeonKey,
-                    }, {
-                        length: 3,
-                        builders: MapBuilderArrayGenerate.inheritOverride(false),
-                        endBuilders: MapBuilderArrayGenerate.inheritPrevious(),
-                        end: ArmEnd.Item,
-                        itemType: ArmItemType.DungeonKey,
-                    }, {
-                        length: 3,
-                        builders: MapBuilderArrayGenerate.inheritOverride(false),
-                        endBuilders: MapBuilderArrayGenerate.inheritPrevious(),
-                        end: ArmEnd.Item,
-                        itemType: ArmItemType.DungeonKey,
-                    }]
-                }]
+                endBuilders: MapBuilderArrayGenerate.inheritPrevious(),
+                end: ArmEnd.Item,
+                itemType: ArmItemType.Tresure,
             },
+            // arm: {
+            //     length: 1,
+            //     builders: MapBuilderArrayGenerate.inheritNone(_sb),
+            //     endBuilders: MapBuilderArrayGenerate.inheritNone(_db),
+            //     end: ArmEnd.Arm,
+            //     arms: [{
+            //         length: 3,
+            //         builders: MapBuilderArrayGenerate.inheritOverride(false),
+            //         endBuilders: MapBuilderArrayGenerate.inheritPrevious(),
+            //         end: ArmEnd.Item,
+            //         itemType: ArmItemType.DungeonKey,
+            //     }, {
+            //         length: 3,
+            //         builders: MapBuilderArrayGenerate.inheritOverride(false),
+            //         endBuilders: MapBuilderArrayGenerate.inheritPrevious(),
+            //         end: ArmEnd.Item,
+            //         itemType: ArmItemType.DungeonKey,
+            //     }, {
+            //         length: 6,
+            //         builders: MapBuilderArrayGenerate.inheritOverride(false),
+            //         endBuilders: MapBuilderArrayGenerate.inheritOverride(true),
+            //         end: ArmEnd.Arm,
+            //         arms: [{
+            //             length: 3,
+            //             builders: MapBuilderArrayGenerate.inheritOverride(false),
+            //             endBuilders: MapBuilderArrayGenerate.inheritPrevious(),
+            //             end: ArmEnd.Item,
+            //             itemType: ArmItemType.DungeonKey,
+            //         }, {
+            //             length: 3,
+            //             builders: MapBuilderArrayGenerate.inheritOverride(false),
+            //             endBuilders: MapBuilderArrayGenerate.inheritPrevious(),
+            //             end: ArmEnd.Item,
+            //             itemType: ArmItemType.DungeonKey,
+            //         }, {
+            //             length: 3,
+            //             builders: MapBuilderArrayGenerate.inheritOverride(false),
+            //             endBuilders: MapBuilderArrayGenerate.inheritPrevious(),
+            //             end: ArmEnd.Item,
+            //             itemType: ArmItemType.DungeonKey,
+            //         }]
+            //     }]
+            // },
         }
-        console.log('dngGenConfig:', dngGenConfig)
-        return dngGenConfig
+        return Promise.resolve(dngGenConfig)
     }
 }
