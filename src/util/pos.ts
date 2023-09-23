@@ -22,6 +22,10 @@ export class DirUtil {
     static flip(dir: Dir): Dir {
         return ((dir + 2) % 4) as Dir
     }
+    
+    static toRight(dir: Dir): Dir {
+        return ((dir + 1) % 4) as Dir
+    }
 
     static convertToDir(dir: keyof typeof Dir): Dir {
         return Dir[dir]

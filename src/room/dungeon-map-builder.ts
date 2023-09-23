@@ -43,7 +43,7 @@ export class PuzzleMapBuilder extends MapBuilder {
         finalize && this.setOnWallPositions()
     }
 
-    prepareToArrange(_: Dir): boolean { return true; }
+    prepareToArrange(dir: Dir): boolean { return this.puzzleRoom.puzzle.start.dir == DirUtil.flip(dir) }
 
     async decideDisplayName(index: number): Promise<string> {
         const selMapDisplayName: string = await getMapDisplayName(this.puzzleRoom.puzzle.map)

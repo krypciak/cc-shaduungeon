@@ -5,7 +5,7 @@ import { DungeonConfigFactory } from '@root/dungeon/dungeon-builder'
 import { PuzzleRoom } from '@root/room/puzzle-room'
 import { Selection } from '@root/types'
 import { MapBuilder } from '@root/room/map-builder'
-import { BattlePuzzleMapBuilder } from '@root/room/dungeon-map-builder'
+import { PuzzleMapBuilder } from '@root/room/dungeon-map-builder'
 
 export class DungeonConfigMainFactory implements DungeonConfigFactory {
     async get(areaInfo: AreaInfo, seed: string): Promise<DungeonGenerateConfig> {
@@ -18,21 +18,25 @@ export class DungeonConfigMainFactory implements DungeonConfigFactory {
         }
         console.log('puzzles:', puzzles)
 
-        const regularBuilders: Omit<MapBuilderArrayGenerate, 'inheritance'> = { arr: [], randomize: true }
+        let index: number = 0
+        const bPool = []
+        const regularBuilders: MapBuilderArrayGenerate = { arr: [], randomize: true, index: index++ }
         for (let i = 0; i < puzzles.length; i++) {
             const sel = puzzles[i]
             const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
-            const builder: MapBuilder = new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap)
+            const builder: MapBuilder = new PuzzleMapBuilder(areaInfo, sel, puzzleMap, true, '', true)
             regularBuilders.arr.push(Object.assign(builder, { exclusive: true }))
         }
+        bPool.push(regularBuilders)
 
         const dngGenConfig: DungeonGenerateConfig = {
             seed,
             areaInfo,
             arm: {
-                length: regularBuilders.arr.length / 2,
-                builders: MapBuilderArrayGenerate.inheritNone(regularBuilders),
-                endBuilders: MapBuilderArrayGenerate.inheritNone(regularBuilders),
+                bPool,
+                length: regularBuilders.arr.length / 1.5,
+                builderPool: 0,
+                endBuilderPool: 0,
                 end: ArmEnd.Item,
                 itemType: ArmItemType.Tresure,
             },

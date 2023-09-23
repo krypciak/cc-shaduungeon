@@ -4,8 +4,9 @@ import { RoomTheme, RoomThemeConfig } from '@root/room/themes'
 import { CCMap, MapLayer } from '@root/util/map'
 import { Dir, MapPoint, MapRect, PosDir } from '@root/util/pos'
 import { assert, assertBool, deepCopy } from '@root/util/misc'
-import { Room, RoomIO } from '@root/room/room'
+import { Room, RoomIO, RoomIOTpr } from '@root/room/room'
 import { getPosDirFromRoomIO } from '@root/room/tunnel-room'
+import { ArmRuntime, ArmRuntimeEntry } from '@root/dungeon/dungeon-arm'
 
 export namespace RoomPlaceVars {
     export function fromRawMap(map: sc.MapModel.Map, theme: RoomTheme, areaInfo: AreaInfo): RoomPlaceVars {
@@ -60,11 +61,15 @@ export interface RoomPlaceVars {
 }
 
 export abstract class MapBuilder {
-    static async placeBuilders(builders: MapBuilder[]): Promise<void[]> {
+    static async placeBuilders(entries: (ArmRuntimeEntry & { arm: ArmRuntime })[]): Promise<void[]> {
+        for (let i = 0; i < entries.length; i++) {
+            const b = entries[i].builder
+            b.preplace(entries[i].arm)
+        }
         return new Promise<void[]>(async (resolve) => {
             const promises: Promise<void>[] = []
-            for (let i = 0; i < builders.length; i++) {
-                const b = builders[i]
+            for (let i = 0; i < entries.length; i++) {
+                const b = entries[i].builder
                 promises.push(new Promise<void>((resolve) => {
                     b.place().then(() => {
                         b.save().then(() => {
@@ -122,9 +127,19 @@ export abstract class MapBuilder {
         return deepCopy(this, new Set(['areaInfo', 'theme']))
     }
 
-    abstract prepareToArrange(dir: Dir): boolean
+    getAllTeleportFields(): RoomIOTpr[] {
+        const arr: RoomIOTpr[] = []
+        this.rooms.forEach(r => {
+            if (r.teleportFields) { arr.push(...r.teleportFields) }
+        })
+        return arr
+    }
+
+    abstract prepareToArrange(dir: Dir, isEnd: boolean, arm: ArmRuntime): boolean
     
     abstract decideDisplayName(index: number): Promise<string>
+
+    preplace(_: ArmRuntime) {}
 
     /* place functions*/
 
@@ -181,4 +196,3 @@ export abstract class MapBuilder {
         return this.areaInfo.paths.saveMap(this)
     }
 }
-

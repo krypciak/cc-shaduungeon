@@ -13,23 +13,17 @@ export enum ArmItemType {
 
 export type ExclusiveMapBuilder = MapBuilder & { exclusive: boolean }
 
-export enum MapBuilderArrayGenerateInheritanceMode {
-    None = 0,
-    Override = 1,
-    Previous = 2,
-}
-
 export interface MapBuilderArrayGenerate {
     arr: ExclusiveMapBuilder[]
     randomize: boolean
-    inheritance: MapBuilderArrayGenerateInheritanceMode
-    inheritanceIsEnd?: boolean
+    index: number
 }
 
 interface TEMP$BaseArm {
     length: number | [number, number]
-    builders: MapBuilderArrayGenerate
-    endBuilders: MapBuilderArrayGenerate
+    builderPool: number
+    endBuilderPool: number
+    bPool?: MapBuilderArrayGenerate[]
 }
 
 interface TEMP$ItemArm extends TEMP$BaseArm {
@@ -43,58 +37,24 @@ interface TEMP$ArmArm<T extends Arm> extends TEMP$BaseArm {
 
 export type Arm = TEMP$ItemArm | TEMP$ArmArm<Arm>
 
+export type MapBuilderPool = { [key: number]: MapBuilderArrayGenerate }
+
 export type ArmRuntimeEntry = {
     builder: MapBuilder
     areaRects: AreaRect[]
     rooms: Room[]
     lastExit: PosDir<AreaPoint> | PosDir<AreaPoint>[] /* set for all builders expect for the last one if its an arm */
-    avBuilders: MapBuilderArrayGenerate
+    bPool?: MapBuilderPool
 }
 
 export type ArmRuntime = {
-    builders: MapBuilderArrayGenerate
-    endBuilders: MapBuilderArrayGenerate
     parentArm?: ArmRuntime & TEMP$ArmArm<ArmRuntime>
+    parentArmIndex?: number
 
     stack: ArmRuntimeEntry[]
     rootArm: boolean
-    flatRuntimeCache?: ArmRuntimeEntry[]
+    flatRuntimeCache?: (ArmRuntimeEntry & { arm: ArmRuntime })[]
 } & TEMP$BaseArm & (TEMP$ItemArm | TEMP$ArmArm<ArmRuntime>)
-
-export namespace MapBuilderArrayGenerate {
-    export function copy(b: MapBuilderArrayGenerate) {
-        return {
-            randomize: b.randomize,
-            inheritance: MapBuilderArrayGenerateInheritanceMode.None,
-            arr: [...b.arr],
-        }
-    }
-    export function inheritNone(b: Omit<MapBuilderArrayGenerate, 'inheritance'>) : MapBuilderArrayGenerate {
-        const copy: Partial<MapBuilderArrayGenerate> = {
-            randomize: b.randomize,
-            inheritance: MapBuilderArrayGenerateInheritanceMode.None,
-            arr: [...b.arr]
-        }
-        return copy as MapBuilderArrayGenerate
-    }
-
-    export function inheritOverride(inheritanceIsEnd: boolean): MapBuilderArrayGenerate {
-        return {
-            randomize: false,
-            arr: [],
-            inheritance: MapBuilderArrayGenerateInheritanceMode.Override,
-            inheritanceIsEnd,
-        }
-    }
-    export function inheritPrevious(): MapBuilderArrayGenerate {
-        return {
-            randomize: false,
-            arr: [],
-            inheritance: MapBuilderArrayGenerateInheritanceMode.Previous,
-        }
-    }
-}
-
 
 export function copyArmRuntime(arm: ArmRuntime): ArmRuntime {
     const newArm: ArmRuntime = {...arm}
@@ -113,14 +73,22 @@ export function forEveryArmEntry(arm: ArmRuntime, func: (entry: ArmRuntimeEntry,
     return entries
 }
 
-export function flatOutArmTopDown(arm: ArmRuntime, allowCache: boolean = true): ArmRuntimeEntry[] {
+export function flatOutArmTopDown(arm: ArmRuntime, allowCache: boolean = true): (ArmRuntimeEntry & { arm: ArmRuntime })[] {
     if (allowCache && arm.flatRuntimeCache) { return arm.flatRuntimeCache }
-    const entries: ArmRuntimeEntry[] = []
-    forEveryArmEntry(arm, (entry: ArmRuntimeEntry) => {
-        entries.push(entry)
+    const entries: (ArmRuntimeEntry & { arm: ArmRuntime })[] = []
+    forEveryArmEntry(arm, (entry: ArmRuntimeEntry, arm: ArmRuntime) => {
+        entries.push(Object.assign(entry, { arm }))
     })
     if (arm.rootArm) {
         arm.flatRuntimeCache = entries
     }
     return entries
+}
+
+export function copyBuilderPool(pool: MapBuilderPool): MapBuilderPool {
+    return Object.values(pool).map(e => ({
+        arr: [...e.arr],
+        randomize: e.randomize,
+        index: e.index
+    }))
 }

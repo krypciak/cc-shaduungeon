@@ -1,4 +1,4 @@
-import { MapDoor, MapDoorLike, MapTransporter } from '@root/util/entity'
+import { MapDoor, MapDoorLike, MapTeleportField, MapTransporter } from '@root/util/entity'
 import { Selection } from '@root/types'
 import { Coll } from '@root/util/map'
 import { Point, Rect, Dir, DirUtil, MapPoint, MapRect, EntityRect, EntityPoint, Dir3d } from '@root/util/pos'
@@ -26,11 +26,11 @@ export function getPosOnRectSide<T extends Point>(init: new (x: number, y: numbe
 }
 
 export namespace Tpr {
-    export function get(name: string, dir: Dir3d, pos: EntityPoint, entityType: MapTransporter.Types, condition?: string): Tpr {
-        return { name, dir, pos, entityType, condition }
+    export function get(name: string, dir: Dir3d, pos: EntityPoint, entityType: MapTransporter.Types, backToArm: boolean = false, condition?: string): Tpr {
+        return { name, dir, pos, entityType, condition, backToArm }
     }
-    export function getReference(name: string, dir: Dir3d, pos: EntityPoint, mtpr: MapTransporter, condition?: string): Tpr {
-        return { name, dir, pos, entityType: mtpr.type as MapTransporter.Types, entity: mtpr, entityCondition: condition }
+    export function getReference(name: string, dir: Dir3d, pos: EntityPoint, mtpr: MapTransporter, backToArm: boolean = false, condition?: string): Tpr {
+        return { name, dir, pos, entityType: mtpr.type as MapTransporter.Types, entity: mtpr, entityCondition: condition, backToArm }
     }
 }
 
@@ -40,6 +40,7 @@ export interface Tpr {
     pos: EntityPoint
     dir: Dir3d
     condition?: string
+    backToArm: boolean
     /* this is only set to a reference to a MapTransporter in the puzzle room (if puzzle type is 'whole room') */
     entity?: MapTransporter
     entityCondition?: string /* only set when entity is set */
@@ -75,8 +76,7 @@ export class RoomIODoorLike extends RoomIOTpr {
         return new RoomIODoorLike(room.getDoorLikeTpr(type, name, dir, prefPos))
     }
     static fromReference(name: string, dir: Dir, pos: EntityPoint, doorLike: MapDoorLike, condition: string = ''): RoomIODoorLike {
-        return new RoomIODoorLike(Tpr.getReference(name, DirUtil.dirToDir3d(dir), pos, doorLike, condition) as TprDoorLike)
-
+        return new RoomIODoorLike(Tpr.getReference(name, DirUtil.dirToDir3d(dir), pos, doorLike, false, condition) as TprDoorLike)
     }
 }
 
@@ -86,6 +86,8 @@ export class Room extends MapRect {
     ios: RoomIO[] = []
     primaryEntarence!: RoomIO
     primaryExit?: RoomIO
+
+    teleportFields?: RoomIOTpr[]
 
     constructor(
         public name: string,
@@ -175,7 +177,9 @@ export class Room extends MapRect {
                         e = MapDoor.new(tpr.pos, rpv.masterLevel, DirUtil.dir3dToDir(tpr.dir), tpr.name, tpr.destMap, tpr.destMarker, tpr.condition)
                         break
                     case 'TeleportGround': throw new Error('not implemented')
-                    case 'TeleportField': throw new Error('not implemented')
+                    case 'TeleportField':
+                        e = MapTeleportField.new(tpr.pos, rpv.masterLevel, DirUtil.dir3dToDir(tpr.dir), tpr.name, tpr.destMap, tpr.destMarker, 'AR', tpr.name, 'false')
+                        break
                     default: throw new Error('not implemented')
                 }
                 rpv.entities.push(e)

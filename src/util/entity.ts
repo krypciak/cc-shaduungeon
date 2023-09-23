@@ -1,4 +1,5 @@
 import { Dir, DirUtil, EntityPoint, EntityRect, Point } from '@root/util/pos'
+import { allLangs } from './misc'
 
 let mapId: number = 1000
 
@@ -63,6 +64,36 @@ export class MapDoor implements MapDoorLike {
             blockEventCondition: '',
             variation: '',
             doorType: 'DEFAULT',
+            mapId: mapId++, 
+        })
+    }
+}
+
+interface TeleportFieldSettings extends ig.ENTITY.TeleportField.Settings {
+    dir: keyof typeof Dir
+}
+
+export class MapTeleportField implements MapTransporter {
+    type: 'TeleportField' = 'TeleportField'
+    constructor(
+        public x: number, 
+        public y: number, 
+        public level: number, 
+        public settings: TeleportFieldSettings) {}
+    
+    static new(pos: EntityPoint, level: number, dir: Dir, 
+        marker: string, destMap: string, destMarker: string,
+        gfxType: TeleportFieldSettings['gfxType'], teleportLabel: string, longTelCond: string): MapTeleportField {
+
+        return new MapTeleportField(pos.x, pos.y, level, {
+            name: marker,
+            dir: DirUtil.convertToString(DirUtil.flip(dir)),
+            map: destMap,
+            marker: destMarker,
+            blockEventCondition: '',
+            gfxType,
+            longTelCond,
+            teleportLabel: allLangs(teleportLabel),
             mapId: mapId++, 
         })
     }

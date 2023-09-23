@@ -1,11 +1,12 @@
 import { AreaInfo } from "@root/area/area-builder"
 import { MapBuilder } from "@root/room/map-builder"
-import { SimpleDoubleTunnelRoom, SimpleMultipleExitRoom, SimpleMultipleExitTunnelRoom, SimpleOpenTunnelRoom, SimpleRoom, SimpleTunnelRoom } from "@root/room/simple-room"
+import { SimpleDoubleTunnelRoom, SimpleMultipleExitTunnelRoom, SimpleOpenTunnelRoom, SimpleRoom, SimpleTunnelEndRoom, SimpleTunnelRoom } from "@root/room/simple-room"
 import { Dir, DirUtil, EntityPoint, MapPoint, MapRect } from "@root/util/pos"
-import { Room } from "@root/room/room"
-import { assertBool } from "@root/util/misc"
+import { Room, RoomIOTpr, Tpr } from "@root/room/room"
+import { assert, assertBool } from "@root/util/misc"
 import { RoomIOTunnelClosed } from "@root/room/tunnel-room"
 import { RoomTheme } from "@root/room/themes"
+import { ArmRuntime } from "@root/dungeon/dungeon-arm"
 
 export class SimpleRoomMapBuilder extends MapBuilder {
     exitCount: number = 1
@@ -161,26 +162,74 @@ export class SimpleDoubleRoomMapBuilder extends MapBuilder {
 
 export class SimpleMultipleExitMapBuilder extends MapBuilder {
     exitCount: number
-    simpleRoom: SimpleMultipleExitRoom | SimpleMultipleExitTunnelRoom
+    simpleRoom: SimpleMultipleExitTunnelRoom
 
-    entarenceRoom: SimpleMultipleExitRoom | SimpleMultipleExitTunnelRoom
+    entarenceRoom: SimpleMultipleExitTunnelRoom
 
-    constructor(areaInfo: AreaInfo, public exitsAsTunnels: boolean, public entDir: Dir, ...exits: Dir[]) {
+    constructor(areaInfo: AreaInfo, public entDir: Dir, ...exits: Dir[]) {
         super(3, areaInfo, RoomTheme.default)
         this.exitCount = exits.length
         this.entarenceRoom = this.simpleRoom =
-            new (exitsAsTunnels ? SimpleMultipleExitTunnelRoom : SimpleMultipleExitRoom)(new MapPoint(0, 0), new MapPoint(24, 24), entDir, ...exits)
+            new SimpleMultipleExitTunnelRoom(new MapPoint(0, 0), new MapPoint(24, 24), entDir, ...exits)
         this.simpleRoom.pushAllRooms(this.rooms)
         this.simpleRoom.exits.forEach(io => this.mapIOs.push({ io, room: this.simpleRoom }))
         this.setOnWallPositions()
     }
 
-    prepareToArrange(dir: Dir): boolean {
-        return this.entDir == DirUtil.flip(dir)
+    prepareToArrange(dir: Dir, isEnd: boolean): boolean {
+        if (this.entDir != DirUtil.flip(dir)) { return false }
+        assertBool(isEnd)
+        return true
     }
 
     async decideDisplayName(index: number): Promise<string> {
         this.displayName = `SimpleDoubleExitMapBuilder ${index}`
+        return this.displayName
+    }
+
+    preplace(arm: ArmRuntime): void {
+        if (arm.parentArm) {
+            const io: RoomIOTpr = this.simpleRoom.addTeleportField(this.simpleRoom.primaryEntarence, this.simpleRoom.teleportFields!.length)
+            this.simpleRoom.ios.push(io)
+            const tpr: Tpr = io.tpr
+            const parentLastBuilder: MapBuilder = arm.parentArm.stack.last().builder
+            const tpf: RoomIOTpr[] = parentLastBuilder.getAllTeleportFields()
+            assert(tpf)
+            const parentTpr: Tpr = tpf[arm.parentArm.arms.indexOf(arm)].tpr
+            tpr.destMap = parentLastBuilder.path
+            tpr.destMarker = parentTpr.name
+
+            parentTpr.destMap = this.path
+            parentTpr.destMarker = tpr.name
+        }
+        super.preplace(arm)
+    }
+}
+
+export class SimpleSingleTunnelEndMapBuilder extends MapBuilder {
+    exitCount: number = 1
+    simpleRoom: SimpleTunnelEndRoom
+
+    entarenceRoom: SimpleTunnelEndRoom
+
+    constructor(areaInfo: AreaInfo, public entDir: Dir, public exitDir: Dir) {
+        super(3, areaInfo, RoomTheme.default)
+        this.simpleRoom = this.entarenceRoom =
+            new SimpleTunnelEndRoom(new MapPoint(0, 0), new MapPoint(16, 16), entDir, exitDir)
+        this.simpleRoom.pushAllRooms(this.rooms)
+    }
+
+    prepareToArrange(dir: Dir, isEnd: boolean): boolean {
+        if (this.entDir != DirUtil.flip(dir)) { return false }
+        this.mapIOs = []
+        this.simpleRoom.addExit(isEnd)
+        this.mapIOs.push({ io: this.simpleRoom.primaryExit, room: this.simpleRoom })
+        this.setOnWallPositions()
+        return true
+    }
+
+    async decideDisplayName(index: number): Promise<string> {
+        this.displayName = `SimpleSingleTunnelEndMapBuilder ${index}`
         return this.displayName
     }
 }
