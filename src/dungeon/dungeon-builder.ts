@@ -13,8 +13,8 @@ export interface DungeonConfigFactory {
 
 export class DungeonBuilder {
     async build(id: string, seed: string,
-        // configFactory: DungeonConfigFactory = new DungeonConfigSimpleFactory()
-        configFactory: DungeonConfigFactory = new DungeonConfigMainFactory()
+        configFactory: DungeonConfigFactory = new DungeonConfigSimpleFactory()
+        // configFactory: DungeonConfigFactory = new DungeonConfigMainFactory()
         ) {
         const dngPaths = new DungeonPaths(id)
         dngPaths.registerSelections()

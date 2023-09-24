@@ -291,6 +291,9 @@ export class AreaBuilder {
 
             remoteTpr.destMap = builder.path
             remoteTpr.destMarker = tpr.name
+
+            Tpr.replaceCondition(tpr)
+            Tpr.replaceCondition(remoteTpr)
         }
     }
 

@@ -201,6 +201,9 @@ export class SimpleMultipleExitMapBuilder extends MapBuilder {
 
             parentTpr.destMap = this.path
             parentTpr.destMarker = tpr.name
+
+            Tpr.replaceCondition(tpr)
+            Tpr.replaceCondition(parentTpr)
         }
         super.preplace(arm)
     }

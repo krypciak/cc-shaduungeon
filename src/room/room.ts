@@ -32,6 +32,11 @@ export namespace Tpr {
     export function getReference(name: string, dir: Dir3d, pos: EntityPoint, mtpr: MapTransporter, backToArm: boolean = false, condition?: string): Tpr {
         return { name, dir, pos, entityType: mtpr.type as MapTransporter.Types, entity: mtpr, entityCondition: condition, backToArm }
     }
+    export function replaceCondition(tpr: Tpr) {
+        if (tpr.condition) {
+            tpr.condition = tpr.condition.replace(/@TARGET_MAP/, tpr.destMap!)
+        }
+    }
 }
 
 export interface Tpr {
@@ -178,7 +183,8 @@ export class Room extends MapRect {
                         break
                     case 'TeleportGround': throw new Error('not implemented')
                     case 'TeleportField':
-                        e = MapTeleportField.new(tpr.pos, rpv.masterLevel, DirUtil.dir3dToDir(tpr.dir), tpr.name, tpr.destMap, tpr.destMarker, 'AR', tpr.name, 'false')
+                        e = MapTeleportField.new(tpr.pos, rpv.masterLevel, DirUtil.dir3dToDir(tpr.dir), tpr.name,
+                            tpr.destMap, tpr.destMarker, 'AR', tpr.name, 'false', tpr.condition)
                         break
                     default: throw new Error('not implemented')
                 }

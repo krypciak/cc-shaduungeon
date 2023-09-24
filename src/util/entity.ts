@@ -83,17 +83,18 @@ export class MapTeleportField implements MapTransporter {
     
     static new(pos: EntityPoint, level: number, dir: Dir, 
         marker: string, destMap: string, destMarker: string,
-        gfxType: TeleportFieldSettings['gfxType'], teleportLabel: string, longTelCond: string): MapTeleportField {
+        gfxType: TeleportFieldSettings['gfxType'], teleportLabel: string, longTelCond: string, spawnCondition?: string): MapTeleportField {
 
         return new MapTeleportField(pos.x, pos.y, level, {
             name: marker,
-            dir: DirUtil.convertToString(DirUtil.flip(dir)),
+            dir: DirUtil.convertToString(dir),
             map: destMap,
             marker: destMarker,
             blockEventCondition: '',
             gfxType,
             longTelCond,
             teleportLabel: allLangs(teleportLabel),
+            spawnCondition,
             mapId: mapId++, 
         })
     }
