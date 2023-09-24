@@ -19,6 +19,8 @@ Don't get too excited lol
 git clone https://github.com/krypciak/cc-shaduungeon
 cd cc-shaduungeon
 npm install
+# you can switch to the main branch if you want
+# git checkout main
 npm run start
 # this should return no errors (hopefully)
 npx tsc
