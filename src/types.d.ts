@@ -12,7 +12,8 @@ declare global {
 
     type Mod1 = Writable<Mod> & {
         isCCModPacked: boolean
-    }& ({
+        findAllAssets?(): void /* only there for ccl2, used to set isCCL3 */
+    } & ({
         isCCL3: true
         id: string
         findAllAssets(): void

@@ -5,7 +5,8 @@ import { DungeonConfigFactory } from '@root/dungeon/dungeon-builder'
 import { PuzzleRoom } from '@root/room/puzzle-room'
 import { Selection } from '@root/types'
 import { MapBuilder } from '@root/room/map-builder'
-import { PuzzleMapBuilder } from '@root/room/dungeon-map-builder'
+import { DungeonIntersectionMapBuilder, PuzzleMapBuilder } from '@root/room/dungeon-map-builder'
+import { DirUtil } from '@root/util/pos'
 
 export class DungeonConfigMainFactory implements DungeonConfigFactory {
     async get(areaInfo: AreaInfo, seed: string): Promise<DungeonGenerateConfig> {
@@ -24,21 +25,44 @@ export class DungeonConfigMainFactory implements DungeonConfigFactory {
         for (let i = 0; i < puzzles.length; i++) {
             const sel = puzzles[i]
             const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
-            const builder: MapBuilder = new PuzzleMapBuilder(areaInfo, sel, puzzleMap, true, '', true)
+            const builder: MapBuilder = new PuzzleMapBuilder(areaInfo, sel, puzzleMap, true, '')
             regularBuilders.arr.push(Object.assign(builder, { exclusive: true }))
         }
         bPool.push(regularBuilders)
+        
+        const _db: MapBuilderArrayGenerate = { arr: [], randomize: true, index: index++ }
+        DirUtil.forEachUniqueDir4((d1, d2, d3, d4) => 
+            _db.arr.push(Object.assign(new DungeonIntersectionMapBuilder(areaInfo, d1, d2, d3, d4), { exclusive: true })))
+        bPool.push(_db)
 
         const dngGenConfig: DungeonGenerateConfig = {
             seed,
             areaInfo,
             arm: {
                 bPool,
-                length: regularBuilders.arr.length / 1.5,
-                builderPool: 0,
-                endBuilderPool: 0,
-                end: ArmEnd.Item,
-                itemType: ArmItemType.Tresure,
+                length: 1,
+                builderPool: regularBuilders.index,
+                endBuilderPool: _db.index,
+                end: ArmEnd.Arm,
+                arms: [{
+                    length: 0,
+                    builderPool: regularBuilders.index,
+                    endBuilderPool: regularBuilders.index,
+                    end: ArmEnd.Item,
+                    itemType: ArmItemType.Tresure,
+                }, {
+                    length: 0,
+                    builderPool: regularBuilders.index,
+                    endBuilderPool: regularBuilders.index,
+                    end: ArmEnd.Item,
+                    itemType: ArmItemType.Tresure,
+                }, {
+                    length: 0,
+                    builderPool: NaN,
+                    endBuilderPool: regularBuilders.index,
+                    end: ArmEnd.Item,
+                    itemType: ArmItemType.Tresure,
+                }]
             },
         }
         return dngGenConfig

@@ -10,22 +10,17 @@ export class DungeonConfigSimpleFactory implements DungeonConfigFactory {
         let index = 0
         const bPool = []
         const _sb: MapBuilderArrayGenerate = { arr: [], randomize: true, index: index++ }
-        DirUtil.forEachDir(dir1 => { DirUtil.forEachDir(dir2 => {
-            try {
-                const b = Object.assign(new SimpleSingleTunnelEndMapBuilder(areaInfo, dir1, dir2), { exclusive: true })
-                // _sb.arr!.push(b, b, b, b, b, b, b, b, b)
-                // _sb.arr!.push(b, b, b, b, b)
-                _sb.arr!.push(b, b)
-            } catch (err) {}
-        })})
+        DirUtil.forEachUniqueDir2((d1, d2) => {
+            const b = Object.assign(new SimpleSingleTunnelEndMapBuilder(areaInfo, d1, d2), { exclusive: true })
+            _sb.arr.push(b, b)
+        })
         bPool.push(_sb)
         
         const _db: MapBuilderArrayGenerate = { arr: [], randomize: true, index: index++ }
-        DirUtil.forEachDir(dir1 => { DirUtil.forEachDir(dir2 => { DirUtil.forEachDir(dir3 => { // DirUtil.forEachDir(dir4 => {
-            try {
-                _db.arr.push(Object.assign(new SimpleMultipleExitMapBuilder(areaInfo, dir1, dir2, dir3), { exclusive: true }))
-            } catch (err) { }
-        })})})// })
+        DirUtil.forEachUniqueDir3((d1, d2, d3) => {
+            const b = Object.assign(new SimpleMultipleExitMapBuilder(areaInfo, d1, d2, d3), { exclusive: true })
+            _db.arr.push(b)
+        })
         bPool.push(_db)
         
         const dngGenConfig: DungeonGenerateConfig = {

@@ -218,7 +218,7 @@ export class AreaBuilder {
         const builder: MapBuilder = obj.entry.builder
         const pa: ArmRuntime = obj.parentArm
         /* set entarence path and marker */ {
-            let prevTpr: Tpr, prevBuilder: MapBuilder
+            let prevTpr: Tpr | null, prevBuilder: MapBuilder | null
             if (obj.index == 0) {
                 const pp = pa.parentArm
                 if (pp) {
@@ -226,20 +226,27 @@ export class AreaBuilder {
                     prevTpr = prevBuilder.mapIOs[pp.arms.indexOf(pa)].io.getTpr()
                 } else {
                     /* first first room */
-                    prevTpr = builder.entarenceRoom.primaryEntarence.getTpr()
-                    prevBuilder = builder
+                    // prevTpr = builder.entarenceRoom.primaryEntarence.getTpr()
+                    // prevBuilder = builder
+                    prevTpr = null
+                    prevBuilder = null
                 }
             } else {
                 prevBuilder = obj.parentArm.stack[obj.index - 1].builder
                 assert(prevBuilder.exitCount == 1)
                 prevTpr = prevBuilder.mapIOs[0].io.getTpr()
             }
-            assert(prevTpr); assert(prevBuilder)
             const entTpr: Tpr = builder.entarenceRoom.primaryEntarence.getTpr()
             assertBool(entTpr.destMap === undefined, 'MapBuilder copy fail'); assertBool(entTpr.destMarker === undefined, 'MapBuilder copy fail')
-            assert(prevBuilder.path); assert(prevTpr.name)
-            entTpr.destMap = prevBuilder.path
-            entTpr.destMarker = prevTpr.name
+            if (prevTpr === null || prevBuilder === null) {
+                entTpr.condition = 'false'
+                entTpr.destMap = 'none'
+                entTpr.destMarker = 'none'
+            } else {
+                assert(prevBuilder.path); assert(prevTpr.name)
+                entTpr.destMap = prevBuilder.path
+                entTpr.destMarker = prevTpr.name
+            }
         }
 
         /* set exit paths and markers */ {

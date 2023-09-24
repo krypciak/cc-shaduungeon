@@ -1,6 +1,6 @@
 import { Dir, MapPoint, EntityRect, Rect, setToClosestSelSide, EntityPoint, DirUtil, MapRect } from '@root/util/pos'
 import { Selection, SelectionMapEntry } from '@root/types'
-import { Room, RoomIO, RoomIODoorLike, } from '@root/room/room'
+import { Room, RoomIO, RoomIODoorLike, RoomIOTpr, Tpr, } from '@root/room/room'
 import { assert } from '@root/util/misc'
 import { MapDoorLike, MapEntity, MapEventTrigger, MapFloorSwitch, MapTransporter } from '@root/util/entity'
 import { RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen } from '@root/room/tunnel-room'
@@ -63,7 +63,7 @@ export class PuzzleRoom extends Room {
 
 
     puzzle: PuzzleData
-    primaryExit!: RoomIODoorLike
+    primaryExit!: RoomIOTpr
     primaryEntarence!: RoomIO
 
     constructor(
@@ -183,7 +183,6 @@ export class PuzzleRoom extends Room {
                 this.primaryExit = RoomIODoorLike.fromRoom('Door', this, name, puzzle.end.dir, EntityPoint.fromVec(puzzle.end.pos))
             }
 
-            this.ios.push(this.primaryExit)
             this.primaryExit.tpr.condition = puzzle.usel.solveConditionUnique
         } else {
             throw new Error('not implemented')
@@ -229,6 +228,23 @@ export class PuzzleRoom extends Room {
         this.ios.push(this.primaryEntarence)
     }
 
+    pushExit(isEnd: boolean) {
+        this.ios = this.ios.filter(io => ! io.toDelete)
+        if (isEnd) {
+            const oldIo: RoomIODoorLike = this.primaryExit as RoomIODoorLike
+            const oldTpr: Tpr = this.primaryExit.getTpr()
+            this.primaryExit = new RoomIOTpr(Tpr.get('puzzle-exit-to-arm', oldTpr.dir,
+                EntityPoint.fromVec(this.puzzle.usel.sel.data.endPos), 'TeleportField', true, oldTpr.condition))
+            if (oldTpr.entity) {
+                oldTpr.entityCondition = 'false'
+                oldTpr.destMap = 'none'
+                oldTpr.destMarker = 'none'
+                this.ios.push(Object.assign(oldIo, { toDelete: true }))
+            }
+        }
+        this.ios.push(Object.assign(this.primaryExit, { toDelete: true }))
+    }
+
     async place(rpv: RoomPlaceVars): Promise<RoomPlaceVars | void> {
         const puzzle = this.puzzle
         puzzle.usel.sel.map = rpv.map.name
@@ -248,7 +264,18 @@ export class PuzzleRoom extends Room {
             puzzle.map = ig.copy(puzzle.map)
             const priExitE: MapEntity | undefined = this.primaryExit.tpr.entity
             puzzle.map.entities = puzzle.map.entities.filter(
-                e => (! MapTransporter.check(e)) || (! priExitE) || (e.x == priExitE.x && e.y == priExitE.y))
+                e => {
+                    if (MapTransporter.check(e)) {
+                        debugger
+                        if (priExitE) {
+                            return e.x == priExitE.x && e.y == priExitE.y
+                        } else  {
+                            return e.settings.condition == 'false'
+                        }
+                    } else {
+                        return true
+                    }
+                })
 
             /* remove all dialog event triggers */
             puzzle.map.entities = puzzle.map.entities.filter(

@@ -18,6 +18,25 @@ export enum Dir3d {
     DOWN = 5,
 }
 
+const unique2: [Dir, Dir][] = [
+    [0, 1], [0, 2], [0, 3],
+    [1, 0], [1, 2], [1, 3],
+    [2, 0], [2, 1], [2, 3],
+    [3, 0], [3, 1], [3, 2],
+]
+const unique3: [Dir, Dir, Dir][] = [
+    [0, 1, 2], [0, 1, 3], [0, 2, 1], [0, 2, 3], [0, 3, 1], [0, 3, 2],
+    [1, 0, 2], [1, 0, 3], [1, 2, 0], [1, 2, 3], [1, 3, 0], [1, 3, 2],
+    [2, 0, 1], [2, 0, 3], [2, 1, 0], [2, 1, 3], [2, 3, 0], [2, 3, 1],
+    [3, 0, 1], [3, 0, 2], [3, 1, 0], [3, 1, 2], [3, 2, 0], [3, 2, 1],
+]
+const unique4: [Dir, Dir, Dir, Dir][] = [
+    [0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 1, 3], [0, 2, 3, 1], [0, 3, 1, 2], [0, 3, 2, 1],
+    [1, 0, 2, 3], [1, 0, 3, 2], [1, 2, 0, 3], [1, 2, 3, 0], [1, 3, 0, 2], [1, 3, 2, 0],
+    [2, 0, 1, 3], [2, 0, 3, 1], [2, 1, 0, 3], [2, 1, 3, 0], [2, 3, 0, 1], [2, 3, 1, 0],
+    [3, 0, 1, 2], [3, 0, 2, 1], [3, 1, 0, 2], [3, 1, 2, 0], [3, 2, 0, 1], [3, 2, 1, 0],
+]
+
 export class DirUtil {
     static flip(dir: Dir): Dir {
         return ((dir + 2) % 4) as Dir
@@ -58,11 +77,10 @@ export class DirUtil {
         return dir3d != Dir3d.UP && dir3d != Dir3d.DOWN
     }
 
-    static forEachDir(action: ((dir: Dir) => void)) {
-        for (let dir: Dir = 0; dir < 4; dir++) {
-            action(dir)
-        }
-    }
+    static forEachUniqueDir1(action: ((d1: Dir) => void)) { for (let dir: Dir = 0; dir < 4; dir++) { action(dir) } }
+    static forEachUniqueDir2(action: ((d1: Dir, d2: Dir) => void)) { unique2.forEach(e => action(...e)) }
+    static forEachUniqueDir3(action: ((d1: Dir, d2: Dir, d3: Dir) => void)) { unique3.forEach(e => action(...e)) }
+    static forEachUniqueDir4(action: ((d1: Dir, d2: Dir, d3: Dir, d4: Dir) => void)) { unique4.forEach(e => action(...e)) }
 }
 
 export type PosDir<T extends Point> =  T & { dir: Dir }

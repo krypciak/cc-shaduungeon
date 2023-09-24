@@ -1,14 +1,16 @@
 import { AreaInfo } from '@root/area/area-builder'
 import { Selection } from '@root/types'
 import { getMapDisplayName } from '@root/util/map'
-import { assertBool } from '@root/util/misc'
+import { assert, assertBool } from '@root/util/misc'
 import { Dir, DirUtil, EntityPoint, MapPoint } from '@root/util/pos'
 import { BattleRoom } from '@root/room/battle-room'
 import { MapBuilder } from '@root/room/map-builder'
 import { PuzzleRoom } from '@root/room/puzzle-room'
-import { Room } from '@root/room/room'
+import { Room, RoomIOTpr, Tpr } from '@root/room/room'
 import { RoomTheme } from '@root/room/themes'
 import { RoomIOTunnelClosed, RoomIOTunnelOpen } from '@root/room/tunnel-room'
+import { SimpleMultipleExitTunnelRoom } from './simple-room'
+import { ArmRuntime } from '@root/dungeon/dungeon-arm'
 
 export const exitMarker: string = 'puzzleExit'
 export const entarenceMarker: string = 'battleEntarence'
@@ -29,21 +31,25 @@ export class PuzzleMapBuilder extends MapBuilder {
         puzzleMap: sc.MapModel.Map,
         closedTunnel: boolean,
         entarenceCondition: string,
-        finalize: boolean = true,
     ) {
         super(3, areaInfo, RoomTheme.getFromArea(puzzleMap.attributes.area))
         this.puzzleRoom = new PuzzleRoom(puzzleSel, puzzleMap, entarenceCondition)
-        this.mapIOs.push({ io: this.puzzleRoom.primaryExit, room: this.puzzleRoom })
         this.puzzleRoom.setEntarenceTunnel(closedTunnel, closedTunnel ? PuzzleMapBuilder.closedTunnelSize : PuzzleMapBuilder.openTunnelSize)
         this.puzzleRoom.pushAllRooms(this.rooms)
 
         this.entarenceRoom = this.puzzleRoom
         this.exitRoom = this.puzzleRoom
-
-        finalize && this.setOnWallPositions()
     }
 
-    prepareToArrange(dir: Dir): boolean { return this.puzzleRoom.puzzle.start.dir == DirUtil.flip(dir) }
+    prepareToArrange(dir: Dir, isEnd: boolean): boolean {
+        if (this.puzzleRoom.puzzle.start.dir != DirUtil.flip(dir)) { return false }
+
+        this.mapIOs = this.mapIOs.filter(obj => ! obj.toDelete)
+        this.exitRoom.pushExit(isEnd)
+        this.mapIOs.push({ io: this.puzzleRoom.primaryExit, room: this.puzzleRoom, toDelete: true })
+        this.setOnWallPositions()
+        return true
+    }
 
     async decideDisplayName(index: number): Promise<string> {
         const selMapDisplayName: string = await getMapDisplayName(this.puzzleRoom.puzzle.map)
@@ -68,7 +74,7 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
         const battleDoneCondition: string = 'map.battle1done'
         const puzzleEntarenceCondition: string = battleStartCondition + ' && !' + battleDoneCondition
 
-        super(areaInfo, puzzleSel, puzzleMap, false, puzzleEntarenceCondition, false)
+        super(areaInfo, puzzleSel, puzzleMap, false, puzzleEntarenceCondition)
         this.exitRoom = this.puzzleRoom
 
         const battleSize: MapPoint = new MapPoint(15, 15)
@@ -81,6 +87,7 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
     prepareToArrange(dir: Dir): boolean {
         assertBool(this.puzzleRoom.primaryEntarence instanceof RoomIOTunnelOpen)
         if (dir == this.puzzleRoom.primaryEntarence.tunnel.dir) { return false }
+        throw new Error('teleport field not implemented')
 
         /* make sure the tunnel isn't duplicated */
         const primEnt = this.battleRoom.primaryEntarence
@@ -101,3 +108,49 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
     }
 }
 
+export class DungeonIntersectionMapBuilder extends MapBuilder {
+    exitCount: number = 3
+    simpleRoom: SimpleMultipleExitTunnelRoom
+
+    entarenceRoom: SimpleMultipleExitTunnelRoom
+
+    constructor(areaInfo: AreaInfo, public entDir: Dir, aDir1: Dir, aDir2: Dir, keyDir: Dir) {
+        super(3, areaInfo, RoomTheme.default)
+        this.entarenceRoom = this.simpleRoom =
+            new SimpleMultipleExitTunnelRoom(new MapPoint(0, 0), new MapPoint(24, 24), entDir, aDir1, aDir2, keyDir)
+        this.simpleRoom.pushAllRooms(this.rooms)
+        this.simpleRoom.exits.forEach(io => this.mapIOs.push({ io, room: this.simpleRoom }))
+        this.setOnWallPositions()
+    }
+
+    prepareToArrange(dir: Dir, isEnd: boolean): boolean {
+        if (this.entDir != DirUtil.flip(dir)) { return false }
+        assertBool(isEnd)
+        return true
+    }
+
+    async decideDisplayName(index: number): Promise<string> {
+        return this.displayName = `DungeonIntersectionMapBuilder ${index}`
+    }
+
+    preplace(arm: ArmRuntime): void {
+        if (arm.parentArm) {
+            const io: RoomIOTpr = this.simpleRoom.addTeleportField(this.simpleRoom.primaryEntarence, this.simpleRoom.teleportFields!.length)
+            this.simpleRoom.ios.push(io)
+            const tpr: Tpr = io.tpr
+            const parentLastBuilder: MapBuilder = arm.parentArm.stack.last().builder
+            const tpf: RoomIOTpr[] = parentLastBuilder.getAllTeleportFields()
+            assert(tpf)
+            const parentTpr: Tpr = tpf[arm.parentArm.arms.indexOf(arm)].tpr
+            tpr.destMap = parentLastBuilder.path
+            tpr.destMarker = parentTpr.name
+
+            parentTpr.destMap = this.path
+            parentTpr.destMarker = tpr.name
+
+            Tpr.replaceCondition(tpr)
+            Tpr.replaceCondition(parentTpr)
+        }
+        super.preplace(arm)
+    }
+}

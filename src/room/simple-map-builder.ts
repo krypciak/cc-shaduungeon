@@ -28,8 +28,7 @@ export class SimpleRoomMapBuilder extends MapBuilder {
     }
 
     async decideDisplayName(index: number): Promise<string> {
-        this.displayName = `SimpleRoomMapBuilder ${index}`
-        return this.displayName
+        return this.displayName = `SimpleRoomMapBuilder ${index}`
     }
 
     static addPreset(builders: MapBuilder[], areaInfo: AreaInfo) {
@@ -75,8 +74,7 @@ export class SimpleSingleTunnelMapBuilder extends MapBuilder {
     }
 
     async decideDisplayName(index: number): Promise<string> {
-        this.displayName = `SimpleSingleTunnelMapBuilder ${index}`
-        return this.displayName
+        return this.displayName = `SimpleSingleTunnelMapBuilder ${index}`
     }
 
     static addPreset(builders: MapBuilder[], areaInfo: AreaInfo) {
@@ -106,8 +104,7 @@ export class SimpleDoubleTunnelMapBuilder extends MapBuilder {
     }
 
     async decideDisplayName(index: number): Promise<string> {
-        this.displayName = `SimpleDoubleTunnelMapBuilder ${index}`
-        return this.displayName
+        return this.displayName = `SimpleDoubleTunnelMapBuilder ${index}`
     }
 }
 
@@ -147,8 +144,7 @@ export class SimpleDoubleRoomMapBuilder extends MapBuilder {
     }
 
     async decideDisplayName(index: number): Promise<string> {
-        this.displayName = `SimpleDoubleRoomMapBuilder ${index}`
-        return this.displayName
+        return this.displayName = `SimpleDoubleRoomMapBuilder ${index}`
     }
 
     static addPreset(builders: MapBuilder[], areaInfo: AreaInfo) {
@@ -170,7 +166,7 @@ export class SimpleMultipleExitMapBuilder extends MapBuilder {
         super(3, areaInfo, RoomTheme.default)
         this.exitCount = exits.length
         this.entarenceRoom = this.simpleRoom =
-            new SimpleMultipleExitTunnelRoom(new MapPoint(0, 0), new MapPoint(24, 24), entDir, ...exits)
+            new SimpleMultipleExitTunnelRoom(new MapPoint(0, 0), new MapPoint(64, 64), entDir, ...exits)
         this.simpleRoom.pushAllRooms(this.rooms)
         this.simpleRoom.exits.forEach(io => this.mapIOs.push({ io, room: this.simpleRoom }))
         this.setOnWallPositions()
@@ -183,8 +179,7 @@ export class SimpleMultipleExitMapBuilder extends MapBuilder {
     }
 
     async decideDisplayName(index: number): Promise<string> {
-        this.displayName = `SimpleDoubleExitMapBuilder ${index}`
-        return this.displayName
+        return this.displayName = `SimpleDoubleExitMapBuilder ${index}`
     }
 
     preplace(arm: ArmRuntime): void {
@@ -232,7 +227,6 @@ export class SimpleSingleTunnelEndMapBuilder extends MapBuilder {
     }
 
     async decideDisplayName(index: number): Promise<string> {
-        this.displayName = `SimpleSingleTunnelEndMapBuilder ${index}`
-        return this.displayName
+        return this.displayName = `SimpleSingleTunnelEndMapBuilder ${index}`
     }
 }

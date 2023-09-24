@@ -67,7 +67,6 @@ export default class DngGen {
         this.dir = mod.baseDirectory
         this.mod = mod
         window.dnggen = this
-        // @ts-expect-error
         this.mod.isCCL3 = mod.findAllAssets ? true : false
         this.mod.isCCModPacked = mod.baseDirectory.endsWith('.ccmod/')
     }

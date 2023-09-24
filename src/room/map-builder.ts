@@ -90,7 +90,7 @@ export abstract class MapBuilder {
     abstract exitCount: number
 
     entarenceOnWall!: PosDir<MapPoint> | null
-    mapIOs: { io: RoomIO; room: Room }[] = []
+    mapIOs: { io: RoomIO; room: Room, toDelete?: boolean }[] = []
     mapIOsOnWall!: (PosDir<MapPoint> | null)[]
 
     /* place vars */

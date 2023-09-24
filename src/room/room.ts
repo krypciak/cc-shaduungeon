@@ -88,7 +88,7 @@ export class RoomIODoorLike extends RoomIOTpr {
 export class Room extends MapRect {
     private addWalls: boolean
     sel?: { sel: Selection, poolName: SelectionPools }
-    ios: RoomIO[] = []
+    ios: (RoomIO & { toDelete?: boolean })[] = []
     primaryEntarence!: RoomIO
     primaryExit?: RoomIO
 
