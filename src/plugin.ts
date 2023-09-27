@@ -19,7 +19,7 @@ declare global {
 function addVimBindings() {
     if (vim) { /* optional dependency https://github.com/krypciak/cc-vim */
         const isInGenMap = (ingame: boolean) => ingame && ig.game.mapName.startsWith('dnggen')
-        vim.addAlias('dnggen', 'generate-dungeon', 'Generate dungeon', 'global', (seed = 'obama', roomTp: string = '0') => {
+        vim.addAlias('dnggen', 'generate-dungeon', 'Generate dungeon', 'global', (seed = '', roomTp: string = '0') => {
             vim.executeString('title-screen')
             dnggen.debug.roomTp = parseInt(roomTp)
             dnggen.debug.seed = seed

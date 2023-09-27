@@ -12,13 +12,13 @@ export class DungeonConfigSimpleFactory implements DungeonConfigFactory {
         const _sb: MapBuilderArrayGenerate = { arr: [], randomize: true, index: index++ }
         DirUtil.forEachUniqueDir2((d1, d2) => {
             const b = Object.assign(new SimpleSingleTunnelEndMapBuilder(areaInfo, d1, d2), { exclusive: true })
-            _sb.arr.push(b, b)
+            _sb.arr.push(b, b, b)
         })
         bPool.push(_sb)
         
         const _db: MapBuilderArrayGenerate = { arr: [], randomize: true, index: index++ }
-        DirUtil.forEachUniqueDir3((d1, d2, d3) => {
-            const b = Object.assign(new SimpleMultipleExitMapBuilder(areaInfo, d1, d2, d3), { exclusive: true })
+        DirUtil.forEachUniqueDir4((d1, d2, d3, d4) => {
+            const b = Object.assign(new SimpleMultipleExitMapBuilder(areaInfo, d1, d2, d3, d4), { exclusive: true })
             _db.arr.push(b)
         })
         bPool.push(_db)
@@ -28,35 +28,138 @@ export class DungeonConfigSimpleFactory implements DungeonConfigFactory {
             areaInfo,
             arm: {
                 bPool,
-                length: 1,
+                length: 3,
                 builderPool: _sb.index,
                 endBuilderPool: _db.index,
                 end: ArmEnd.Arm,
                 arms: [{
-                    length: 2,
-                    builderPool: _sb.index,
-                    endBuilderPool: _sb.index,
-                    end: ArmEnd.Item,
-                    itemType: ArmItemType.DungeonKey,
-                }, {
-                    length: 2,
+                    length: 3,
                     builderPool: _sb.index,
                     endBuilderPool: _db.index,
                     end: ArmEnd.Arm,
                     arms: [{
-                        length: 2,
+                        length: 1,
                         builderPool: _sb.index,
                         endBuilderPool: _sb.index,
                         end: ArmEnd.Item,
                         itemType: ArmItemType.DungeonKey,
                     }, {
-                        length: 2,
+                        length: 1,
+                        builderPool: _sb.index,
+                        endBuilderPool: _sb.index,
+                        end: ArmEnd.Item,
+                        itemType: ArmItemType.DungeonKey,
+                    }, {
+                        length: 1,
+                        builderPool: _sb.index,
+                        endBuilderPool: _sb.index,
+                        end: ArmEnd.Item,
+                        itemType: ArmItemType.DungeonKey,
+                    }]
+                }, {
+                    length: 3,
+                    builderPool: _sb.index,
+                    endBuilderPool: _db.index,
+                    end: ArmEnd.Arm,
+                    arms: [{
+                        length: 1,
+                        builderPool: _sb.index,
+                        endBuilderPool: _sb.index,
+                        end: ArmEnd.Item,
+                        itemType: ArmItemType.DungeonKey,
+                    }, {
+                        length: 1,
+                        builderPool: _sb.index,
+                        endBuilderPool: _sb.index,
+                        end: ArmEnd.Item,
+                        itemType: ArmItemType.DungeonKey,
+                    }, {
+                        length: 1,
+                        builderPool: _sb.index,
+                        endBuilderPool: _sb.index,
+                        end: ArmEnd.Item,
+                        itemType: ArmItemType.DungeonKey,
+                    }]
+                }, {
+                    length: 3,
+                    builderPool: _sb.index,
+                    endBuilderPool: _db.index,
+                    end: ArmEnd.Arm,
+                    arms: [{
+                        length: 1,
+                        builderPool: _sb.index,
+                        endBuilderPool: _sb.index,
+                        end: ArmEnd.Item,
+                        itemType: ArmItemType.DungeonKey,
+                    }, {
+                        length: 1,
+                        builderPool: _sb.index,
+                        endBuilderPool: _sb.index,
+                        end: ArmEnd.Item,
+                        itemType: ArmItemType.DungeonKey,
+                    }, {
+                        length: 1,
                         builderPool: _sb.index,
                         endBuilderPool: _sb.index,
                         end: ArmEnd.Item,
                         itemType: ArmItemType.DungeonKey,
                     }]
                 }]
+                //arms: [{
+                //    length: 1,
+                //    builderPool: _sb.index,
+                //    endBuilderPool: _sb.index,
+                //    end: ArmEnd.Item,
+                //    itemType: ArmItemType.DungeonKey,
+                //}, {
+                //    length: 1,
+                //    builderPool: _sb.index,
+                //    endBuilderPool: _db.index,
+                //    end: ArmEnd.Arm,
+                //    arms: [{
+                //        length: 0,
+                //        builderPool: _sb.index,
+                //        endBuilderPool: _sb.index,
+                //        end: ArmEnd.Item,
+                //        itemType: ArmItemType.DungeonKey,
+                //    }, {
+                //        length: 0,
+                //        builderPool: _sb.index,
+                //        endBuilderPool: _sb.index,
+                //        end: ArmEnd.Item,
+                //        itemType: ArmItemType.DungeonKey,
+                //    }, {
+                //        length: 0,
+                //        builderPool: _sb.index,
+                //        endBuilderPool: _sb.index,
+                //        end: ArmEnd.Item,
+                //        itemType: ArmItemType.DungeonKey,
+                //    }]
+                //}, {
+                //    length: 1,
+                //    builderPool: _sb.index,
+                //    endBuilderPool: _db.index,
+                //    end: ArmEnd.Arm,
+                //    arms: [{
+                //        length: 0,
+                //        builderPool: _sb.index,
+                //        endBuilderPool: _sb.index,
+                //        end: ArmEnd.Item,
+                //        itemType: ArmItemType.DungeonKey,
+                //    }, {
+                //        length: 0,
+                //        builderPool: _sb.index,
+                //        endBuilderPool: _sb.index,
+                //        end: ArmEnd.Item,
+                //        itemType: ArmItemType.DungeonKey,
+                //    }, {
+                //        length: 0,
+                //        builderPool: _sb.index,
+                //        endBuilderPool: _sb.index,
+                //        end: ArmEnd.Item,
+                //        itemType: ArmItemType.DungeonKey,
+                //    }]
+                //}]
             },
         }
         return Promise.resolve(dngGenConfig)

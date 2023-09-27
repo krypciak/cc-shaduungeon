@@ -7,6 +7,20 @@ import { DungeonPaths } from '@root/dungeon/dungeon-paths'
 import { AreaViewFloorTypes } from '@root/area/custom-MapAreaContainer'
 import { ArmEnd, ArmRuntime, ArmRuntimeEntry, flatOutArmTopDown, forEveryArmEntry } from '@root/dungeon/dungeon-arm'
 
+export enum Item {
+    FajroKey = 146,
+    FajroKeyMaster = 147,
+    MineMasterKey = 153,
+    ThiefsKey = 154,
+    WhiteKey = 155,
+    RadiantKey = 156,
+    ZirvitarKey = 272,
+    SonajizKey = 319,
+    KryskajoKey = 349,
+    KryskajoMasterKey = 350,
+    KuleroKey = 560,
+    KuleroMasterKey = 624,
+}
 export class AreaInfo {
     name: string
     constructor(
@@ -14,7 +28,11 @@ export class AreaInfo {
         public displayName: string,
         public displayDesc: string,
         public type: 'PATH' | 'TOWN' | 'DUNGEON',
-        public pos: Vec2) {
+        public pos: Vec2,
+        public keyItem: Item,
+        public masterKeyItem: Item,
+        public boosterItem: Item,
+    ) {
         this.name = paths.nameAndId
     }
 }
@@ -286,21 +304,24 @@ export class AreaBuilder {
                 currTpr.destMarker = nextTpr.name
             }
         }
-        for (const obj1 of builder.mapIOs) {
-            const tpr: Tpr = obj1.io.getTpr()
-            if (! tpr.backToArm) { continue }
-            assert(pa.parentArm); assert(pa.parentArmIndex)
-            const parentArmEndEntry: ArmRuntimeEntry = pa.parentArm.stack.last()
-            tpr.destMap = parentArmEndEntry.builder.path
-            const tfs: RoomIOTpr[] = parentArmEndEntry.builder.getAllTeleportFields()
-            const remoteTpr: Tpr = tfs[pa.parentArmIndex].getTpr()
-            tpr.destMarker = remoteTpr.name
+        if (pa.parentArm) {
+            for (const obj1 of builder.mapIOs) {
+                const tpr: Tpr = obj1.io.getTpr()
+                if (! tpr.backToArm) { continue }
+                if (! pa.parentArm) { continue }
+                assert(pa.parentArmIndex)
+                const parentArmEndEntry: ArmRuntimeEntry = pa.parentArm.stack.last()
+                tpr.destMap = parentArmEndEntry.builder.path
+                const tfs: RoomIOTpr[] = parentArmEndEntry.builder.getAllTeleportFields()
+                const remoteTpr: Tpr = tfs[pa.parentArmIndex].getTpr()
+                tpr.destMarker = remoteTpr.name
 
-            remoteTpr.destMap = builder.path
-            remoteTpr.destMarker = tpr.name
+                remoteTpr.destMap = builder.path
+                remoteTpr.destMarker = tpr.name
 
-            Tpr.replaceCondition(tpr)
-            Tpr.replaceCondition(remoteTpr)
+                Tpr.replaceCondition(tpr)
+                Tpr.replaceCondition(remoteTpr)
+            }
         }
     }
 
@@ -383,10 +404,12 @@ export class AreaBuilder {
     createDbEntry() {
         this.dbEntry = {
             path: '',
-            boosterItem: '1000000',
+            boosterItem: this.areaInfo.boosterItem.toString(),
             landmarks: {},
             name: allLangs(this.areaInfo.displayName),
             description: allLangs(this.areaInfo.displayDesc),
+            keyItem: this.areaInfo.keyItem.toString(),
+            masterKeyItem: this.areaInfo.masterKeyItem.toString(),
             areaType: this.areaInfo.type,
             order: 1001,
             track: true,

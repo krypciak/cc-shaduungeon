@@ -1,7 +1,7 @@
 import { AreaBuilder, AreaInfo } from "@root/area/area-builder"
 import { assert, assertBool, randomSeedInt, setRandomSeed } from "@root/util/misc"
 import { AreaPoint, Dir, PosDir } from "@root/util/pos"
-import { Arm, ArmEnd, ArmRuntime, ArmRuntimeEntry, ExclusiveMapBuilder, MapBuilderPool, copyArmRuntime, copyBuilderPool } from "./dungeon-arm"
+import { Arm, ArmEnd, ArmRuntime, ArmRuntimeEntry, ExclusiveMapBuilder, MapBuilderPool, copyArmRuntime, copyBuilderPool } from "@root/dungeon/dungeon-arm"
 
 export interface DungeonGenerateConfig<T extends Arm = Arm> {
     arm?: T
@@ -40,27 +40,42 @@ export class DungeonArranger {
         this.c = cr
     }
 
-    private recursiveTryPlaceArmEntry(arm: ArmRuntime, lastEntry: ArmRuntimeEntry, armIndex?: number): ArmRuntime | null {
+    private tryArmBranch(arm: ArmRuntime, index: number): ArmRuntime | undefined {
+        assertBool(arm.end == ArmEnd.Arm)
+        const armEnd = arm.arms[index]
+        armEnd.stack = []
+        armEnd.parentArm = arm
+        armEnd.parentArmIndex = index
+        const parentLastEntry: ArmRuntimeEntry = arm.stack.last()
+        const retArm = this.recursiveTryPlaceArmEntry(armEnd, parentLastEntry, armEnd.parentArmIndex)
+        if (retArm) {
+            assertBool(arm.arms[index] === armEnd)
+        }
+        return retArm
+    }
+
+    private recursiveTryPlaceArmEntry(arm: ArmRuntime, lastEntry: ArmRuntimeEntry, armIndex?: number): ArmRuntime | undefined {
         assertBool(typeof arm.length === 'number')
+        /* if arm is completed */
         if (arm.stack.length == arm.length + 1) {
-            /* completed arm */
-            if (arm.end == ArmEnd.Arm) {
-                /* try place all arm ends */
-                assertBool(Array.isArray(lastEntry.lastExit))
-                for (let i = 0; i < arm.arms.length; i++) {
-                    const armEnd = arm.arms[i]
-                    armEnd.stack = []
-                    armEnd.parentArm = arm
-                    armEnd.parentArmIndex = i
-                    const retArm = this.recursiveTryPlaceArmEntry(armEnd, lastEntry, i)
-                    if (retArm) {
-                        arm.arms[i] = retArm
-                    } else {
-                        return null
-                    }
+            let retArm: ArmRuntime | undefined = arm
+            if (retArm.end == ArmEnd.Arm) {
+                assertBool(lastEntry.builder.exitCount == lastEntry.lastExit.length)
+                assertBool(retArm.arms.length == lastEntry.builder.exitCount, 'exit count missmatch with arm count')
+                retArm = this.tryArmBranch(arm, 0)?.parentArm /* this has to return the same as arm */
+                if (! retArm) { return undefined }
+            } 
+            if (retArm.parentArmIndex !== undefined) { /* if doing arm branch filling */
+                assert(retArm.parentArm)
+                retArm.parentArm.arms[retArm.parentArmIndex].stack = arm.stack
+                if (retArm.parentArmIndex == retArm.parentArm.arms.length - 1) {
+                    /* all arm branched filled succesfully */
+                    return retArm
                 }
+                /* else continue to the next arm branch */
+                retArm = this.tryArmBranch(retArm.parentArm, retArm.parentArmIndex + 1)
             }
-            return arm
+            return retArm
         }
 
         let poolIndex: number
@@ -81,28 +96,22 @@ export class DungeonArranger {
         }
         const avBuilders = lastEntry.bPool![poolIndex]
         assert(avBuilders)
+        assertBool(avBuilders.arr.length > 0, 'ran out of builders')
         for (const possibleBuilder of avBuilders.arr) {
             const retArm = this.recursiveTryArmBuilder(possibleBuilder, arm, lastEntry, poolIndex, skipPoolCopy, isEnd, armIndex)
             if (retArm) { return retArm }
         }
-        return null /* hit end, popping */
+        return undefined /* hit end, popping */
     }
 
     private recursiveTryArmBuilder(builder: ExclusiveMapBuilder, arm: ArmRuntime, lastEntry: ArmRuntimeEntry,
         bPoolIndex: number, skipPoolCopy: boolean, isEnd: boolean, armIndex: number | undefined ) {
 
-        let lastExit: PosDir<AreaPoint>
-        if (armIndex !== undefined) {
-            assertBool(Array.isArray(lastEntry.lastExit))
-            lastExit = lastEntry.lastExit[armIndex]
-        } else {
-            assertBool(! Array.isArray(lastEntry.lastExit))
-            lastExit = lastEntry.lastExit
-        }
+        const lastExit: PosDir<AreaPoint> = lastEntry.lastExit[armIndex ?? 0]
         if (! builder.prepareToArrange(lastExit.dir, isEnd, arm)) { return }
      
         const obj = AreaBuilder.tryGetAreaRects(builder, lastExit, arm)
-        if (! obj) { /* map overlaps */ return }
+        if (! obj) { return /* map overlaps */ }
         assertBool(obj.rooms.length == obj.rects.length)
      
         // shallow copy
@@ -116,9 +125,9 @@ export class DungeonArranger {
 
         arm.stack.push({
             builder: builder.copy(),
-            areaRects: obj.rects.map(e => e),
-            rooms: obj.rooms.map(e => e),
-            lastExit: obj.exits.length == 1 ? obj.exits[0]! : obj.exits.map(e => e!),
+            areaRects: [...obj.rects],
+            rooms: [...obj.rooms],
+            lastExit: obj.exits.map(e => e!),
             bPool,
         })
         lastEntry = arm.stack.last()
@@ -130,10 +139,11 @@ export class DungeonArranger {
         assert(this.c.arm)
         this.c.arm.stack = []
         const lastEntry: Partial<ArmRuntimeEntry> = {
-            lastExit: Object.assign(new AreaPoint(0, 0), { dir: Dir.NORTH }),
+            lastExit: [Object.assign(new AreaPoint(0, 0), { dir: Dir.NORTH })],
         }
-        const retArm = this.recursiveTryPlaceArmEntry(this.c.arm, lastEntry as ArmRuntimeEntry)
-        this.c.arm = retArm ? retArm : undefined
+        let retArm: ArmRuntime | undefined = this.recursiveTryPlaceArmEntry(this.c.arm, lastEntry as ArmRuntimeEntry)
+        retArm && assertBool(retArm.rootArm)
+        this.c.arm = retArm
         return this.c
     }
 }

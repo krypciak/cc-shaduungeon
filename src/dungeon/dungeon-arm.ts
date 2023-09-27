@@ -43,7 +43,7 @@ export type ArmRuntimeEntry = {
     builder: MapBuilder
     areaRects: AreaRect[]
     rooms: Room[]
-    lastExit: PosDir<AreaPoint> | PosDir<AreaPoint>[] /* set for all builders expect for the last one if its an arm */
+    lastExit: PosDir<AreaPoint>[]
     bPool?: MapBuilderPool
 }
 

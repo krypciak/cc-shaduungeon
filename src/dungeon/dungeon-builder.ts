@@ -1,5 +1,5 @@
 import { AreaPoint } from '@root/util/pos'
-import { AreaBuilder, AreaInfo } from '@root/area/area-builder'
+import { AreaBuilder, AreaInfo, Item } from '@root/area/area-builder'
 import { DungeonPaths } from '@root/dungeon/dungeon-paths'
 import { DungeonArranger, DungeonGenerateConfig, } from '@root/dungeon/dungeon-arrange'
 import { MapBuilder } from '@root/room/map-builder'
@@ -20,7 +20,10 @@ export class DungeonBuilder {
         dngPaths.registerSelections()
         dngPaths.clearDir()
 
-        const areaInfo: AreaInfo = new AreaInfo(dngPaths, 'Generated Dungeon', 'generic description, ' + dngPaths.nameAndId, 'DUNGEON', Vec2.createC(150, 70))
+        const boosterItem: number = 100000
+        const areaInfo: AreaInfo = new AreaInfo(dngPaths,
+            'Generated Dungeon', 'generic description, ' + dngPaths.nameAndId,
+            'DUNGEON', Vec2.createC(150, 70), Item.FajroKey, Item.FajroKeyMaster, boosterItem)
         
         const dngGenConfig: DungeonGenerateConfig = await configFactory.get(areaInfo, seed)
         console.log('dngGenConfig:', dngGenConfig)
@@ -42,8 +45,8 @@ export class DungeonBuilder {
         areaBuilder.createDbEntry()
         areaBuilder.saveToFile()
 
-        // dnggen.areaDrawer.drawArea(dngConfig, size)
-        // dnggen.areaDrawer.copyToClipboard()
+        dnggen.areaDrawer.drawArea(dngConfig, size)
+        dnggen.areaDrawer.copyToClipboard()
 
         const flatEntries: (ArmRuntimeEntry & { arm: ArmRuntime })[] = flatOutArmTopDown(dngConfig.arm)
 

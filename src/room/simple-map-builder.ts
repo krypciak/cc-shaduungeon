@@ -166,7 +166,7 @@ export class SimpleMultipleExitMapBuilder extends MapBuilder {
         super(3, areaInfo, RoomTheme.default)
         this.exitCount = exits.length
         this.entarenceRoom = this.simpleRoom =
-            new SimpleMultipleExitTunnelRoom(new MapPoint(0, 0), new MapPoint(64, 64), entDir, ...exits)
+            new SimpleMultipleExitTunnelRoom(new MapPoint(0, 0), new MapPoint(24, 24), entDir, ...exits)
         this.simpleRoom.pushAllRooms(this.rooms)
         this.simpleRoom.exits.forEach(io => this.mapIOs.push({ io, room: this.simpleRoom }))
         this.setOnWallPositions()

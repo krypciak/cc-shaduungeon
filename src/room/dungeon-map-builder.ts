@@ -51,6 +51,7 @@ export class PuzzleMapBuilder extends MapBuilder {
         return true
     }
 
+
     async decideDisplayName(index: number): Promise<string> {
         const selMapDisplayName: string = await getMapDisplayName(this.puzzleRoom.puzzle.map)
         this.displayName = `${index.toString()} => ${this.puzzleRoom.puzzle.map.name} ${selMapDisplayName}`
@@ -87,7 +88,8 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
     prepareToArrange(dir: Dir): boolean {
         assertBool(this.puzzleRoom.primaryEntarence instanceof RoomIOTunnelOpen)
         if (dir == this.puzzleRoom.primaryEntarence.tunnel.dir) { return false }
-        throw new Error('teleport field not implemented')
+
+        let a = true; if (a) throw new Error('teleport field not implemented')
 
         /* make sure the tunnel isn't duplicated */
         const primEnt = this.battleRoom.primaryEntarence

@@ -7,6 +7,7 @@ import { Selection } from '@root/types'
 import { MapBuilder } from '@root/room/map-builder'
 import { DungeonIntersectionMapBuilder, PuzzleMapBuilder } from '@root/room/dungeon-map-builder'
 import { DirUtil } from '@root/util/pos'
+import { SimpleSingleTunnelEndMapBuilder } from '@root/room/simple-map-builder'
 
 export class DungeonConfigMainFactory implements DungeonConfigFactory {
     async get(areaInfo: AreaInfo, seed: string): Promise<DungeonGenerateConfig> {
@@ -30,6 +31,13 @@ export class DungeonConfigMainFactory implements DungeonConfigFactory {
         }
         bPool.push(regularBuilders)
         
+        const _sb: MapBuilderArrayGenerate = { arr: [], randomize: true, index: index++ }
+        DirUtil.forEachUniqueDir2((d1, d2) => {
+            const b = Object.assign(new SimpleSingleTunnelEndMapBuilder(areaInfo, d1, d2), { exclusive: true })
+            _sb.arr.push(b, b, b)
+        })
+
+        bPool.push(_sb)
         const _db: MapBuilderArrayGenerate = { arr: [], randomize: true, index: index++ }
         DirUtil.forEachUniqueDir4((d1, d2, d3, d4) => 
             _db.arr.push(Object.assign(new DungeonIntersectionMapBuilder(areaInfo, d1, d2, d3, d4), { exclusive: true })))
@@ -38,6 +46,14 @@ export class DungeonConfigMainFactory implements DungeonConfigFactory {
         const dngGenConfig: DungeonGenerateConfig = {
             seed,
             areaInfo,
+            // arm: {
+            //     bPool,
+            //     length: regularBuilders.arr.length / 1.5,
+            //     builderPool: regularBuilders.index,
+            //     endBuilderPool: regularBuilders.index,
+            //     end: ArmEnd.Item,
+            //     itemType: ArmItemType.Tresure,
+            // }
             arm: {
                 bPool,
                 length: 1,
@@ -45,13 +61,7 @@ export class DungeonConfigMainFactory implements DungeonConfigFactory {
                 endBuilderPool: _db.index,
                 end: ArmEnd.Arm,
                 arms: [{
-                    length: 0,
-                    builderPool: regularBuilders.index,
-                    endBuilderPool: regularBuilders.index,
-                    end: ArmEnd.Item,
-                    itemType: ArmItemType.Tresure,
-                }, {
-                    length: 0,
+                    length: 6,
                     builderPool: regularBuilders.index,
                     endBuilderPool: regularBuilders.index,
                     end: ArmEnd.Item,
@@ -59,6 +69,12 @@ export class DungeonConfigMainFactory implements DungeonConfigFactory {
                 }, {
                     length: 0,
                     builderPool: NaN,
+                    endBuilderPool: _sb.index,
+                    end: ArmEnd.Item,
+                    itemType: ArmItemType.Tresure,
+                }, {
+                    length: 6,
+                    builderPool: regularBuilders.index,
                     endBuilderPool: regularBuilders.index,
                     end: ArmEnd.Item,
                     itemType: ArmItemType.Tresure,

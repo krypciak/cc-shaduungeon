@@ -266,7 +266,6 @@ export class PuzzleRoom extends Room {
             puzzle.map.entities = puzzle.map.entities.filter(
                 e => {
                     if (MapTransporter.check(e)) {
-                        debugger
                         if (priExitE) {
                             return e.x == priExitE.x && e.y == priExitE.y
                         } else  {
