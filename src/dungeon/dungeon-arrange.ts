@@ -1,7 +1,7 @@
 import { AreaBuilder, AreaInfo } from "@root/area/area-builder"
 import { assert, assertBool, randomSeedInt, setRandomSeed } from "@root/util/misc"
 import { AreaPoint, Dir, PosDir } from "@root/util/pos"
-import { Arm, ArmEnd, ArmRuntime, ArmRuntimeEntry, ExclusiveMapBuilder, MapBuilderPool, copyArmRuntime, copyBuilderPool } from "@root/dungeon/dungeon-arm"
+import { Arm, ArmEnd, ArmRuntime, ArmRuntimeEntry, ExclusiveMapBuilder, MapBuilderPool, copyArmRuntime, copyBuilderPool, } from "@root/dungeon/dungeon-arm"
 
 export interface DungeonGenerateConfig<T extends Arm = Arm> {
     arm?: T
@@ -46,7 +46,11 @@ export class DungeonArranger {
         armEnd.stack = []
         armEnd.parentArm = arm
         armEnd.parentArmIndex = index
-        const parentLastEntry: ArmRuntimeEntry = arm.stack.last()
+        const parentLastEntry: ArmRuntimeEntry = { ...arm.stack.last() }
+        if (index > 0) {
+            parentLastEntry.bPool = arm.arms[index - 1].stack.last().bPool
+        }
+
         const retArm = this.recursiveTryPlaceArmEntry(armEnd, parentLastEntry, armEnd.parentArmIndex)
         if (retArm) {
             assertBool(arm.arms[index] === armEnd)

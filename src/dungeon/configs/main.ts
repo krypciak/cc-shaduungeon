@@ -61,7 +61,7 @@ export class DungeonConfigMainFactory implements DungeonConfigFactory {
                 endBuilderPool: _db.index,
                 end: ArmEnd.Arm,
                 arms: [{
-                    length: 6,
+                    length: 5,
                     builderPool: regularBuilders.index,
                     endBuilderPool: regularBuilders.index,
                     end: ArmEnd.Item,
@@ -73,7 +73,7 @@ export class DungeonConfigMainFactory implements DungeonConfigFactory {
                     end: ArmEnd.Item,
                     itemType: ArmItemType.Tresure,
                 }, {
-                    length: 6,
+                    length: 5,
                     builderPool: regularBuilders.index,
                     endBuilderPool: regularBuilders.index,
                     end: ArmEnd.Item,

@@ -62,6 +62,18 @@ export function copyArmRuntime(arm: ArmRuntime): ArmRuntime {
     return newArm
 }
 
+/*
+export function copyMapBuilderPool(pool: MapBuilderPool) {
+    pool = {...pool}
+    Object.entries(pool).forEach((e: [string, MapBuilderArrayGenerate]) => {
+        const k = parseInt(e[0])
+        pool[k] = {...pool[k]}
+        pool[k].arr = [...pool[k].arr]
+    })
+    return pool
+}
+*/
+
 export function forEveryArmEntry(arm: ArmRuntime, func: (entry: ArmRuntimeEntry, arm: ArmRuntime, index: number) => void) {
     const entries: ArmRuntimeEntry[] = []
     if (arm.stack) { arm.stack.forEach((e, i) => func(e, arm, i)) }
