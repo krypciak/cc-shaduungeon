@@ -40,6 +40,7 @@ interface DngGenDebug {
     collisionlessMapArrange: boolean
     dontDiscoverAllMaps: boolean
     areaMapConnections: boolean
+    dontFlushCacheOnGen: boolean
     /* used only in debug functions */
     roomTp: number
     seed: string
@@ -59,6 +60,7 @@ export default class DngGen {
         collisionlessMapArrange: true,
         dontDiscoverAllMaps: false,
         areaMapConnections: true,
+        dontFlushCacheOnGen: false,
         roomTp: 0,
         seed: '',
     }

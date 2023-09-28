@@ -162,8 +162,10 @@ export class SimpleMultipleExitMapBuilder extends MapBuilder {
 
     entarenceRoom: SimpleMultipleExitTunnelRoom
 
-    constructor(areaInfo: AreaInfo, public entDir: Dir, ...exits: Dir[]) {
+    constructor(areaInfo: AreaInfo, public entDir: Dir, ...exits1: (Dir | undefined)[]) {
         super(3, areaInfo, RoomTheme.default)
+        const lastUndefinedIndex = exits1.lastIndexOf(undefined)
+        const exits: Dir[] = exits1.slice(0, lastUndefinedIndex > 0 ? lastUndefinedIndex : exits1.length) as Dir[]
         this.exitCount = exits.length
         this.entarenceRoom = this.simpleRoom =
             new SimpleMultipleExitTunnelRoom(new MapPoint(0, 0), new MapPoint(24, 24), entDir, ...exits)

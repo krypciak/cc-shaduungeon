@@ -62,20 +62,9 @@ export class AreaBuilder {
         })
 
         if (dnggen.debug.collisionlessMapArrange) {
-            // let rootArm = arm
-            // while (rootArm.parentArm) { rootArm = rootArm.parentArm }
-            // assertBool(rootArm.rootArm)
-            // console.log('rootArm:', rootArm)
-            // const arr = flatOutArmTopDown(rootArm).flatMap(e => e.areaRects)
-            // if (arr.length == 0) {
-            //     const arr1 = flatOutArmTopDown(rootArm).flatMap(e => e.areaRects)
-            // }
-            // console.log(arr)
-            // if (doesRectArrayOverlapRectArray(arr, rects)) {
-            //     return
-            // }
             let hitRoot = false
-            const armsChecked: Set<ArmRuntime> = new Set()
+            const armsChecked: WeakSet<ArmRuntime> = new WeakSet()
+
             function doesCollide(arm: ArmRuntime): boolean {
                 if (arm.rootArm) { hitRoot = true }
                 for (const e of (arm.stack ?? [])) {
@@ -88,6 +77,11 @@ export class AreaBuilder {
                     }
                 }
                 if (arm.parentArm && ! armsChecked.has(arm.parentArm)) {
+                    if(arm.parentArmIndex !== undefined) {
+                        if (arm.parentArm.arms[arm.parentArmIndex] !== arm) {
+                            arm.parentArm.arms[arm.parentArmIndex] = arm
+                        }
+                    }
                     if (doesCollide(arm.parentArm)) { return true }
                 }
                 return false

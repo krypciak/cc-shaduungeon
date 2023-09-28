@@ -46,7 +46,7 @@ export class DungeonBuilder {
         areaBuilder.saveToFile()
 
         dnggen.areaDrawer.drawArea(dngConfig, size)
-        dnggen.areaDrawer.copyToClipboard()
+        // dnggen.areaDrawer.copyToClipboard()
 
         const flatEntries: (ArmRuntimeEntry & { arm: ArmRuntime })[] = flatOutArmTopDown(dngConfig.arm)
 
@@ -58,7 +58,14 @@ export class DungeonBuilder {
         blitzkrieg.battleSelections.save()
 
         dngPaths.registerFiles()
-
+        if (! dnggen.debug.dontFlushCacheOnGen) {
+            if (sc.AreaLoadable.cache) {
+                const entry = sc.AreaLoadable.cache[areaInfo.name]
+                if (entry) {
+                    entry.debugReload = true; entry.reload(); entry.debugReload = false
+                }
+            }
+        }
         ig.game.varsChangedDeferred()
 
         const firstBuilder = flatEntries[dnggen.debug.roomTp].builder
@@ -68,7 +75,7 @@ export class DungeonBuilder {
             baseZPos: 0,
             size: {x: 0, y: 0}
         }))
-        // AreaBuilder.openAreaViewerGui(areaInfo.name, flatEntries[0].builder.name!, 0)
+        AreaBuilder.openAreaViewerGui(areaInfo.name, flatEntries[0].builder.name!, 0)
     }
 }
 

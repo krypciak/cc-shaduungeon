@@ -77,6 +77,7 @@ export class CCCanvas {
     }
 
     initInternal() {
+        document.body.insertAdjacentHTML('beforeend', this.htmlDiv)
         this.div = document.getElementById(this.divId) as HTMLDivElement
         this.canvas = document.getElementById(this.canvasId) as HTMLCanvasElement
     }
@@ -201,7 +202,7 @@ export class CCCanvas {
 export class AreaDrawer extends CCCanvas {
     static colorList: string[] = [ 'black', 'blue', ]
     colorIndex: number = 0
-    scale: number = 6
+    scale: number = 4
     
     constructor() {
         super(true)
@@ -230,7 +231,7 @@ export class AreaDrawer extends CCCanvas {
         return '#00000000'
     }
 
-    async drawArea(dngConfig: DungeonGenerateConfig<ArmRuntime>, size: AreaPoint) {
+    drawArea(dngConfig: DungeonGenerateConfig<ArmRuntime>, size: AreaPoint) {
         if (! dngConfig.arm) { return }
         this.show()
         this.colorIndex = 0

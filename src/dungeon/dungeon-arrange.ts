@@ -1,5 +1,5 @@
 import { AreaBuilder, AreaInfo } from "@root/area/area-builder"
-import { assert, assertBool, randomSeedInt, setRandomSeed } from "@root/util/misc"
+import { assert, assertBool, randomSeedInt, setRandomSeed, shuffleArray, } from "@root/util/misc"
 import { AreaPoint, Dir, PosDir } from "@root/util/pos"
 import { Arm, ArmEnd, ArmRuntime, ArmRuntimeEntry, ExclusiveMapBuilder, MapBuilderPool, copyArmRuntime, copyBuilderPool, } from "@root/dungeon/dungeon-arm"
 
@@ -15,6 +15,7 @@ export class DungeonArranger {
     constructor(normalConfig: DungeonGenerateConfig) {
         this.normalConfig = Object.freeze(normalConfig)
         setRandomSeed(normalConfig.seed)
+        console.log(normalConfig.seed)
 
         function recursivePrepArm(arm: Arm): ArmRuntime {
             const armr: ArmRuntime = arm as ArmRuntime
@@ -24,6 +25,13 @@ export class DungeonArranger {
             if (armr.end == ArmEnd.Arm) {
                 armr.arms = armr.arms.map((childArm: Arm) => {
                     return recursivePrepArm(childArm)
+                })
+            }
+            if (armr.bPool) {
+                Object.values(armr.bPool).forEach(v => {
+                    if (v.randomize) {
+                        v.arr = shuffleArray(v.arr)
+                    }
                 })
             }
             return armr as ArmRuntime
@@ -53,7 +61,7 @@ export class DungeonArranger {
 
         const retArm = this.recursiveTryPlaceArmEntry(armEnd, parentLastEntry, armEnd.parentArmIndex)
         if (retArm) {
-            assertBool(arm.arms[index] === armEnd)
+            assertBool(armEnd.parentArm === arm)
         }
         return retArm
     }
@@ -101,7 +109,12 @@ export class DungeonArranger {
         const avBuilders = lastEntry.bPool![poolIndex]
         assert(avBuilders)
         assertBool(avBuilders.arr.length > 0, 'ran out of builders')
+        const len: number = arm.stack.length
         for (const possibleBuilder of avBuilders.arr) {
+            if (arm.stack.length != len) {
+                arm.stack = arm.stack.slice(0, len)
+                assertBool(arm.stack.length == len, 'why')
+            }
             const retArm = this.recursiveTryArmBuilder(possibleBuilder, arm, lastEntry, poolIndex, skipPoolCopy, isEnd, armIndex)
             if (retArm) { return retArm }
         }
@@ -119,7 +132,7 @@ export class DungeonArranger {
         assertBool(obj.rooms.length == obj.rects.length)
      
         // shallow copy
-        arm = copyArmRuntime(arm)
+        const newArm = copyArmRuntime(arm)
         assert(lastEntry.bPool)
         let bPool: MapBuilderPool = skipPoolCopy ? lastEntry.bPool : copyBuilderPool(lastEntry.bPool)
         if (builder.exclusive) {
@@ -127,16 +140,16 @@ export class DungeonArranger {
             arr.splice(arr.indexOf(builder), 1)
         }
 
-        arm.stack.push({
+        newArm.stack.push({
             builder: builder.copy(),
             areaRects: [...obj.rects],
             rooms: [...obj.rooms],
             lastExit: obj.exits.map(e => e!),
             bPool,
         })
-        lastEntry = arm.stack.last()
+        lastEntry = newArm.stack.last()
      
-        return this.recursiveTryPlaceArmEntry(arm, lastEntry)
+        return this.recursiveTryPlaceArmEntry(newArm, lastEntry)
     }
 
     async arrangeDungeon(): Promise<DungeonGenerateConfig<ArmRuntime>> {
