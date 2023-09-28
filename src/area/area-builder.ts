@@ -274,7 +274,7 @@ export class AreaBuilder {
                         assert(destMap); assert(destMarker)
 
                         const tpr: Tpr = obj1.io.getTpr()
-                        assertBool(tpr.destMap === undefined, 'MapBuilder copy fail'); assertBool(tpr.destMarker === undefined, 'MapBuilder copy fail')
+                        Tpr.checkDest(tpr)
                         tpr.destMap = destMap
                         tpr.destMarker = destMarker
                     })
@@ -283,14 +283,14 @@ export class AreaBuilder {
                     /* dead end */
                     /* temp: set loop the exit */
                     const tpr: Tpr = builder.mapIOs[0].io.getTpr()
-                    assertBool(tpr.destMap === undefined, 'MapBuilder copy fail'); assertBool(tpr.destMarker === undefined, 'MapBuilder copy fail')
+                    Tpr.checkDest(tpr)
                     tpr.destMap = builder.path
                     tpr.destMarker = tpr.name
                 }
             } else {
                 assertBool(builder.exitCount == 1)
                 const currTpr: Tpr = builder.mapIOs[0].io.getTpr()
-                assertBool(currTpr.destMap === undefined, 'MapBuilder copy fail'); assertBool(currTpr.destMarker === undefined, 'MapBuilder copy fail')
+                Tpr.checkDest(currTpr)
                 const nextBuilder: MapBuilder = obj.parentArm.stack[obj.index + 1].builder
                 currTpr.destMap = nextBuilder.path!
 

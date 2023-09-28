@@ -139,7 +139,10 @@ export abstract class MapBuilder {
     
     abstract decideDisplayName(index: number): Promise<string>
 
-    preplace(_: ArmRuntime) {}
+    preplace(arm: ArmRuntime) {
+        const isEnd: boolean = arm.stack.findIndex(e => e.builder === this) == arm.length
+        this.rooms.forEach(r => r.preplace(arm, isEnd))
+    }
 
     /* place functions*/
 

@@ -45,7 +45,7 @@ export class DungeonBuilder {
         areaBuilder.createDbEntry()
         areaBuilder.saveToFile()
 
-        dnggen.areaDrawer.drawArea(dngConfig, size)
+        // dnggen.areaDrawer.drawArea(dngConfig, size)
         // dnggen.areaDrawer.copyToClipboard()
 
         const flatEntries: (ArmRuntimeEntry & { arm: ArmRuntime })[] = flatOutArmTopDown(dngConfig.arm)
@@ -75,7 +75,7 @@ export class DungeonBuilder {
             baseZPos: 0,
             size: {x: 0, y: 0}
         }))
-        AreaBuilder.openAreaViewerGui(areaInfo.name, flatEntries[0].builder.name!, 0)
+        // AreaBuilder.openAreaViewerGui(areaInfo.name, flatEntries[0].builder.name!, 0)
     }
 }
 

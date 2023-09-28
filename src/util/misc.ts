@@ -85,6 +85,20 @@ export function deepCopy<T>(obj: T, ignoreSet: Set<string> = new Set(), seen = n
     return newObj
 }
 
+export function shallowCopy<T>(obj: T): T {
+    if (Array.isArray(obj)) { return [...obj] as T }
+    if (obj === null || typeof obj !== 'object' || typeof obj === 'function') { return obj }
+
+    const newObj: T = Object.create(Object.getPrototypeOf(obj))
+
+    for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            newObj[key] = obj[key]
+        }
+    }
+    return newObj
+}
+
 export function setRandomSeed(obj: { toString(): string }) {
     Math.seedrandomSeed(obj.toString())
 }

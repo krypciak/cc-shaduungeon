@@ -46,14 +46,14 @@ export class DungeonConfigMainFactory implements DungeonConfigFactory {
         const dngGenConfig: DungeonGenerateConfig = {
             seed,
             areaInfo,
-            // arm: {
-            //     bPool,
-            //     length: regularBuilders.arr.length / 1.5,
-            //     builderPool: regularBuilders.index,
-            //     endBuilderPool: regularBuilders.index,
-            //     end: ArmEnd.Item,
-            //     itemType: ArmItemType.Tresure,
-            // }
+            //arm: {
+            //    bPool,
+            //    length: regularBuilders.arr.length / 1.5,
+            //    builderPool: regularBuilders.index,
+            //    endBuilderPool: regularBuilders.index,
+            //    end: ArmEnd.Item,
+            //    itemType: ArmItemType.Tresure,
+            //}
             arm: {
                 bPool,
                 length: 1,

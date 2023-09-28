@@ -1,10 +1,11 @@
 import { Dir, MapPoint, EntityRect, Rect, setToClosestSelSide, EntityPoint, DirUtil, MapRect } from '@root/util/pos'
 import { Selection, SelectionMapEntry } from '@root/types'
 import { Room, RoomIO, RoomIODoorLike, RoomIOTpr, Tpr, } from '@root/room/room'
-import { assert } from '@root/util/misc'
+import { assert, shallowCopy } from '@root/util/misc'
 import { MapDoorLike, MapEntity, MapEventTrigger, MapFloorSwitch, MapTransporter } from '@root/util/entity'
 import { RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen } from '@root/room/tunnel-room'
 import { RoomPlaceVars } from '@root/room/map-builder'
+import { ArmRuntime } from '@root/dungeon/dungeon-arm'
 
 enum PuzzleRoomType {
     WholeRoom,
@@ -65,6 +66,7 @@ export class PuzzleRoom extends Room {
     puzzle: PuzzleData
     primaryExit!: RoomIOTpr
     primaryEntarence!: RoomIO
+    origExit!: RoomIOTpr
 
     constructor(
         puzzleSel: Selection,
@@ -175,19 +177,19 @@ export class PuzzleRoom extends Room {
                         dir = DirUtil.flip(dir) /* TeleportGround dir is the opposite of the door for whatever reason */
                     }
 
-                    this.primaryExit = RoomIODoorLike.fromReference(name, dir, newPos, closestTransporter, puzzle.usel.solveCondition)
+                    this.origExit = RoomIODoorLike.fromReference(name, dir, newPos, closestTransporter, puzzle.usel.solveCondition)
                 } else {
-                    this.primaryExit = RoomIODoorLike.fromRoom('Door', this, name, puzzle.end.dir, EntityPoint.fromVec(puzzle.end.pos))
+                    this.origExit = RoomIODoorLike.fromRoom('Door', this, name, puzzle.end.dir, EntityPoint.fromVec(puzzle.end.pos))
                 }
             } else if (puzzle.roomType == PuzzleRoomType.AddWalls) {
-                this.primaryExit = RoomIODoorLike.fromRoom('Door', this, name, puzzle.end.dir, EntityPoint.fromVec(puzzle.end.pos))
+                this.origExit = RoomIODoorLike.fromRoom('Door', this, name, puzzle.end.dir, EntityPoint.fromVec(puzzle.end.pos))
             }
 
-            this.primaryExit.tpr.condition = puzzle.usel.solveConditionUnique
+            this.origExit.tpr.condition = puzzle.usel.solveConditionUnique
         } else {
             throw new Error('not implemented')
         }
-        assert(this.primaryExit, 'primary exit missing?')
+        assert(this.origExit, 'primary exit missing?')
 
         this.sel = { sel: puzzle.usel.sel, poolName: 'puzzle' }
 
@@ -231,18 +233,26 @@ export class PuzzleRoom extends Room {
     pushExit(isEnd: boolean) {
         this.ios = this.ios.filter(io => ! io.toDelete)
         if (isEnd) {
-            const oldIo: RoomIODoorLike = this.primaryExit as RoomIODoorLike
-            const oldTpr: Tpr = this.primaryExit.getTpr()
+            const oldTpr: Tpr = this.origExit.getTpr()
             this.primaryExit = new RoomIOTpr(Tpr.get('puzzle-exit-to-arm', oldTpr.dir,
                 EntityPoint.fromVec(this.puzzle.usel.sel.data.endPos), 'TeleportField', true, oldTpr.condition))
-            if (oldTpr.entity) {
-                oldTpr.entityCondition = 'false'
-                oldTpr.destMap = 'none'
-                oldTpr.destMarker = 'none'
-                this.ios.push(Object.assign(oldIo, { toDelete: true }))
-            }
+        } else {
+            this.primaryExit = this.origExit
         }
         this.ios.push(Object.assign(this.primaryExit, { toDelete: true }))
+    }
+
+    preplace(arm: ArmRuntime, isEnd: boolean): void {
+        if (isEnd) {
+            const origTpr = this.origExit.tpr
+            if (origTpr.entity) {
+                origTpr.entityCondition = 'false'
+                origTpr.destMap = 'none'
+                origTpr.destMarker = 'none'
+                this.ios.push(Object.assign(this.origExit, { toDelete: true }))
+            }
+        }
+        super.preplace(arm, isEnd)
     }
 
     async place(rpv: RoomPlaceVars): Promise<RoomPlaceVars | void> {

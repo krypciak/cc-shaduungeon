@@ -2,9 +2,10 @@ import { MapDoor, MapDoorLike, MapTeleportField, MapTransporter } from '@root/ut
 import { Selection } from '@root/types'
 import { Coll } from '@root/util/map'
 import { Point, Rect, Dir, DirUtil, MapPoint, MapRect, EntityRect, EntityPoint, Dir3d } from '@root/util/pos'
-import { assert, round } from '@root/util/misc'
+import { assert, assertBool, round } from '@root/util/misc'
 import { RoomPlaceVars } from '@root/room/map-builder'
 import { SelectionPools } from '@root/dungeon/dungeon-paths'
+import { ArmRuntime } from '@root/dungeon/dungeon-arm'
 
 const tilesize: number = 16
 
@@ -37,6 +38,10 @@ export namespace Tpr {
             tpr.condition = tpr.condition.replace(/@TARGET_MAP/, tpr.destMap!)
         }
     }
+    export function checkDest(tpr: Tpr) {
+        tpr.destMap != 'none' && assertBool(tpr.destMap === undefined, 'MapBuilder copy fail')
+        tpr.destMarker != 'none' && assertBool(tpr.destMarker === undefined, 'MapBuilder copy fail')
+    }
 }
 
 export interface Tpr {
@@ -57,6 +62,7 @@ export interface TprDoorLike extends Tpr {
     entityType: MapDoorLike.Types
     entity?: MapDoorLike
 }
+
 
 // IO: in-out
 export interface RoomIO {
@@ -150,6 +156,8 @@ export class Room extends MapRect {
             if (io.tunnel) { arr.push(io.tunnel) }
         })
     }
+
+    preplace(_arm: ArmRuntime, _isEnd: boolean) {}
 
     // place functions
     
