@@ -215,7 +215,7 @@ export class Rect {
 
 export class EntityRect extends Rect {
     static multiplier: number = 64
-    private _entityrect: boolean = true
+    _entityrect: boolean = true /* set so you cant assign different types to each other */
 
     static fromxy2(x: number, y: number, x2: number, y2: number): EntityRect {
         return new EntityRect(x, y, x2 - x, y2 - y)
@@ -227,7 +227,7 @@ export class EntityRect extends Rect {
 
 export class MapRect extends Rect {
     static multiplier: number = 4
-    private _maprect: boolean = true
+    _maprect: boolean = true /* set so you cant assign different types to each other */
     
     static fromxy2(x: number, y: number, x2: number, y2: number): MapRect {
         return new MapRect(x, y, x2 - x, y2 - y)
@@ -239,7 +239,7 @@ export class MapRect extends Rect {
 }
 
 export class AreaRect extends Rect {
-    private _arearect: boolean = true
+    _arearect: boolean = true /* set so you cant assign different types to each other */
     static multiplier: number = 1
 
     static fromxy2(x: number, y: number, x2: number, y2: number): AreaRect {
@@ -292,7 +292,7 @@ export class Point {
 
 export class EntityPoint extends Point {
     static multiplier: number = EntityRect.multiplier
-    private _entityPoint: boolean = true
+    _entityPoint: boolean = true /* set so you cant assign different types to each other */
 
     copy(): EntityPoint {
         return new EntityPoint(this.x, this.y)
@@ -309,7 +309,7 @@ export class EntityPoint extends Point {
 
 export class MapPoint extends Point {
     static multiplier: number = MapRect.multiplier
-    private _mapPoint: boolean = true
+    _mapPoint: boolean = true /* set so you cant assign different types to each other */
 
     copy(): MapPoint {
         return new MapPoint(this.x, this.y)
@@ -322,7 +322,7 @@ export class MapPoint extends Point {
 
 export class AreaPoint extends Point {
     static multiplier: number = AreaRect.multiplier
-    private _areaPoint: boolean = true
+    _areaPoint: boolean = true /* set so you cant assign different types to each other */
 
     copy(): AreaPoint {
         return new AreaPoint(this.x, this.y)

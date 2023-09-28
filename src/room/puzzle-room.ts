@@ -1,7 +1,7 @@
 import { Dir, MapPoint, EntityRect, Rect, setToClosestSelSide, EntityPoint, DirUtil, MapRect } from '@root/util/pos'
 import { Selection, SelectionMapEntry } from '@root/types'
 import { Room, RoomIO, RoomIODoorLike, RoomIOTpr, Tpr, } from '@root/room/room'
-import { assert, shallowCopy } from '@root/util/misc'
+import { assert } from '@root/util/misc'
 import { MapDoorLike, MapEntity, MapEventTrigger, MapFloorSwitch, MapTransporter } from '@root/util/entity'
 import { RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen } from '@root/room/tunnel-room'
 import { RoomPlaceVars } from '@root/room/map-builder'
