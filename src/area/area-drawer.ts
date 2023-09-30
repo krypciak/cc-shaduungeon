@@ -242,7 +242,7 @@ export class AreaDrawer extends CCCanvas {
         const colorIndex = this.colorIndex
         const arr = flatOutArmTopDown(dngConfig.arm)
         for (let i = 0; i < arr.length; i++) {
-            const e = arr[i]
+            const e = arr[i].entry
             this.nextColor()
             for (let i = 0; i < e.areaRects.length; i++) {
                 const rect = e.areaRects[i]
@@ -254,7 +254,7 @@ export class AreaDrawer extends CCCanvas {
         this.colorIndex = colorIndex
         this.setColor(startColor)
         for (let i = 0; i < arr.length; i++) {
-            const e = arr[i]
+            const e = arr[i].entry
             this.nextColor()
             for (const exit of Array.isArray(e.lastExit) ? e.lastExit : [e.lastExit]) {
                 this.drawArrow(exit.to(MapPoint), exit.dir)

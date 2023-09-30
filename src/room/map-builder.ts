@@ -4,7 +4,7 @@ import { RoomTheme, RoomThemeConfig } from '@root/room/themes'
 import { CCMap, MapLayer } from '@root/util/map'
 import { Dir, MapPoint, MapRect, PosDir } from '@root/util/pos'
 import { assert, assertBool, deepCopy } from '@root/util/misc'
-import { Room, RoomIO, RoomIOTpr } from '@root/room/room'
+import { Room, RoomIO, RoomIOTpr, Tpr } from '@root/room/room'
 import { getPosDirFromRoomIO } from '@root/room/tunnel-room'
 import { ArmRuntime, ArmRuntimeEntry } from '@root/dungeon/dungeon-arm'
 
@@ -61,17 +61,29 @@ export interface RoomPlaceVars {
 }
 
 export abstract class MapBuilder {
-    static async placeBuilders(entries: (ArmRuntimeEntry & { arm: ArmRuntime })[]): Promise<void[]> {
-        for (let i = 0; i < entries.length; i++) {
-            const b = entries[i].builder
-            b.preplace(entries[i].arm)
-        }
+    static async placeBuilders(entries: { entry: ArmRuntimeEntry, arm: ArmRuntime }[]): Promise<void[]> {
+        let roomPreplaceFunctions = (entries.flatMap(e => {
+            const builder = e.entry.builder
+            assertBool(e.arm.stack.findIndex(e1 => e1.builder === builder) != -1)
+            const isArmEnd: boolean = e.arm.stack.last().builder === builder
+            return builder.rooms.flatMap(r => {
+                r.isArmEnd = isArmEnd
+                r.preplaceFunctions.forEach(e1 => {
+                    e1.func = e1.func.bind(r, e.arm, builder)
+                })
+                return r.preplaceFunctions
+            })}) as ({ order: number, func: () => void }[]))
+            .sort((e1, e2) => e1.order - e2.order)
+        roomPreplaceFunctions.forEach(o => o.func())
+
+        entries.forEach(e => e.entry.builder.preplace(e.arm))
+
         return new Promise<void[]>(async (resolve) => {
             const promises: Promise<void>[] = []
-            for (let i = 0; i < entries.length; i++) {
-                const b = entries[i].builder
+            for (const e of entries) {
+                const b = e.entry.builder
                 promises.push(new Promise<void>((resolve) => {
-                    b.place().then(() => {
+                    b.place(e.arm).then(() => {
                         b.save().then(() => {
                             resolve()
                         })
@@ -140,8 +152,24 @@ export abstract class MapBuilder {
     abstract decideDisplayName(index: number): Promise<string>
 
     preplace(arm: ArmRuntime) {
-        const isEnd: boolean = arm.stack.findIndex(e => e.builder === this) == arm.length
-        this.rooms.forEach(r => r.preplace(arm, isEnd))
+        if (arm.parentArm) {
+            for (const obj1 of this.mapIOs) {
+                const tpr: Tpr = obj1.io.getTpr()
+                if (! tpr.backToArm) { continue }
+                assert(arm.parentArmIndex)
+                const parentArmEndEntry: ArmRuntimeEntry = arm.parentArm.stack.last()
+                tpr.destMap = parentArmEndEntry.builder.path
+                const tfs: RoomIOTpr[] = parentArmEndEntry.builder.getAllTeleportFields()
+                const remoteTpr: Tpr = tfs[arm.parentArmIndex].getTpr()
+                tpr.destMarker = remoteTpr.name
+
+                remoteTpr.destMap = this.path
+                remoteTpr.destMarker = tpr.name
+
+                Tpr.replaceConditionTarget(tpr, remoteTpr)
+                Tpr.replaceConditionTarget(remoteTpr, tpr)
+            }
+        }
     }
 
     /* place functions*/
@@ -177,14 +205,14 @@ export abstract class MapBuilder {
         this.rpv = rpv
     }
 
-    async place() {
+    async place(arm: ArmRuntime) {
         assert(this.path)
 
         this.trimRoomPositions(new MapRect(3, 10, 4, 4))
         this.createEmptyMap()
         assert(this.rpv)
         for (const room of this.rooms.sort((a, b) => a.placeOrder - b.placeOrder)) {
-            const rpv: RoomPlaceVars | void = await room.place(this.rpv)
+            const rpv: RoomPlaceVars | void = await room.place(this.rpv, arm)
             if (rpv) {
                 this.rpv = rpv
             }

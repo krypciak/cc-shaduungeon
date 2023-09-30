@@ -1,16 +1,16 @@
 import { AreaInfo } from '@root/area/area-builder'
 import { Selection } from '@root/types'
 import { getMapDisplayName } from '@root/util/map'
-import { assert, assertBool } from '@root/util/misc'
+import { assertBool } from '@root/util/misc'
 import { Dir, DirUtil, EntityPoint, MapPoint } from '@root/util/pos'
 import { BattleRoom } from '@root/room/battle-room'
 import { MapBuilder } from '@root/room/map-builder'
 import { PuzzleRoom } from '@root/room/puzzle-room'
-import { Room, RoomIOTpr, Tpr } from '@root/room/room'
+import { Room, RoomIOTpr, } from '@root/room/room'
 import { RoomTheme } from '@root/room/themes'
 import { RoomIOTunnelClosed, RoomIOTunnelOpen } from '@root/room/tunnel-room'
-import { SimpleMultipleExitTunnelRoom } from './simple-room'
 import { ArmRuntime } from '@root/dungeon/dungeon-arm'
+import { DungeonIntersectionRoom } from './dungeon-room'
 
 export const exitMarker: string = 'puzzleExit'
 export const entarenceMarker: string = 'battleEntarence'
@@ -112,14 +112,14 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
 
 export class DungeonIntersectionMapBuilder extends MapBuilder {
     exitCount: number = 3
-    simpleRoom: SimpleMultipleExitTunnelRoom
+    simpleRoom: DungeonIntersectionRoom
 
-    entarenceRoom: SimpleMultipleExitTunnelRoom
+    entarenceRoom: DungeonIntersectionRoom
 
-    constructor(areaInfo: AreaInfo, public entDir: Dir, aDir1: Dir, aDir2: Dir, keyDir: Dir) {
+    constructor(areaInfo: AreaInfo, keyCount: number, public entDir: Dir, aDir1: Dir, aDir2: Dir, keyDir: Dir) {
         super(3, areaInfo, RoomTheme.default)
         this.entarenceRoom = this.simpleRoom =
-            new SimpleMultipleExitTunnelRoom(new MapPoint(0, 0), new MapPoint(24, 24), entDir, aDir1, aDir2, keyDir)
+            new DungeonIntersectionRoom(new MapPoint(0, 0), new MapPoint(20, 20), keyCount, entDir, aDir1, aDir2, keyDir)
         this.simpleRoom.pushAllRooms(this.rooms)
         this.simpleRoom.exits.forEach(io => this.mapIOs.push({ io, room: this.simpleRoom }))
         this.setOnWallPositions()
@@ -139,19 +139,7 @@ export class DungeonIntersectionMapBuilder extends MapBuilder {
         if (arm.parentArm) {
             const io: RoomIOTpr = this.simpleRoom.addTeleportField(this.simpleRoom.primaryEntarence, this.simpleRoom.teleportFields!.length)
             this.simpleRoom.ios.push(io)
-            const tpr: Tpr = io.tpr
-            const parentLastBuilder: MapBuilder = arm.parentArm.stack.last().builder
-            const tpf: RoomIOTpr[] = parentLastBuilder.getAllTeleportFields()
-            assert(tpf)
-            const parentTpr: Tpr = tpf[arm.parentArm.arms.indexOf(arm)].tpr
-            tpr.destMap = parentLastBuilder.path
-            tpr.destMarker = parentTpr.name
-
-            parentTpr.destMap = this.path
-            parentTpr.destMarker = tpr.name
-
-            Tpr.replaceCondition(tpr)
-            Tpr.replaceCondition(parentTpr)
+            this.mapIOs.push({ io, room: this.simpleRoom })
         }
         super.preplace(arm)
     }

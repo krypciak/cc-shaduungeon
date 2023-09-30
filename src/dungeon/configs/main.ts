@@ -40,7 +40,7 @@ export class DungeonConfigMainFactory implements DungeonConfigFactory {
         bPool.push(_sb)
         const _db: MapBuilderArrayGenerate = { arr: [], randomize: true, index: index++ }
         DirUtil.forEachUniqueDir4((d1, d2, d3, d4) => 
-            _db.arr.push(Object.assign(new DungeonIntersectionMapBuilder(areaInfo, d1, d2, d3, d4), { exclusive: true })))
+            _db.arr.push(Object.assign(new DungeonIntersectionMapBuilder(areaInfo, 2, d1, d2, d3, d4), { exclusive: true })))
         bPool.push(_db)
 
         const dngGenConfig: DungeonGenerateConfig = {
@@ -61,23 +61,23 @@ export class DungeonConfigMainFactory implements DungeonConfigFactory {
                 endBuilderPool: _db.index,
                 end: ArmEnd.Arm,
                 arms: [{
-                    length: 5,
-                    builderPool: regularBuilders.index,
-                    endBuilderPool: regularBuilders.index,
-                    end: ArmEnd.Item,
-                    itemType: ArmItemType.Tresure,
-                }, {
                     length: 0,
                     builderPool: NaN,
                     endBuilderPool: _sb.index,
                     end: ArmEnd.Item,
-                    itemType: ArmItemType.Tresure,
+                    itemType: ArmItemType.DungeonKey,
                 }, {
                     length: 5,
                     builderPool: regularBuilders.index,
                     endBuilderPool: regularBuilders.index,
                     end: ArmEnd.Item,
-                    itemType: ArmItemType.Tresure,
+                    itemType: ArmItemType.DungeonKey,
+                }, {
+                    length: 5,
+                    builderPool: regularBuilders.index,
+                    endBuilderPool: regularBuilders.index,
+                    end: ArmEnd.Item,
+                    itemType: ArmItemType.DungeonKey,
                 }]
             },
         }

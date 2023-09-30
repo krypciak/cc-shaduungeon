@@ -1,11 +1,12 @@
 import { AreaPoint } from '@root/util/pos'
-import { AreaBuilder, AreaInfo, Item } from '@root/area/area-builder'
+import { AreaBuilder, AreaInfo } from '@root/area/area-builder'
 import { DungeonPaths } from '@root/dungeon/dungeon-paths'
 import { DungeonArranger, DungeonGenerateConfig, } from '@root/dungeon/dungeon-arrange'
 import { MapBuilder } from '@root/room/map-builder'
 import { ArmRuntime, ArmRuntimeEntry, flatOutArmTopDown } from '@root/dungeon/dungeon-arm'
 import { DungeonConfigMainFactory } from '@root/dungeon/configs/main'
 import { DungeonConfigSimpleFactory } from '@root/dungeon/configs/simple'
+import { Item } from '@root/room/item-handler'
 
 export interface DungeonConfigFactory {
     get(areaInfo: AreaInfo, seed: string): Promise<DungeonGenerateConfig>
@@ -48,7 +49,7 @@ export class DungeonBuilder {
         // dnggen.areaDrawer.drawArea(dngConfig, size)
         // dnggen.areaDrawer.copyToClipboard()
 
-        const flatEntries: (ArmRuntimeEntry & { arm: ArmRuntime })[] = flatOutArmTopDown(dngConfig.arm)
+        const flatEntries: { entry: ArmRuntimeEntry, arm: ArmRuntime }[] = flatOutArmTopDown(dngConfig.arm)
 
         await MapBuilder.placeBuilders(flatEntries)
 
@@ -68,7 +69,7 @@ export class DungeonBuilder {
         }
         ig.game.varsChangedDeferred()
 
-        const firstBuilder = flatEntries[dnggen.debug.roomTp].builder
+        const firstBuilder = flatEntries[dnggen.debug.roomTp].entry.builder
         ig.game.teleport(firstBuilder.path!, ig.TeleportPosition.createFromJson({
             marker: firstBuilder.entarenceRoom.primaryEntarence.getTpr().name,
             level: 0,

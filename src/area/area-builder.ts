@@ -1,26 +1,12 @@
 import { AreaPoint, AreaRect, Dir, MapPoint, PosDir, Rect, doesRectArrayOverlapRectArray } from '@root/util/pos'
 import { loadArea } from '@root/util/map'
 import { allLangs, assert, assertBool } from '@root/util/misc'
-import { Room, RoomIOTpr, Tpr, } from '@root/room/room'
+import { Room, Tpr, } from '@root/room/room'
 import { MapBuilder } from '@root/room/map-builder'
 import { DungeonPaths } from '@root/dungeon/dungeon-paths'
 import { AreaViewFloorTypes } from '@root/area/custom-MapAreaContainer'
 import { ArmEnd, ArmRuntime, ArmRuntimeEntry, flatOutArmTopDown, forEveryArmEntry } from '@root/dungeon/dungeon-arm'
-
-export enum Item {
-    FajroKey = 146,
-    FajroKeyMaster = 147,
-    MineMasterKey = 153,
-    ThiefsKey = 154,
-    WhiteKey = 155,
-    RadiantKey = 156,
-    ZirvitarKey = 272,
-    SonajizKey = 319,
-    KryskajoKey = 349,
-    KryskajoMasterKey = 350,
-    KuleroKey = 560,
-    KuleroMasterKey = 624,
-}
+import { Item } from '@root/room/item-handler'
 export class AreaInfo {
     name: string
     constructor(
@@ -117,7 +103,7 @@ export class AreaBuilder {
     builtArea?: sc.AreaLoadable.Data
 
     static trimArm(arm: ArmRuntime, additionalSpace: number = 2): { offset: AreaPoint; size: AreaPoint } {
-        const rects = flatOutArmTopDown(arm).flatMap(e => e.areaRects)
+        const rects = flatOutArmTopDown(arm).flatMap(e => e.entry.areaRects)
         const obj = Rect.getMinMaxPosFromRectArr(rects)
         const minPos: AreaPoint = obj.min as AreaPoint
         const maxPos: AreaPoint = obj.max as AreaPoint
@@ -249,7 +235,7 @@ export class AreaBuilder {
                 prevTpr = prevBuilder.mapIOs[0].io.getTpr()
             }
             const entTpr: Tpr = builder.entarenceRoom.primaryEntarence.getTpr()
-            assertBool(entTpr.destMap === undefined, 'MapBuilder copy fail'); assertBool(entTpr.destMarker === undefined, 'MapBuilder copy fail')
+            Tpr.checkDest(entTpr)
             if (prevTpr === null || prevBuilder === null) {
                 entTpr.condition = 'false'
                 entTpr.destMap = 'none'
@@ -296,25 +282,6 @@ export class AreaBuilder {
 
                 const nextTpr: Tpr = nextBuilder.entarenceRoom.primaryEntarence.getTpr()
                 currTpr.destMarker = nextTpr.name
-            }
-        }
-        if (pa.parentArm) {
-            for (const obj1 of builder.mapIOs) {
-                const tpr: Tpr = obj1.io.getTpr()
-                if (! tpr.backToArm) { continue }
-                if (! pa.parentArm) { continue }
-                assert(pa.parentArmIndex)
-                const parentArmEndEntry: ArmRuntimeEntry = pa.parentArm.stack.last()
-                tpr.destMap = parentArmEndEntry.builder.path
-                const tfs: RoomIOTpr[] = parentArmEndEntry.builder.getAllTeleportFields()
-                const remoteTpr: Tpr = tfs[pa.parentArmIndex].getTpr()
-                tpr.destMarker = remoteTpr.name
-
-                remoteTpr.destMap = builder.path
-                remoteTpr.destMarker = tpr.name
-
-                Tpr.replaceCondition(tpr)
-                Tpr.replaceCondition(remoteTpr)
             }
         }
     }

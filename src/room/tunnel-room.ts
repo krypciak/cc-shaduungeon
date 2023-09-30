@@ -1,6 +1,9 @@
-import { assert } from '@root/util/misc'
-import { Dir, DirUtil, EntityPoint, EntityRect, MapPoint, MapRect, PosDir } from '@root/util/pos'
+import { assert, randomSeedInt } from '@root/util/misc'
+import { Dir, DirUtil, EntityPoint, EntityRect, MapPoint, MapRect, Point, PosDir, Rect } from '@root/util/pos'
 import { Room, RoomIO, RoomIODoorLike, RoomPlaceOrder, RoomType, Tpr } from '@root/room/room'
+import { MapDestructible, MapKeyPanel } from '@root/util/entity'
+import { RoomPlaceVars } from './map-builder'
+import { ArmRuntime } from '@root/dungeon/dungeon-arm'
 
 export class RoomIOTunnel implements RoomIO {
     protected constructor(public tunnel: TunnelRoom) {}
@@ -8,16 +11,16 @@ export class RoomIOTunnel implements RoomIO {
     getTpr(): Tpr { throw new Error('invalid call on RoomIOTunnel') }
 }
 export class RoomIOTunnelOpen extends RoomIOTunnel {
-    private _open = true
-    constructor(parentRoom: Room, dir: Dir, size: MapPoint, exitDir: Dir, setPos: EntityPoint, preffedPos: boolean) {
-        super(new TunnelRoom(parentRoom, dir, size, exitDir, setPos, preffedPos))
+    _open = true
+    constructor(parentRoom: Room, dir: Dir, size: MapPoint, exitDir: Dir, setPos: EntityPoint, preffedPos: boolean, keyCount?: number) {
+        super(new TunnelRoom(parentRoom, dir, size, exitDir, setPos, preffedPos, keyCount))
     }
     getTpr(): Tpr { throw new Error('invalid call on RoomIOTunnelOpen: these dont have tprs') }
 }
 export class RoomIOTunnelClosed extends RoomIOTunnel {
-    private _closed = true
-    constructor(parentRoom: Room, dir: Dir, size: MapPoint, setPos: EntityPoint, preffedPos: boolean) {
-        super(new TunnelRoom(parentRoom, dir, size, null, setPos, preffedPos))
+    _closed = true
+    constructor(parentRoom: Room, dir: Dir, size: MapPoint, setPos: EntityPoint, preffedPos: boolean, keyCount?: number) {
+        super(new TunnelRoom(parentRoom, dir, size, null, setPos, preffedPos, keyCount))
     }
     getTpr(): Tpr {
         assert(this.tunnel.primaryExit)
@@ -27,10 +30,9 @@ export class RoomIOTunnelClosed extends RoomIOTunnel {
 
 export function getPosDirFromRoomIO(baseRoom: Room, io: RoomIO): PosDir<MapPoint> | null {
     const tpr = io.getTpr()
-    if (! DirUtil.dir3dIsDir(tpr.dir)) { return null }
 
     const pos: MapPoint = tpr.pos.to(MapPoint)
-    const dir = DirUtil.dir3dToDir(tpr.dir)
+    const dir = tpr.dir
 
     const room: Room = io instanceof RoomIOTunnel ? io.tunnel : baseRoom
     room.setPosToSide(pos, dir)
@@ -38,6 +40,7 @@ export function getPosDirFromRoomIO(baseRoom: Room, io: RoomIO): PosDir<MapPoint
 }
 
 export class TunnelRoom extends Room {
+    static keyDestSpacing: number = 16
     primaryExit?: RoomIODoorLike
 
     constructor(
@@ -47,11 +50,15 @@ export class TunnelRoom extends Room {
         public exitDir: Dir | null,
         setPos: EntityPoint,
         preffedPos: boolean,
+        public keyCount?: number,
     ) {
         const pos: EntityPoint = setPos.copy()
         preffedPos && parentRoom.to(EntityRect).setPosToSide(pos, dir)
 
         const rect: EntityRect = EntityRect.fromTwoPoints(pos, size.to(EntityPoint))
+        if (keyCount) {
+            rect.height += keyCount * (TunnelRoom.keyDestSpacing + 16)
+        }
         if (! DirUtil.isVertical(dir)) {
             [rect.width, rect.height] = [rect.height, rect.width]
         }
@@ -101,5 +108,37 @@ export class TunnelRoom extends Room {
             if (exitDir == Dir.WEST) { exitWallRect.x -= roomSize.x }
         }
         return MapPoint.fromVec(exitWallRect)
+    }
+
+    async place(rpv: RoomPlaceVars, arm: ArmRuntime): Promise<void | RoomPlaceVars> {
+        super.place(rpv, arm)
+        if (this.keyCount) {
+            const initKeyArrRect: EntityRect = Rect.new(MapRect, this.getSide(DirUtil.flip(this.dir), 0)).to(EntityRect)
+            if (this.dir == Dir.NORTH) { initKeyArrRect.y -= 16 }
+            else if (this.dir == Dir.WEST) { initKeyArrRect.x -= 16 }
+
+            const keyArrLen: number = this.size.x
+            let lastRealKeyPos: number = -1
+            for (let i = 0; i < this.keyCount; i++) {
+                const keyArrPos: EntityPoint = EntityPoint.fromVec(initKeyArrRect)
+                Point.moveInDirection(keyArrPos, this.dir, (16 + TunnelRoom.keyDestSpacing) * i)
+                let keyPos: number = -2
+                do {
+                    keyPos = randomSeedInt(2, keyArrLen)
+                } while (keyPos == lastRealKeyPos)
+
+                const keyDestArr: MapDestructible[] = MapDestructible.keyPillarChain(keyArrPos, rpv.masterLevel, this.dir,
+                    `${this.name}_keyChain`, keyArrLen, keyPos)
+                rpv.entities.push(...keyDestArr)
+                lastRealKeyPos = keyPos
+            }
+
+            const keyPanelPos: EntityPoint = initKeyArrRect.middlePoint(EntityPoint)
+            Point.moveInDirection(keyPanelPos, DirUtil.flip(this.dir), 64)
+            keyPanelPos.x -= 8
+            keyPanelPos.y -= 8
+            const keyPanelE: MapKeyPanel = MapKeyPanel.new(keyPanelPos, rpv.masterLevel, `${this.name}_keyPanel`, 'REGULAR')
+            rpv.entities.push(keyPanelE)
+        }
     }
 }

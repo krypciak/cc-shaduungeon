@@ -85,7 +85,7 @@ export class SimpleMultipleExitTunnelRoom extends Room {
         const rect: EntityRect = Rect.new(MapRect, exit.tunnel.getSide(DirUtil.flip(dir), 0)).to(EntityRect)
         rect.x += rect.width/2 - 12
         rect.y += rect.height/2 - 12
-        const io = new RoomIOTpr(Tpr.get('simple-end-of-arm' + index, DirUtil.dirToDir3d(dir), EntityPoint.fromVec(rect), 'TeleportField', true, 'maps.@TARGET_MAP'))
+        const io = new RoomIOTpr(Tpr.get('simple-end-of-arm' + index, dir, EntityPoint.fromVec(rect), 'TeleportField', true, 'maps.@TARGET_MAP'))
         this.teleportFields!.push(io)
         return io
     }
@@ -109,7 +109,7 @@ export class SimpleTunnelEndRoom extends Room {
             const pos: EntityPoint = getPosOnRectSide(EntityPoint, this.exitDir, this.to(EntityRect))
             Point.moveInDirection(pos, DirUtil.flip(this.exitDir), 32)
             Point.moveInDirection(pos, DirUtil.toRight(this.exitDir), -16)
-            this.primaryExit = new RoomIOTpr(Tpr.get('simple-exit-to-arm', DirUtil.dirToDir3d(this.exitDir), pos, 'TeleportField', true))
+            this.primaryExit = new RoomIOTpr(Tpr.get('simple-exit-to-arm', this.exitDir, pos, 'TeleportField', true))
         } else {
             this.primaryExit = RoomIODoorLike.fromRoom('Door', this, 'simple-exit', this.exitDir)
         }

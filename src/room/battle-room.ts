@@ -2,8 +2,9 @@ import { MapEnemyCounter, MapEventTrigger, MapGlowingLine, MapHiddenBlock, MapTo
 import { assert } from '@root/util/misc'
 import { DirUtil, EntityPoint, EntityRect, MapPoint, MapRect } from '@root/util/pos'
 import { RoomPlaceVars } from '@root/room/map-builder'
-import { Room, RoomIO, RoomIODoorLike, RoomIOTpr } from '@root/room/room'
-import { RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen, TunnelRoom, } from '@root/room/tunnel-room'
+import { Room } from '@root/room/room'
+import { RoomIOTunnel, RoomIOTunnelOpen, TunnelRoom, } from '@root/room/tunnel-room'
+import { ArmRuntime } from '@root/dungeon/dungeon-arm'
 
 export class BattleRoom extends Room {
     primaryEntarence!: RoomIOTunnel
@@ -16,9 +17,9 @@ export class BattleRoom extends Room {
         super('battle', MapRect.fromTwoPoints(pos, size), [true, true, true, true])
     }
 
-    async place(rpv: RoomPlaceVars): Promise<RoomPlaceVars | void> {
+    async place(rpv: RoomPlaceVars, arm: ArmRuntime): Promise<RoomPlaceVars | void> {
         this.sel = { sel: blitzkrieg.util.getSelFromRect(this.to(EntityRect), rpv.map.name, 0), poolName: 'battle'  }
-        super.place(rpv)
+        super.place(rpv, arm)
 
         if (dnggen.debug.decorateBattleRoom) {
             assert(this.primExit, 'closed tunnels not implemented')

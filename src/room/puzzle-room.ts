@@ -1,11 +1,12 @@
-import { Dir, MapPoint, EntityRect, Rect, setToClosestSelSide, EntityPoint, DirUtil, MapRect } from '@root/util/pos'
+import { Dir, MapPoint, EntityRect, Rect, setToClosestSelSide, EntityPoint, DirUtil, MapRect, Point } from '@root/util/pos'
 import { Selection, SelectionMapEntry } from '@root/types'
 import { Room, RoomIO, RoomIODoorLike, RoomIOTpr, Tpr, } from '@root/room/room'
-import { assert } from '@root/util/misc'
-import { MapDoorLike, MapEntity, MapEventTrigger, MapFloorSwitch, MapTransporter } from '@root/util/entity'
+import { assert, assertBool } from '@root/util/misc'
+import { MapChest, MapDoorLike, MapEntity, MapEventTrigger, MapFloorSwitch, MapTeleportField, MapTransporter } from '@root/util/entity'
 import { RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen } from '@root/room/tunnel-room'
-import { RoomPlaceVars } from '@root/room/map-builder'
-import { ArmRuntime } from '@root/dungeon/dungeon-arm'
+import { MapBuilder, RoomPlaceVars } from '@root/room/map-builder'
+import { ArmEnd, ArmRuntime } from '@root/dungeon/dungeon-arm'
+import { ItemHandler } from './item-handler'
 
 enum PuzzleRoomType {
     WholeRoom,
@@ -29,6 +30,7 @@ interface PuzzleData {
         solveCondition?: string
         solveConditionUnique?: string
     }
+    finishCondition: string
     end: {
         pos: Vec3 & { level: number },
         dir: Dir,
@@ -62,11 +64,31 @@ export class PuzzleRoom extends Room {
         }
     }
 
-
     puzzle: PuzzleData
     primaryExit!: RoomIOTpr
     primaryEntarence!: RoomIO
     origExit!: RoomIOTpr
+
+    private oldFC?: string
+
+    private preplaceFuncionsEntries = [{ order: 0, func: function(this: PuzzleRoom, arm: ArmRuntime, builder: MapBuilder) {
+        assert(this.isArmEnd)
+        if (this.isArmEnd) {
+            this.primaryExit.tpr.noPlace = true
+            const origTpr = this.origExit.tpr
+            if (origTpr.entity) {
+                origTpr.entityCondition = 'false'
+                origTpr.destMap = 'none'
+                origTpr.destMarker = 'none'
+                origTpr.noPlace = true
+                this.ios.push(Object.assign(this.origExit, { toDelete: true }))
+            }
+            if (arm.end == ArmEnd.Item) {
+                this.oldFC = this.puzzle.finishCondition
+                this.puzzle.finishCondition = this.primaryExit.tpr.condition = `maps.${builder.path!}.puzzleFinished`
+            }
+        }
+    }}]
 
     constructor(
         puzzleSel: Selection,
@@ -193,10 +215,14 @@ export class PuzzleRoom extends Room {
 
         this.sel = { sel: puzzle.usel.sel, poolName: 'puzzle' }
 
+        puzzle.finishCondition = this.origExit.tpr.condition
+
         /* at this point all variables in PuzzleData are satisfied */
         assert(puzzle.roomType); assert(puzzle.completion); assert(puzzle.map); assert(puzzle.usel)
         assert(puzzle.end); assert(puzzle.start)
         this.puzzle = puzzle as PuzzleData
+
+        this.preplaceFunctions.push(...this.preplaceFuncionsEntries)
     }
 
     offsetBy(offset: MapPoint): void {
@@ -235,35 +261,17 @@ export class PuzzleRoom extends Room {
         if (isEnd) {
             const oldTpr: Tpr = this.origExit.getTpr()
             this.primaryExit = new RoomIOTpr(Tpr.get('puzzle-exit-to-arm', oldTpr.dir,
-                EntityPoint.fromVec(this.puzzle.usel.sel.data.endPos), 'TeleportField', true, oldTpr.condition))
+                EntityPoint.fromVec(this.puzzle.usel.sel.data.endPos), 'TeleportField', true, this.puzzle.finishCondition))
         } else {
             this.primaryExit = this.origExit
         }
         this.ios.push(Object.assign(this.primaryExit, { toDelete: true }))
     }
 
-    preplace(arm: ArmRuntime, isEnd: boolean): void {
-        if (isEnd) {
-            const origTpr = this.origExit.tpr
-            if (origTpr.entity) {
-                origTpr.entityCondition = 'false'
-                origTpr.destMap = 'none'
-                origTpr.destMarker = 'none'
-                this.ios.push(Object.assign(this.origExit, { toDelete: true }))
-            }
-        }
-        super.preplace(arm, isEnd)
-    }
-
-    async place(rpv: RoomPlaceVars): Promise<RoomPlaceVars | void> {
+    async place(rpv: RoomPlaceVars, arm: ArmRuntime): Promise<RoomPlaceVars | void> {
         const puzzle = this.puzzle
         puzzle.usel.sel.map = rpv.map.name
-        rpv = await super.place(rpv) ?? rpv
-     
-        if (puzzle.completion == PuzzleCompletionType.GetTo && puzzle.roomType == PuzzleRoomType.AddWalls) {
-            assert(puzzle.usel.solveConditionUnique)
-            rpv.entities.push(MapFloorSwitch.new(EntityPoint.fromVec(puzzle.end.pos), puzzle.end.pos.level, 'puzzleSolveSwitch', puzzle.usel.solveConditionUnique))
-        }
+        rpv = await super.place(rpv, arm) ?? rpv
 
         if (puzzle.roomType == PuzzleRoomType.WholeRoom) {
             this.placeWallsInEmptySpace(rpv, puzzle.usel.sel)
@@ -273,30 +281,28 @@ export class PuzzleRoom extends Room {
             /* delete all tprs other than the optional tpr (when whole room) */
             puzzle.map = ig.copy(puzzle.map)
             const priExitE: MapEntity | undefined = this.primaryExit.tpr.entity
-            puzzle.map.entities = puzzle.map.entities.filter(
-                e => {
-                    if (MapTransporter.check(e)) {
-                        if (priExitE) {
-                            return e.x == priExitE.x && e.y == priExitE.y
-                        } else  {
-                            return e.settings.condition == 'false'
-                        }
-                    } else {
-                        return true
+            puzzle.map.entities = puzzle.map.entities.filter(e => {
+                if (MapTransporter.check(e)) {
+                    if (priExitE) {
+                        return e.x == priExitE.x && e.y == priExitE.y
+                    } else  {
+                        return e.settings.condition == 'false'
                     }
-                })
+                } else {
+                    return true
+                }
+            });
 
             /* remove all dialog event triggers */
-            puzzle.map.entities = puzzle.map.entities.filter(
-                e => {
-                    if (! e || e.type != 'EventTrigger') { return true }
-                    for (const event of (e as MapEventTrigger).settings.event ?? []) {
-                        if (event.type == 'START_PRIVATE_MSG') {
-                            return false
-                        }
+            puzzle.map.entities = puzzle.map.entities.filter(e => {
+                if (! e || e.type != 'EventTrigger') { return true }
+                for (const event of (e as MapEventTrigger).settings.event ?? []) {
+                    if (event.type == 'START_PRIVATE_MSG') {
+                        return false
                     }
-                    return true
-                })
+                }
+                return true
+            });
 
             const pastePos: EntityPoint = EntityPoint.fromVec(puzzle.usel.sel.size)
             const map: sc.MapModel.Map = await blitzkrieg.selectionCopyManager
@@ -307,8 +313,47 @@ export class PuzzleRoom extends Room {
                     makePuzzlesUnique: true,
                     uniqueId: puzzle.usel.id,
                     uniqueSel: puzzle.usel.sel,
-                })
+                });
             rpv = RoomPlaceVars.fromRawMap(map, rpv.theme, rpv.areaInfo)
+
+            const endPos = puzzle.usel.sel.data.endPos
+            const endPosVec: EntityPoint = EntityPoint.fromVec(endPos)
+            assert(this.isArmEnd)
+            if (this.isArmEnd) {
+                if (arm.end == ArmEnd.Item) {
+                    const chestPos = endPosVec.copy()
+                    Point.moveInDirection(chestPos, DirUtil.flip(this.primaryExit.tpr.dir), 24)
+                    if (DirUtil.isVertical(this.primaryExit.tpr.dir)) {
+                        chestPos.x += 3
+                    }
+                    const chestE: MapChest = ItemHandler.get(rpv.areaInfo, arm.itemType, 'puzzle-exit-item', chestPos, endPos.level, this.oldFC)
+                    const triggerCond = 'map.chest_' + chestE.settings.mapId
+                    rpv.entities.push(chestE)
+
+                    const eventTriggerPos: EntityPoint = endPosVec.copy()
+                    Point.moveInDirection(eventTriggerPos, this.primaryExit.tpr.dir, 24)
+                    const eventTrigger: MapEventTrigger = MapEventTrigger.new(eventTriggerPos, rpv.masterLevel,
+                    'eventTriggerTurnOnTeleportField', 'PARALLEL', triggerCond, 'ONCE', 'true', [
+                        { ignoreSlowDown: false, type: 'WAIT', time: 0.5 },
+                        {
+                            changeType: 'set',
+                            type: 'CHANGE_VAR_BOOL',
+                            varName: puzzle.finishCondition,
+                            value: true,
+                        },
+                    ])
+                    rpv.entities.push(eventTrigger)
+                }
+                assertBool(this.primaryExit.tpr.entityType == 'TeleportField')
+                this.primaryExit.tpr.condition = puzzle.finishCondition
+                const entity: MapTeleportField = Room.placeTpr(rpv, this.primaryExit.tpr) as MapTeleportField
+                entity.level = endPos.level
+            }
+     
+            if (puzzle.completion == PuzzleCompletionType.GetTo && puzzle.roomType == PuzzleRoomType.AddWalls) {
+                assert(puzzle.usel.solveConditionUnique)
+                rpv.entities.push(MapFloorSwitch.new(endPosVec, endPos.level, 'puzzleSolveSwitch', puzzle.usel.solveConditionUnique))
+            }
         }
 
         return rpv

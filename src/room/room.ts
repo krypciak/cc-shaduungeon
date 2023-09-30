@@ -1,9 +1,9 @@
 import { MapDoor, MapDoorLike, MapTeleportField, MapTransporter } from '@root/util/entity'
 import { Selection } from '@root/types'
 import { Coll } from '@root/util/map'
-import { Point, Rect, Dir, DirUtil, MapPoint, MapRect, EntityRect, EntityPoint, Dir3d } from '@root/util/pos'
+import { Point, Rect, Dir, DirUtil, MapPoint, MapRect, EntityRect, EntityPoint, } from '@root/util/pos'
 import { assert, assertBool, round } from '@root/util/misc'
-import { RoomPlaceVars } from '@root/room/map-builder'
+import { MapBuilder, RoomPlaceVars } from '@root/room/map-builder'
 import { SelectionPools } from '@root/dungeon/dungeon-paths'
 import { ArmRuntime } from '@root/dungeon/dungeon-arm'
 
@@ -27,15 +27,18 @@ export function getPosOnRectSide<T extends Point>(init: new (x: number, y: numbe
 }
 
 export namespace Tpr {
-    export function get(name: string, dir: Dir3d, pos: EntityPoint, entityType: MapTransporter.Types, backToArm: boolean = false, condition?: string): Tpr {
+    export function get(name: string, dir: Dir, pos: EntityPoint, entityType: MapTransporter.Types, backToArm: boolean = false, condition?: string): Tpr {
         return { name, dir, pos, entityType, condition, backToArm }
     }
-    export function getReference(name: string, dir: Dir3d, pos: EntityPoint, mtpr: MapTransporter, backToArm: boolean = false, condition?: string): Tpr {
+    export function getReference(name: string, dir: Dir, pos: EntityPoint, mtpr: MapTransporter, backToArm: boolean = false, condition?: string): Tpr {
         return { name, dir, pos, entityType: mtpr.type as MapTransporter.Types, entity: mtpr, entityCondition: condition, backToArm }
     }
-    export function replaceCondition(tpr: Tpr) {
+    
+    export function replaceConditionTarget(tpr: Tpr, targetTpr: Tpr) {
         if (tpr.condition) {
-            tpr.condition = tpr.condition.replace(/@TARGET_MAP/, tpr.destMap!)
+            tpr.condition = tpr.condition
+                .replace(/@TARGET_MAP/, tpr.destMap!)
+                .replace(/@TARGET_CONDITION/, targetTpr.condition!)
         }
     }
     export function checkDest(tpr: Tpr) {
@@ -48,7 +51,7 @@ export interface Tpr {
     name: string
     entityType: MapTransporter.Types
     pos: EntityPoint
-    dir: Dir3d
+    dir: Dir
     condition?: string
     backToArm: boolean
     /* this is only set to a reference to a MapTransporter in the puzzle room (if puzzle type is 'whole room') */
@@ -57,6 +60,7 @@ export interface Tpr {
     /* set after place */
     destMap?: string
     destMarker?: string
+    noPlace?: boolean
 }
 export interface TprDoorLike extends Tpr {
     entityType: MapDoorLike.Types
@@ -87,7 +91,7 @@ export class RoomIODoorLike extends RoomIOTpr {
         return new RoomIODoorLike(room.getDoorLikeTpr(type, name, dir, prefPos))
     }
     static fromReference(name: string, dir: Dir, pos: EntityPoint, doorLike: MapDoorLike, condition: string = ''): RoomIODoorLike {
-        return new RoomIODoorLike(Tpr.getReference(name, DirUtil.dirToDir3d(dir), pos, doorLike, false, condition) as TprDoorLike)
+        return new RoomIODoorLike(Tpr.getReference(name, dir, pos, doorLike, false, condition) as TprDoorLike)
     }
 }
 
@@ -99,6 +103,7 @@ export class Room extends MapRect {
     primaryExit?: RoomIO
 
     teleportFields?: RoomIOTpr[]
+    isArmEnd!: boolean
 
     constructor(
         public name: string,
@@ -146,7 +151,7 @@ export class Room extends MapRect {
         if (dir == Dir.SOUTH) { doorPos.y -= tilesize }
         if (dir == Dir.EAST) { doorPos.x -= tilesize }
 
-        return Tpr.get(name, DirUtil.dirToDir3d(dir), doorPos, type) as TprDoorLike
+        return Tpr.get(name, dir, doorPos, type) as TprDoorLike
     }
 
     pushAllRooms(arr: Room[]) {
@@ -157,11 +162,11 @@ export class Room extends MapRect {
         })
     }
 
-    preplace(_arm: ArmRuntime, _isEnd: boolean) {}
-
+    preplaceFunctions: { order: number, func: ((arm: ArmRuntime, builder: MapBuilder) => void) }[]  = []
     // place functions
     
-    async place(rpv: RoomPlaceVars): Promise<RoomPlaceVars | void> {
+    async place(rpv: RoomPlaceVars, _arm: ArmRuntime): Promise<RoomPlaceVars | void> {
+        assert(this.isArmEnd)
         if (this.placeOrder == RoomPlaceOrder.NoPlace) { return }
         this.placeRoom(rpv, this.addNavMap)
         this.placeTprs(rpv)
@@ -171,32 +176,36 @@ export class Room extends MapRect {
         }
     }
 
+    static placeTpr(rpv: RoomPlaceVars, tpr: Tpr): MapTransporter {
+        if (tpr.entity) {
+            const s = tpr.entity.settings
+            s.name = tpr.name
+            s.map = tpr.destMap!
+            s.marker = tpr.destMarker!
+            s.condition = tpr.entityCondition!
+            return tpr.entity
+        }
+        let e: MapTransporter
+        assert(tpr.destMap); assert(tpr.destMarker)
+        switch (tpr.entityType) {
+            case 'Door':
+                e = MapDoor.new(tpr.pos, rpv.masterLevel, tpr.dir, tpr.name, tpr.destMap, tpr.destMarker, tpr.condition)
+                break
+            case 'TeleportGround': throw new Error('not implemented')
+            case 'TeleportField':
+                e = MapTeleportField.new(tpr.pos, rpv.masterLevel, tpr.dir, tpr.name,
+                    tpr.destMap, tpr.destMarker, 'AR', tpr.name, 'false', tpr.condition)
+                break
+            default: throw new Error('not implemented')
+        }
+        rpv.entities.push(e)
+        return e
+    }
+
     private placeTprs(rpv: RoomPlaceVars) {
         for (const io of this.ios) {
-            if (io instanceof RoomIOTpr) {
-                const tpr = io.getTpr()
-                if (tpr.entity) {
-                    const s = tpr.entity.settings
-                    s.name = tpr.name
-                    s.map = tpr.destMap!
-                    s.marker = tpr.destMarker!
-                    s.condition = tpr.entityCondition!
-                    continue
-                }
-                let e: MapTransporter
-                assert(tpr.destMap); assert(tpr.destMarker)
-                switch (tpr.entityType) {
-                    case 'Door':
-                        e = MapDoor.new(tpr.pos, rpv.masterLevel, DirUtil.dir3dToDir(tpr.dir), tpr.name, tpr.destMap, tpr.destMarker, tpr.condition)
-                        break
-                    case 'TeleportGround': throw new Error('not implemented')
-                    case 'TeleportField':
-                        e = MapTeleportField.new(tpr.pos, rpv.masterLevel, DirUtil.dir3dToDir(tpr.dir), tpr.name,
-                            tpr.destMap, tpr.destMarker, 'AR', tpr.name, 'false', tpr.condition)
-                        break
-                    default: throw new Error('not implemented')
-                }
-                rpv.entities.push(e)
+            if (io instanceof RoomIOTpr && ! io.tpr.noPlace) {
+                Room.placeTpr(rpv, io.tpr)
             }
         }
     }

@@ -8,6 +8,7 @@ export enum ArmEnd {
 }
 export enum ArmItemType {
     DungeonKey,
+    DungeonMasterKey,
     Tresure,
 }
 
@@ -53,7 +54,7 @@ export type ArmRuntime = {
 
     stack: ArmRuntimeEntry[]
     rootArm: boolean
-    flatRuntimeCache?: (ArmRuntimeEntry & { arm: ArmRuntime })[]
+    flatRuntimeCache?: { entry: ArmRuntimeEntry, arm: ArmRuntime }[]
 } & TEMP$BaseArm & (TEMP$ItemArm | TEMP$ArmArm<ArmRuntime>)
 
 export function copyArmRuntime(arm: ArmRuntime): ArmRuntime {
@@ -73,11 +74,11 @@ export function forEveryArmEntry(arm: ArmRuntime, func: (entry: ArmRuntimeEntry,
     return entries
 }
 
-export function flatOutArmTopDown(arm: ArmRuntime, allowCache: boolean = true): (ArmRuntimeEntry & { arm: ArmRuntime })[] {
+export function flatOutArmTopDown(arm: ArmRuntime, allowCache: boolean = true): { entry: ArmRuntimeEntry, arm: ArmRuntime }[] {
     if (allowCache && arm.flatRuntimeCache) { return arm.flatRuntimeCache }
-    const entries: (ArmRuntimeEntry & { arm: ArmRuntime })[] = []
+    const entries: { entry: ArmRuntimeEntry, arm: ArmRuntime }[] = []
     forEveryArmEntry(arm, (entry: ArmRuntimeEntry, arm: ArmRuntime) => {
-        entries.push(Object.assign(entry, { arm }))
+        entries.push({ entry, arm })
     })
     if (arm.rootArm) {
         arm.flatRuntimeCache = entries

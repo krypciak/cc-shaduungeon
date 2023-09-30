@@ -2,8 +2,8 @@ import { AreaInfo } from "@root/area/area-builder"
 import { MapBuilder } from "@root/room/map-builder"
 import { SimpleDoubleTunnelRoom, SimpleMultipleExitTunnelRoom, SimpleOpenTunnelRoom, SimpleRoom, SimpleTunnelEndRoom, SimpleTunnelRoom } from "@root/room/simple-room"
 import { Dir, DirUtil, EntityPoint, MapPoint, MapRect } from "@root/util/pos"
-import { Room, RoomIOTpr, Tpr } from "@root/room/room"
-import { assert, assertBool } from "@root/util/misc"
+import { Room, RoomIOTpr } from "@root/room/room"
+import { assertBool } from "@root/util/misc"
 import { RoomIOTunnelClosed } from "@root/room/tunnel-room"
 import { RoomTheme } from "@root/room/themes"
 import { ArmRuntime } from "@root/dungeon/dungeon-arm"
@@ -188,19 +188,6 @@ export class SimpleMultipleExitMapBuilder extends MapBuilder {
         if (arm.parentArm) {
             const io: RoomIOTpr = this.simpleRoom.addTeleportField(this.simpleRoom.primaryEntarence, this.simpleRoom.teleportFields!.length)
             this.simpleRoom.ios.push(io)
-            const tpr: Tpr = io.tpr
-            const parentLastBuilder: MapBuilder = arm.parentArm.stack.last().builder
-            const tpf: RoomIOTpr[] = parentLastBuilder.getAllTeleportFields()
-            assert(tpf)
-            const parentTpr: Tpr = tpf[arm.parentArm.arms.indexOf(arm)].tpr
-            tpr.destMap = parentLastBuilder.path
-            tpr.destMarker = parentTpr.name
-
-            parentTpr.destMap = this.path
-            parentTpr.destMarker = tpr.name
-
-            Tpr.replaceCondition(tpr)
-            Tpr.replaceCondition(parentTpr)
         }
         super.preplace(arm)
     }

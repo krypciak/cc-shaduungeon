@@ -573,11 +573,84 @@ export class MapEventTrigger implements MapEntity {
         event: any[] = []): MapEventTrigger {
         return new MapEventTrigger(pos.x, pos.y, level, {
             name, mapId: mapId++,
-            eventType, startCondition, triggerType, loadCondition, event
+            eventType, startCondition, triggerType, loadCondition, event,
+            endCondition: 'false'
         })
     }
 }
 
+export class MapChest implements MapEntity {
+    type: 'Chest' = 'Chest'
+
+    constructor(
+        public x: number, 
+        public y: number, 
+        public level: number, 
+        public settings: ig.ENTITY.Chest.Settings) { }
+
+    static new(pos: EntityPoint, level: number, name: string,
+        chestType: keyof typeof sc.CHEST_TYPE, item: number, spawnCondition?: string, amount?: number, trigger?: string): MapChest {
+
+        return new MapChest(pos.x, pos.y, level, {
+            name, mapId: mapId++,
+            chestType,
+            item,
+            amount,
+            trigger,
+            spawnCondition,
+        })
+    }
+}
+
+export class MapDestructible implements MapEntity {
+    type: 'Destructible' = 'Destructible'
+
+    constructor(
+        public x: number, 
+        public y: number, 
+        public level: number, 
+        public settings: ig.ENTITY.Destructible.Settings) { }
+
+    static new(pos: EntityPoint, level: number, name: string, desType: keyof typeof sc.DESTRUCTIBLE_TYPE): MapDestructible {
+        return new MapDestructible(pos.x, pos.y, level, {
+            name, mapId: mapId++,
+            desType
+        })
+    }
+
+    static keyPillarChain(startPos: EntityPoint, level: number, dir: Dir, baseName: string, len: number, realPos: number): MapDestructible[] {
+        const arr: MapDestructible[] = []
+        const pos: EntityPoint = startPos.copy()
+        const vertical: boolean = ! DirUtil.isVertical(dir)
+        const size: number = 16
+        for (let i = 0; i < len; i++) {
+            arr.push(MapDestructible.new(pos, level, `${baseName}_${i}`, (i == realPos - 1) ? 'keyPillar' : 'keyPillarAR'))
+            if (vertical) {
+                pos.y += size
+            } else {
+                pos.x += size
+            }
+        }
+        return arr
+    }
+}
+
+export class MapKeyPanel implements MapEntity {
+    type: 'KeyPanel' = 'KeyPanel'
+
+    constructor(
+        public x: number, 
+        public y: number, 
+        public level: number, 
+        public settings: ig.ENTITY.KeyPanel.Settings) { }
+
+    static new(pos: EntityPoint, level: number, name: string, keyType: 'REGULAR' | 'MASTER'): MapKeyPanel {
+        return new MapKeyPanel(pos.x, pos.y, level, {
+            name, mapId: mapId++,
+            keyType,
+        })
+    }
+}
 
 // boldPntMarker name: 'boldPnt' + index, 
 /*
