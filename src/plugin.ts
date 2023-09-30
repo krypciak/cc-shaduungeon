@@ -89,6 +89,6 @@ export default class DngGen {
         overrideMapAreaContainer()
         poststartGameStart()
 
-        startDnggenGame()
+        // startDnggenGame()
     }
 }
