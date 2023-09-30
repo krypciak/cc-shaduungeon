@@ -28,6 +28,10 @@ jobs:
                   exit 1
                 fi
                 
+
+            - name: Install dependencies
+              run: sudo apt update; sudo apt install npm
+
             - name: Update package.json and ccmod.json
               run: | 
                 sed -i "s/\"version\": \".*\"/\"version\": \"${VERSION}\"/" package.json ccmod.json
