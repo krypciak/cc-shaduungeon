@@ -25,7 +25,7 @@
 	"plugin": "plugin.js",
 	"dependencies": {
 		"input-api": ">=1.0.0",
-		"cc-blitzkrieg": ">=3.0.0",
+		"cc-blitzkrieg": ">=3.0.1",
 		"crosscode": ">=1.4.0",
 		"post-game": ">=1.4.0"
 	}
