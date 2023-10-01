@@ -583,6 +583,7 @@ export class MapEventTrigger implements MapEntity {
 
 export class MapChest implements MapEntity {
     type: 'Chest' = 'Chest'
+    static check(e: sc.MapModel.MapEntity): e is MapChest { return e.type == 'Chest' }
 
     constructor(
         public x: number, 

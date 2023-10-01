@@ -306,6 +306,8 @@ export class PuzzleRoom extends Room {
                 } else if (MapDestructible.check(e)) {
                     if (e.settings.desType == 'keyPillar' || e.settings.desType == 'keyPillarAR') { return false }
                     return true
+                } else if (MapChest.check(e)) {
+                    return false
                 } else {
                     return true
                 }

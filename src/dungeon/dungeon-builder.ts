@@ -7,6 +7,7 @@ import { ArmRuntime, ArmRuntimeEntry, flatOutArmTopDown } from '@root/dungeon/du
 import { DungeonConfigMainFactory } from '@root/dungeon/configs/main'
 import { DungeonConfigSimpleFactory } from '@root/dungeon/configs/simple'
 import { Item } from '@root/room/item-handler'
+import { randomSeedInt } from '@root/util/misc'
 
 export interface DungeonConfigFactory {
     get(areaInfo: AreaInfo, seed: string): Promise<DungeonGenerateConfig>
@@ -34,6 +35,7 @@ export class DungeonBuilder {
         console.log(dngConfig)
         if (! dngConfig.arm) {
             console.log('build failed')
+            await this.build(id, seed + randomSeedInt(0, 9).toString())
             return
         }
 

@@ -104,7 +104,7 @@ export function setRandomSeed(obj: { toString(): string }) {
 }
 
 export function randomSeedInt(min: number, max: number) {
-    return Math.floor(Math.randomSeed() * (max - min) + min)
+    return Math.floor(Math.randomSeed() * (max + 1 - min) + min)
 }
 
 export function shuffleArray<T>(array: T[]): T[] {

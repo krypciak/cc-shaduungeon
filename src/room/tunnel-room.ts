@@ -124,7 +124,7 @@ export class TunnelRoom extends Room {
                 Point.moveInDirection(keyArrPos, this.dir, (16 + TunnelRoom.keyDestSpacing) * i)
                 let keyPos: number = -2
                 do {
-                    keyPos = randomSeedInt(2, keyArrLen)
+                    keyPos = randomSeedInt(2, keyArrLen - 1) 
                 } while (keyPos == lastRealKeyPos)
 
                 const keyDestArr: MapDestructible[] = MapDestructible.keyPillarChain(keyArrPos, rpv.masterLevel, this.dir,

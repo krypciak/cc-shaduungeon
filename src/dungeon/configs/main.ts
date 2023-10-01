@@ -5,9 +5,10 @@ import { DungeonConfigFactory } from '@root/dungeon/dungeon-builder'
 import { PuzzleRoom } from '@root/room/puzzle-room'
 import { Selection } from '@root/types'
 import { MapBuilder } from '@root/room/map-builder'
-import { DungeonIntersectionMapBuilder, PuzzleMapBuilder } from '@root/room/dungeon-map-builder'
+import { BattlePuzzleMapBuilder, DungeonIntersectionMapBuilder, PuzzleMapBuilder } from '@root/room/dungeon-map-builder'
 import { DirUtil } from '@root/util/pos'
 import { SimpleSingleTunnelEndMapBuilder } from '@root/room/simple-map-builder'
+import { randomSeedInt, setRandomSeed } from '@root/util/misc'
 
 export class DungeonConfigMainFactory implements DungeonConfigFactory {
     async get(areaInfo: AreaInfo, seed: string): Promise<DungeonGenerateConfig> {
@@ -20,17 +21,27 @@ export class DungeonConfigMainFactory implements DungeonConfigFactory {
         }
         console.log('puzzles:', puzzles)
 
+
+        setRandomSeed(seed)
         let index: number = 0
         const bPool = []
-        const regularBuilders: MapBuilderArrayGenerate = { arr: [], randomize: true, index: index++ }
+        const puzzleB: MapBuilderArrayGenerate = { arr: [], randomize: true, index: index++ }
+        // const battlePuzzleB: MapBuilderArrayGenerate = { arr: [], randomize: true, index: index++ }
         for (let i = 0; i < puzzles.length; i++) {
             const sel = puzzles[i]
             const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
-            const builder: MapBuilder = new PuzzleMapBuilder(areaInfo, sel, puzzleMap, true, '')
-            regularBuilders.arr.push(Object.assign(builder, { exclusive: true }))
+            let builder: MapBuilder
+            if (randomSeedInt(0, 1) == 0) {
+                builder = new PuzzleMapBuilder(areaInfo, sel, puzzleMap, true, '')
+            } else {
+                builder = new BattlePuzzleMapBuilder(areaInfo, sel, puzzleMap)
+            }
+            puzzleB.arr.push(Object.assign(builder, { exclusive: true }))
         }
-        bPool.push(regularBuilders)
-        
+        bPool.push(puzzleB)
+        // bPool.push(battlePuzzleB)
+
+        bPool.push(puzzleB)
         const _sb: MapBuilderArrayGenerate = { arr: [], randomize: true, index: index++ }
         DirUtil.forEachUniqueDir2((d1, d2) => {
             const b = Object.assign(new SimpleSingleTunnelEndMapBuilder(areaInfo, d1, d2), { exclusive: true })
@@ -38,27 +49,30 @@ export class DungeonConfigMainFactory implements DungeonConfigFactory {
         })
 
         bPool.push(_sb)
-        const _db: MapBuilderArrayGenerate = { arr: [], randomize: true, index: index++ }
+        const _db1: MapBuilderArrayGenerate = { arr: [], randomize: true, index: index++ }
         DirUtil.forEachUniqueDir4((d1, d2, d3, d4) => 
-            _db.arr.push(Object.assign(new DungeonIntersectionMapBuilder(areaInfo, 2, d1, d2, d3, d4), { exclusive: true })))
-        bPool.push(_db)
+            _db1.arr.push(Object.assign(new DungeonIntersectionMapBuilder(areaInfo, 2, d1, d2, d3, d4), { exclusive: true })))
+        bPool.push(_db1)
 
         const dngGenConfig: DungeonGenerateConfig = {
             seed,
             areaInfo,
-            //arm: {
-            //    bPool,
-            //    length: regularBuilders.arr.length / 1.5,
-            //    builderPool: regularBuilders.index,
-            //    endBuilderPool: regularBuilders.index,
-            //    end: ArmEnd.Item,
-            //    itemType: ArmItemType.Tresure,
-            //}
+            /*
+            arm: {
+                bPool,
+                length: battlePuzzleB.arr.length / 1.5,
+                builderPool: battlePuzzleB.index,
+                endBuilderPool: battlePuzzleB.index,
+                end: ArmEnd.Item,
+                itemType: ArmItemType.Tresure,
+            }
+            */
+            /*
             arm: {
                 bPool,
                 length: 1,
-                builderPool: regularBuilders.index,
-                endBuilderPool: _db.index,
+                builderPool: puzzleB.index,
+                endBuilderPool: _db1.index,
                 end: ArmEnd.Arm,
                 arms: [{
                     length: 0,
@@ -68,18 +82,65 @@ export class DungeonConfigMainFactory implements DungeonConfigFactory {
                     itemType: ArmItemType.DungeonKey,
                 }, {
                     length: 5,
-                    builderPool: regularBuilders.index,
-                    endBuilderPool: regularBuilders.index,
+                    builderPool: puzzleB.index,
+                    endBuilderPool: battlePuzzleB.index,
                     end: ArmEnd.Item,
                     itemType: ArmItemType.DungeonKey,
                 }, {
                     length: 5,
-                    builderPool: regularBuilders.index,
-                    endBuilderPool: regularBuilders.index,
+                    builderPool: puzzleB.index,
+                    endBuilderPool: battlePuzzleB.index,
                     end: ArmEnd.Item,
                     itemType: ArmItemType.DungeonKey,
                 }]
             },
+            */
+            ///*
+            arm: {
+                bPool,
+                length: 1,
+                builderPool: puzzleB.index,
+                endBuilderPool: _db1.index,
+                end: ArmEnd.Arm,
+                arms: [{
+                    length: 3,
+                    builderPool: puzzleB.index,
+                    endBuilderPool: _db1.index,
+                    end: ArmEnd.Arm,
+                    arms: [{
+                        length: 0,
+                        builderPool: NaN,
+                        endBuilderPool: _sb.index,
+                        end: ArmEnd.Item,
+                        itemType: ArmItemType.DungeonKey,
+                    }, {
+                        length: 3,
+                        builderPool: puzzleB.index,
+                        endBuilderPool: puzzleB.index,
+                        end: ArmEnd.Item,
+                        itemType: ArmItemType.DungeonKey,
+                    }, {
+                        length: 3,
+                        builderPool: puzzleB.index,
+                        endBuilderPool: puzzleB.index,
+                        end: ArmEnd.Item,
+                        itemType: ArmItemType.DungeonKey,
+                    }]
+                }, {
+                    length: 2,
+                    builderPool: puzzleB.index,
+                    endBuilderPool: puzzleB.index,
+                    end: ArmEnd.Item,
+                    itemType: ArmItemType.DungeonKey,
+                }, {
+                    length: 2,
+                    builderPool: puzzleB.index,
+                    endBuilderPool: puzzleB.index,
+                    end: ArmEnd.Item,
+                    itemType: ArmItemType.DungeonKey,
+                }]
+            },
+            //*/
         }
         return dngGenConfig
     }

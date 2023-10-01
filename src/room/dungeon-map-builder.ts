@@ -24,6 +24,8 @@ export class PuzzleMapBuilder extends MapBuilder {
     exitRoom: PuzzleRoom
     
     puzzleRoom: PuzzleRoom
+
+    prepareCheck: boolean = true
      
     constructor(
         public areaInfo: AreaInfo,
@@ -42,12 +44,12 @@ export class PuzzleMapBuilder extends MapBuilder {
     }
 
     prepareToArrange(dir: Dir, isEnd: boolean): boolean {
-        if (this.puzzleRoom.puzzle.start.dir != DirUtil.flip(dir)) { return false }
+        if (this.prepareCheck && this.puzzleRoom.puzzle.start.dir != DirUtil.flip(dir)) { return false }
 
         this.mapIOs = this.mapIOs.filter(obj => ! obj.toDelete)
         this.exitRoom.pushExit(isEnd)
         this.mapIOs.push({ io: this.puzzleRoom.primaryExit, room: this.puzzleRoom, toDelete: true })
-        this.setOnWallPositions()
+        this.prepareCheck && this.setOnWallPositions()
         return true
     }
 
@@ -85,11 +87,12 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
         this.battleRoom = this.entarenceRoom = new BattleRoom(battlePos, battleSize, battleStartCondition, battleDoneCondition, this.puzzleRoom.primaryEntarence)
     }
 
-    prepareToArrange(dir: Dir): boolean {
+    prepareToArrange(dir: Dir, isEnd: boolean): boolean {
         assertBool(this.puzzleRoom.primaryEntarence instanceof RoomIOTunnelOpen)
         if (dir == this.puzzleRoom.primaryEntarence.tunnel.dir) { return false }
 
-        let a = true; if (a) throw new Error('teleport field not implemented')
+        this.prepareCheck = false
+        super.prepareToArrange(dir, isEnd)
 
         /* make sure the tunnel isn't duplicated */
         const primEnt = this.battleRoom.primaryEntarence
@@ -101,8 +104,8 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
         }
 
         const tunnelSize: MapPoint = new MapPoint(5, 4)
-        this.battleRoom.primaryEntarence = new RoomIOTunnelClosed(this.battleRoom, DirUtil.flip(dir), tunnelSize,
-            this.battleRoom.middlePoint(MapPoint).to(EntityPoint), true)
+        this.battleRoom.primaryEntarence = Object.assign(new RoomIOTunnelClosed(this.battleRoom, DirUtil.flip(dir), tunnelSize,
+            this.battleRoom.middlePoint(MapPoint).to(EntityPoint), true), { toDelete: true })
         this.battleRoom.ios.push(this.battleRoom.primaryEntarence)
         this.battleRoom.pushAllRooms(this.rooms)
         this.setOnWallPositions()
