@@ -2,13 +2,13 @@
 	"id": "cc-shaduungeon",
 	"version": "0.5.1",
 	"title": {
-		"en_US": "shaduungeon",
-		"de_DE": "shaduungeon",
-		"fr_FR": "shaduungeon",
-		"zh_CN": "shaduungeon",
-		"zh_TW": "shaduungeon",
-		"ja_JP": "shaduungeon",
-		"ko_KR": "shaduungeon"
+		"en_US": "Shadunngeon",
+		"de_DE": "Shaduungeon",
+		"fr_FR": "Shaduungeon",
+		"zh_CN": "Shaduungeon",
+		"zh_TW": "Shaduungeon",
+		"ja_JP": "Shaduungeon",
+		"ko_KR": "Shaduungeon"
 	},
 	"description": {
 		"en_US": "Dungeon Generator (WIP)",
