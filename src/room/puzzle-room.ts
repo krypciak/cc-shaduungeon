@@ -2,7 +2,7 @@ import { Dir, MapPoint, EntityRect, Rect, setToClosestSelSide, EntityPoint, DirU
 import { Selection, SelectionMapEntry } from '@root/types'
 import { Room, RoomIO, RoomIODoorLike, RoomIOTpr, Tpr, } from '@root/room/room'
 import { assert, assertBool } from '@root/util/misc'
-import { MapChest, MapDoorLike, MapEntity, MapEventTrigger, MapFloorSwitch, MapTeleportField, MapTransporter } from '@root/util/entity'
+import { MapChest, MapDestructible, MapDoorLike, MapEntity, MapEventTrigger, MapFloorSwitch, MapTeleportField, MapTransporter } from '@root/util/entity'
 import { RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen } from '@root/room/tunnel-room'
 import { MapBuilder, RoomPlaceVars } from '@root/room/map-builder'
 import { ArmEnd, ArmRuntime } from '@root/dungeon/dungeon-arm'
@@ -288,20 +288,20 @@ export class PuzzleRoom extends Room {
                     } else  {
                         return e.settings.condition == 'false'
                     }
+                } else if (MapEventTrigger.check(e)) {
+                    /* remove all dialog event triggers */
+                    for (const event of (e as MapEventTrigger).settings.event ?? []) {
+                        if (event.type == 'START_PRIVATE_MSG') {
+                            return false
+                        }
+                    }
+                    return true
+                } else if (MapDestructible.check(e)) {
+                    if (e.settings.desType == 'keyPillar' || e.settings.desType == 'keyPillarAR') { return false }
+                    return true
                 } else {
                     return true
                 }
-            });
-
-            /* remove all dialog event triggers */
-            puzzle.map.entities = puzzle.map.entities.filter(e => {
-                if (! e || e.type != 'EventTrigger') { return true }
-                for (const event of (e as MapEventTrigger).settings.event ?? []) {
-                    if (event.type == 'START_PRIVATE_MSG') {
-                        return false
-                    }
-                }
-                return true
             });
 
             const pastePos: EntityPoint = EntityPoint.fromVec(puzzle.usel.sel.size)

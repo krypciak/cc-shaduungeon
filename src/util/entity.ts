@@ -100,6 +100,7 @@ export class MapTeleportField implements MapTransporter {
     }
 }
 
+
 export class MapElementPole implements MapEntity {
     type: 'ElementPole' = 'ElementPole'
 
@@ -558,6 +559,7 @@ export class MapMarker implements MapEntity {
 
 export class MapEventTrigger implements MapEntity {
     type: 'EventTrigger' = 'EventTrigger'
+    static check(e: sc.MapModel.MapEntity): e is MapEventTrigger { return e.type == 'EventTrigger' }
 
     constructor(
         public x: number, 
@@ -604,6 +606,7 @@ export class MapChest implements MapEntity {
 
 export class MapDestructible implements MapEntity {
     type: 'Destructible' = 'Destructible'
+    static check(e: sc.MapModel.MapEntity): e is MapDestructible { return e.type == 'Destructible' }
 
     constructor(
         public x: number, 
