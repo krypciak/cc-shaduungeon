@@ -6,18 +6,18 @@ import { overrideMapAreaContainer } from '@root/area/custom-MapAreaContainer'
 import { poststartGameStart, prestartGameStart, startDnggenGame } from '@root/game-start'
 import { DungeonPaths } from '@root/dungeon/dungeon-paths'
 
-declare const vim: VimLogic
-
 declare global {
     const blitzkrieg: Blitzkrieg
     const dnggen: DngGen
+    const vim: VimLogic
     interface Window {
         dnggen: DngGen
+        vim: VimLogic
     }
 }
 
 function addVimBindings() {
-    if (vim) { /* optional dependency https://github.com/krypciak/cc-vim */
+    if (window.vim) { /* optional dependency https://github.com/krypciak/cc-vim */
         const isInGenMap = (ingame: boolean) => ingame && ig.game.mapName.startsWith('dnggen')
         vim.addAlias('dnggen', 'generate-dungeon', 'Generate dungeon', 'global', (seed = '', roomTp: string = '0') => {
             vim.executeString('title-screen')
