@@ -290,7 +290,7 @@ export class PuzzleRoom extends Room {
             /* remove some unwanted entities */
             puzzle.map.entities = puzzle.map.entities.filter(e => {
                 if (MapTransporter.check(e)) {
-                    if (e.settings.condition == 'false') { return true }
+                    if (e.settings.condition == 'false' && e.type != 'TeleportGround') { return true }
                     for (const e1 of keepArr) {
                         if (e.x == e1.x && e.y == e1.y) { return true }
                     }
