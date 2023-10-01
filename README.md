@@ -14,7 +14,8 @@
 | [cc-blitzkrieg](https://github.com/krypciak/cc-blitzkrieg) | **_[Quick download](https://github.com/krypciak/cc-blitzkrieg/releases/latest)_** |
 | [input-api](https://github.com/CCDirectLink/input-api)    | **_[Quick download](https://github.com/CCDirectLink/input-api/releases/latest)_** |  
   
-
+### [cc-vim](https://github.com/krypciak/cc-vim) commands
+- `gen(seed?: string, roomTp?: number)` Generates the dungeon with the specified seed
 
 ## Building
 ```bash
