@@ -9,3 +9,4 @@ json/genPuzzle.json
 *.ccmod
 dist
 node_modules
+icon.png~
