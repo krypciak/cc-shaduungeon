@@ -54,11 +54,11 @@ export class DungeonBuilder {
         await MapBuilder.placeBuilders(flatEntries)
 
         dngPaths.saveConfig()
-
-        blitzkrieg.puzzleSelections.save()
-        blitzkrieg.battleSelections.save()
-
         dngPaths.registerFiles()
+
+        await blitzkrieg.puzzleSelections.save()
+        await blitzkrieg.battleSelections.save()
+
         if (! dnggen.debug.dontFlushCacheOnGen) {
             if (sc.AreaLoadable.cache) {
                 const entry = sc.AreaLoadable.cache[areaInfo.name]

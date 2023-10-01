@@ -318,10 +318,10 @@ export interface Selections {
     newSelEvent: (sel: Selection) => void
     walkInEvent: (sel: Selection) => void
     walkOutEvent: (sel: Selection) => void
-    load(index: number): void
     isSelInPos(sel: Selection, pos: Point): boolean
-    save(): void
-    load(): void
+    save(): Promise<void>
+    load(index: number): Promise<void>
+    loadAll(): Promise<void>
 }
 
 export interface Selection {

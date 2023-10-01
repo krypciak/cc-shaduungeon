@@ -36,7 +36,7 @@ export class DungeonPaths {
             if (! DungeonPaths.registeredIds.has(id)) {
                 const paths = new DungeonPaths(id)
                 if (paths.loadConfig()) {
-                    paths.register()
+                    paths.register(true)
                 } else {
                     return 'dnggen/limbo' /* set the loading map path to a fallback map */
                 }
@@ -121,9 +121,9 @@ export class DungeonPaths {
         return true
     }
 
-    register() {
+    register(loadSelections: boolean = false) {
         this.registerFiles()
-        this.registerSelections()
+        this.registerSelections(loadSelections)
     }
 
     registerFiles() {
@@ -140,13 +140,25 @@ export class DungeonPaths {
         DungeonPaths.registeredIds.add(this.id)
     }
 
-    registerSelections() {
+    registerSelections(load: boolean = false) {
         for (const selEntry of Object.entries(this.config.sels)) {
             const [ poolName, path ] = selEntry
             const pool = (blitzkrieg[poolName + 'Selections'] as Selections)
+            while (pool.jsonfiles.includes(path)) {
+                const indexToDel: number = pool.jsonfiles.indexOf(path)
+                Object.keys(pool.selHashMap).forEach(k => {
+                    const val = pool.selHashMap[k]
+                    if (val.fileIndex == indexToDel) {
+                        delete pool.selHashMap[k]
+                    }
+                })
+                pool.jsonfiles.splice(indexToDel)
+            }
             const index = this.selIndexes[poolName] = pool.jsonfiles.length
             pool.jsonfiles.push(path)
-            pool.load(index)
+            if (load) {
+                pool.load(index)
+            }
         }
     }
 
