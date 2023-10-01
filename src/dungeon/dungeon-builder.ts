@@ -18,6 +18,10 @@ export class DungeonBuilder {
         // configFactory: DungeonConfigFactory = new DungeonConfigSimpleFactory()
         configFactory: DungeonConfigFactory = new DungeonConfigMainFactory()
         ) {
+        if (seed === '') {
+            Math.seedrandomSeed(Math.random().toString())
+            seed = randomSeedInt(0, 99999999).toString()
+        }
         const dngPaths = new DungeonPaths(id)
         dngPaths.registerSelections()
         dngPaths.clearDir()
@@ -78,6 +82,9 @@ export class DungeonBuilder {
             baseZPos: 0,
             size: {x: 0, y: 0}
         }))
+        console.log('------------------------')
+        console.log('SEED: ' + seed)
+        console.log('------------------------')
         // AreaBuilder.openAreaViewerGui(areaInfo.name, flatEntries[0].builder.name!, 0)
     }
 }
