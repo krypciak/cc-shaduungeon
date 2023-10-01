@@ -1,6 +1,6 @@
 {
     "name": "cc-shaduungeon",
-    "version": "0.5.1",
+    "version": "0.5.2",
     "description": "Dungeon Generator (WIP)",
     "scripts": {
         "start": "esbuild --target=es2018 --format=esm --platform=node --bundle --sourcemap=inline --outfile=plugin.js src/plugin.ts",
