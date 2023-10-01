@@ -262,6 +262,11 @@ export class PuzzleRoom extends Room {
             const oldTpr: Tpr = this.origExit.getTpr()
             this.primaryExit = new RoomIOTpr(Tpr.get('puzzle-exit-to-arm', oldTpr.dir,
                 EntityPoint.fromVec(this.puzzle.usel.sel.data.endPos), 'TeleportField', true, this.puzzle.finishCondition))
+            if (oldTpr.entity) {
+                oldTpr.entity.settings.condition = 'false'
+                oldTpr.destMap = 'none'
+                oldTpr.destMarker = 'none'
+            }
         } else {
             this.primaryExit = this.origExit
         }
@@ -280,14 +285,16 @@ export class PuzzleRoom extends Room {
         if (dnggen.debug.pastePuzzle) {
             /* delete all tprs other than the optional tpr (when whole room) */
             puzzle.map = ig.copy(puzzle.map)
-            const priExitE: MapEntity | undefined = this.primaryExit.tpr.entity
+            const keepArr: MapEntity[] = []
+            if (this.primaryExit.tpr.entity) { keepArr.push(this.primaryExit.tpr.entity) }
+            /* remove some unwanted entities */
             puzzle.map.entities = puzzle.map.entities.filter(e => {
                 if (MapTransporter.check(e)) {
-                    if (priExitE) {
-                        return e.x == priExitE.x && e.y == priExitE.y
-                    } else  {
-                        return e.settings.condition == 'false'
+                    if (e.settings.condition == 'false') { return true }
+                    for (const e1 of keepArr) {
+                        if (e.x == e1.x && e.y == e1.y) { return true }
                     }
+                    return false
                 } else if (MapEventTrigger.check(e)) {
                     /* remove all dialog event triggers */
                     for (const event of (e as MapEventTrigger).settings.event ?? []) {
