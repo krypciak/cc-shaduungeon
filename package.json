@@ -13,9 +13,11 @@
         "@types/node": "^20.4.4",
         "@typescript-eslint/eslint-plugin": "^6.2.0",
         "@typescript-eslint/parser": "^6.2.0",
+        "cc-blitzkrieg": "github:krypciak/cc-blitzkrieg",
+        "cc-map-util": "github:krypciak/cc-map-util",
         "cc-vim": "github:krypciak/cc-vim",
         "esbuild": "^0.18.15",
-        "typescript": "^5.1.6",
+        "typescript": "^5.2.2",
         "ultimate-crosscode-typedefs": "github:krypciak/ultimate-crosscode-typedefs"
     }
 }

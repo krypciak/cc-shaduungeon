@@ -1,32 +1,23 @@
-import { Dir, MapPoint, EntityRect, Rect, setToClosestSelSide, EntityPoint, DirUtil, MapRect, Point } from '@root/util/pos'
-import { Selection, SelectionMapEntry } from '@root/types'
+import { Dir, MapPoint, EntityPoint, DirUtil, Point } from 'cc-map-util/pos'
 import { Room, RoomIO, RoomIODoorLike, RoomIOTpr, Tpr, } from '@root/room/room'
-import { assert, assertBool } from '@root/util/misc'
+import { assert, assertBool } from 'cc-map-util/util'
 import { MapChest, MapDestructible, MapDoorLike, MapEntity, MapEventTrigger, MapFloorSwitch, MapTeleportField, MapTransporter } from '@root/util/entity'
 import { RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen } from '@root/room/tunnel-room'
 import { MapBuilder, RoomPlaceVars } from '@root/room/map-builder'
 import { ArmEnd, ArmRuntime } from '@root/dungeon/dungeon-arm'
 import { ItemHandler } from './item-handler'
-
-enum PuzzleRoomType {
-    WholeRoom,
-    AddWalls,
-}
-
-enum PuzzleCompletionType {
-    Normal,
-    GetTo,
-    Item,
-}
+import { setToClosestSelSide } from '@root/util/misc'
+import { PuzzleSelection, } from 'cc-blitzkrieg/src/puzzle-selection'
+import { EntityRect, MapRect, Rect, generateUniqueId } from 'cc-map-util/src/rect'
 
 interface PuzzleData {
-    roomType: PuzzleRoomType
-    completion: PuzzleCompletionType
+    roomType: blitzkrieg.PuzzleRoomType
+    completion: blitzkrieg.PuzzleCompletionType
     map: sc.MapModel.Map
-    sel: Selection
+    sel: PuzzleSelection
     usel: {
         id: number
-        sel: Selection
+        sel: PuzzleSelection
         solveCondition?: string
         solveConditionUnique?: string
     }
@@ -42,19 +33,19 @@ interface PuzzleData {
 }
 
 export class PuzzleRoom extends Room {
-    static puzzleMap: ReadonlyMap<string, Readonly<Readonly<Selection>[]>>
-    static puzzleList: Readonly<Readonly<Selection>[]>
+    static puzzleMap: ReadonlyMap<string, Readonly<Readonly<PuzzleSelection>[]>>
+    static puzzleList: Readonly<Readonly<PuzzleSelection>[]>
 
     static async preloadPuzzleList() {
         if (! PuzzleRoom.puzzleMap) {
-            const puzzleMap = new Map<string, Readonly<Selection>[]>
-            const puzzleList: Readonly<Selection>[] = []
+            const puzzleMap = new Map<string, Readonly<PuzzleSelection>[]>
+            const puzzleList: Readonly<PuzzleSelection>[] = []
             PuzzleRoom.puzzleList = []
-            for (const mapName in blitzkrieg.puzzleSelections.selHashMap) {
-                const entry: SelectionMapEntry = blitzkrieg.puzzleSelections.selHashMap[mapName]
+            for (const mapName in blitzkrieg.sels.puzzle.selMap) {
+                const entry = blitzkrieg.sels.puzzle.selMap[mapName]
                 /* entry is from blitzkrieg puzzle list */
                 if (entry.fileIndex == 0 && entry.sels.length > 0) {
-                    const filtered: Readonly<Selection>[] = entry.sels.filter((sel) => sel.data.type != 'dis').map(e => Object.freeze(e))
+                    const filtered: Readonly<PuzzleSelection>[] = entry.sels.filter((sel) => sel.data.type != 'dis').map(e => Object.freeze(e as PuzzleSelection))
                     puzzleMap.set(mapName, filtered)
                     for (const sel of filtered) { puzzleList.push(Object.freeze(sel)) }
                 }
@@ -91,66 +82,51 @@ export class PuzzleRoom extends Room {
     }}]
 
     constructor(
-        puzzleSel: Selection,
+        puzzleSel: PuzzleSelection,
         puzzleMap: sc.MapModel.Map,
         public enterCondition: string,
     ) {
-        let roomType: PuzzleRoomType
-        switch (puzzleSel.data.type!) {
-            case 'whole room': roomType = PuzzleRoomType.WholeRoom; break
-            case 'add walls': roomType = PuzzleRoomType.AddWalls; break
-            case 'dis': throw new Error('how did a disabled puzzle get here')
-        }
-        let completionType: PuzzleCompletionType
-        switch (puzzleSel.data.completionType!) {
-            case 'normal': completionType = PuzzleCompletionType.Normal; break
-            case 'getTo': completionType = PuzzleCompletionType.GetTo; break
-            case 'item': completionType = PuzzleCompletionType.Item; break
-        }
-
         const puzzle: Partial<PuzzleData> = {
-            roomType,
-            completion: completionType,
+            roomType: puzzleSel.data.type,
+            completion: puzzleSel.data.completionType,
             map: puzzleMap,
             sel: puzzleSel,
         }
         assert(puzzle.sel); assert(puzzle.map);
         /* extract data from original puzzle selection */ {
-        const id = blitzkrieg.util.generateUniqueID()
-        const sel = blitzkrieg.selectionCopyManager
-            .createUniquePuzzleSelection(puzzle.sel, 0, 0, id)
+        const id = generateUniqueId()
+        const sel = puzzle.sel ///blitzkrieg.selectionCopyManager .createUniquePuzzleSelection(puzzle.sel, 0, 0, id)
 
         let solveCondition: string | undefined
         let solveConditionUnique: string | undefined
         switch (puzzle.completion) {
-            case PuzzleCompletionType.Normal:
-                solveCondition = blitzkrieg.puzzleSelectionManager.getPuzzleSolveCondition(puzzle.sel)
+            case blitzkrieg.PuzzleCompletionType.Normal:
+                solveCondition = blitzkrieg.PuzzleSelectionManager.getPuzzleSolveCondition(puzzle.sel)
                 break
-            case PuzzleCompletionType.GetTo:
-                if (puzzle.roomType == PuzzleRoomType.WholeRoom) {
+            case blitzkrieg.PuzzleCompletionType.GetTo:
+                if (puzzle.roomType == blitzkrieg.PuzzleRoomType.WholeRoom) {
                     solveCondition = ''
-                } else if (puzzle.roomType == PuzzleRoomType.AddWalls) {
+                } else if (puzzle.roomType == blitzkrieg.PuzzleRoomType.AddWalls) {
                     solveCondition = 'map.puzzleSolution1'; break
                 }
-            case PuzzleCompletionType.Item:
+            case blitzkrieg.PuzzleCompletionType.Item:
                 solveCondition = undefined
         }
         if (solveCondition) {
             solveConditionUnique = solveCondition
             if (solveCondition && ! solveCondition.includes('_destroyed')) { solveConditionUnique += '_' + id }
         }
-        sel.size = Rect.new(EntityRect, sel.size)
         puzzle.usel = { id, sel, solveCondition, solveConditionUnique }
         } /* end */
 
         /* prepare for super() call */
         let wallSides: boolean[], roomRect: MapRect
-        if (puzzle.roomType == PuzzleRoomType.WholeRoom) {
+        if (puzzle.roomType == blitzkrieg.PuzzleRoomType.WholeRoom) {
             wallSides = [false, false, false, false]
-            roomRect = puzzle.usel.sel.size.to(MapRect)
-        } else if (puzzle.roomType == PuzzleRoomType.AddWalls) {
+            roomRect = Rect.new(MapRect, puzzle.usel.sel.sizeRect)
+        } else if (puzzle.roomType == blitzkrieg.PuzzleRoomType.AddWalls) {
             wallSides = [true, true, true, true]
-            roomRect = puzzle.usel.sel.size.to(MapRect)
+            roomRect = Rect.new(MapRect, puzzle.usel.sel.sizeRect)
             roomRect.extend(3)
         } else { throw new Error('not implemented') }
         /* end */
@@ -158,14 +134,14 @@ export class PuzzleRoom extends Room {
 
         /* set start pos */ {
         const pos: Vec3  & { level: number } = ig.copy(puzzle.usel.sel.data.startPos)
-        const dir: Dir = (puzzle.roomType == PuzzleRoomType.WholeRoom ?
+        const dir: Dir = (puzzle.roomType == blitzkrieg.PuzzleRoomType.WholeRoom ?
             setToClosestSelSide(pos, puzzle.usel.sel) :
             Rect.new(EntityRect, this).setToClosestRectSide(pos)).dir
         puzzle.start = { pos, dir }
         } /* end */
         /* set end pos */ {
         const pos: Vec3  & { level: number } = ig.copy(puzzle.usel.sel.data.endPos)
-        const dir: Dir = (puzzle.roomType == PuzzleRoomType.WholeRoom ?
+        const dir: Dir = (puzzle.roomType == blitzkrieg.PuzzleRoomType.WholeRoom ?
             setToClosestSelSide(pos, puzzle.usel.sel) :
             Rect.new(EntityRect, this).setToClosestRectSide(pos)).dir
 
@@ -173,9 +149,9 @@ export class PuzzleRoom extends Room {
         } /* end */
 
         /* figure out exit io */
-        if (puzzle.completion != PuzzleCompletionType.Item) {
+        if (puzzle.completion != blitzkrieg.PuzzleCompletionType.Item) {
             const name = 'exit'
-            if (puzzle.roomType == PuzzleRoomType.WholeRoom) {
+            if (puzzle.roomType == blitzkrieg.PuzzleRoomType.WholeRoom) {
                 let closestDistance: number = 100000
                 let closestTransporter: MapDoorLike | undefined
                 // check if there's a door near puzzle end
@@ -192,7 +168,7 @@ export class PuzzleRoom extends Room {
                     // console.log('door dist:', closestDistance)
 
                     const newPos: EntityPoint = EntityPoint.fromVec(closestTransporter)
-                    Vec2.sub(newPos, puzzle.sel.size)
+                    Vec2.sub(newPos, puzzle.sel.sizeRect)
 
                     let dir: Dir = DirUtil.flip(DirUtil.convertToDir(closestTransporter.settings.dir))
                     if (closestTransporter.type == 'TeleportGround') {
@@ -203,7 +179,7 @@ export class PuzzleRoom extends Room {
                 } else {
                     this.origExit = RoomIODoorLike.fromRoom('Door', this, name, puzzle.end.dir, EntityPoint.fromVec(puzzle.end.pos))
                 }
-            } else if (puzzle.roomType == PuzzleRoomType.AddWalls) {
+            } else if (puzzle.roomType == blitzkrieg.PuzzleRoomType.AddWalls) {
                 this.origExit = RoomIODoorLike.fromRoom('Door', this, name, puzzle.end.dir, EntityPoint.fromVec(puzzle.end.pos))
             }
 
@@ -240,7 +216,7 @@ export class PuzzleRoom extends Room {
         const dir = puzzle.start.dir
         const size: MapPoint = sizeOrig.copy()
 
-        const preffedPos: boolean = puzzle.roomType == PuzzleRoomType.AddWalls
+        const preffedPos: boolean = puzzle.roomType == blitzkrieg.PuzzleRoomType.AddWalls
         if (! preffedPos) {
             const sidePos: EntityPoint = setPos.copy()
             this.to(EntityRect).setPosToSide(sidePos, dir)
@@ -275,10 +251,10 @@ export class PuzzleRoom extends Room {
 
     async place(rpv: RoomPlaceVars, arm: ArmRuntime): Promise<RoomPlaceVars | void> {
         const puzzle = this.puzzle
-        puzzle.usel.sel.map = rpv.map.name
+        puzzle.usel.sel.mapName = rpv.map.name
         rpv = await super.place(rpv, arm) ?? rpv
 
-        if (puzzle.roomType == PuzzleRoomType.WholeRoom) {
+        if (puzzle.roomType == blitzkrieg.PuzzleRoomType.WholeRoom) {
             this.placeWallsInEmptySpace(rpv, puzzle.usel.sel)
         }
 
@@ -313,16 +289,22 @@ export class PuzzleRoom extends Room {
                 }
             });
 
-            const pastePos: EntityPoint = EntityPoint.fromVec(puzzle.usel.sel.size)
-            const map: sc.MapModel.Map = await blitzkrieg.selectionCopyManager
-                .copySelToMap(ig.copy(rpv.map), puzzle.map, puzzle.sel, pastePos.x, pastePos.y, rpv.map.name, {
-                    disableEntities: false,
-                    mergeLayers: false,
-                    removeCutscenes: true,
-                    makePuzzlesUnique: true,
-                    uniqueId: puzzle.usel.id,
-                    uniqueSel: puzzle.usel.sel,
-                });
+            const pastePos: MapPoint = MapPoint.fromVec(puzzle.usel.sel.sizeRect)
+            const map: sc.MapModel.Map = blitzkrieg.mapUtil.copySelMapAreaTo(rpv.map, puzzle.map, puzzle.sel, pastePos, [], {
+                disableEntities: false,
+                makePuzzlesUnique: true,
+                uniqueId: puzzle.usel.id,
+                // uniqueSel: puzzle.usel.sel,
+            })
+            // const map: sc.MapModel.Map = blitzkrieg.mapUtil.
+            //    copySelToMap(ig.copy(rpv.map), puzzle.map, puzzle.sel, pastePos.x, pastePos.y, rpv.map.name, {
+            //        disableEntities: false,
+            //        mergeLayers: false,
+            //        removeCutscenes: true,
+            //        makePuzzlesUnique: true,
+            //        uniqueId: puzzle.usel.id,
+            //        uniqueSel: puzzle.usel.sel,
+            //    });
             rpv = RoomPlaceVars.fromRawMap(map, rpv.theme, rpv.areaInfo)
 
             const endPos = puzzle.usel.sel.data.endPos
@@ -359,7 +341,7 @@ export class PuzzleRoom extends Room {
                 entity.level = endPos.level
             }
      
-            if (puzzle.completion == PuzzleCompletionType.GetTo && puzzle.roomType == PuzzleRoomType.AddWalls) {
+            if (puzzle.completion == blitzkrieg.PuzzleCompletionType.GetTo && puzzle.roomType == blitzkrieg.PuzzleRoomType.AddWalls) {
                 assert(puzzle.usel.solveConditionUnique)
                 rpv.entities.push(MapFloorSwitch.new(endPosVec, endPos.level, 'puzzleSolveSwitch', puzzle.usel.solveConditionUnique))
             }

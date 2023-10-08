@@ -1,6 +1,7 @@
-import { Dir, DirUtil, EntityPoint, EntityRect, MapPoint, MapRect, Point, Rect } from '@root/util/pos'
+import { Dir, DirUtil, EntityPoint, MapPoint, Point, } from 'cc-map-util/pos'
 import { Room, RoomIODoorLike, RoomIOTpr, Tpr, getPosOnRectSide } from '@root/room/room'
 import { RoomIOTunnelClosed, RoomIOTunnelOpen, } from '@root/room/tunnel-room'
+import { EntityRect, MapRect, Rect } from 'cc-map-util/src/rect'
 
 export class SimpleRoom extends Room {
     primaryEntarence: RoomIODoorLike

@@ -1,12 +1,14 @@
-import { AreaPoint, AreaRect, Dir, MapPoint, PosDir, Rect, doesRectArrayOverlapRectArray } from '@root/util/pos'
-import { loadArea } from '@root/util/map'
-import { allLangs, assert, assertBool } from '@root/util/misc'
+import { AreaPoint, Dir, MapPoint, PosDir, } from 'cc-map-util/pos'
+import { loadArea } from 'cc-map-util/map'
+import { assert, assertBool } from 'cc-map-util/util'
 import { Room, Tpr, } from '@root/room/room'
 import { MapBuilder } from '@root/room/map-builder'
 import { DungeonPaths } from '@root/dungeon/dungeon-paths'
 import { AreaViewFloorTypes } from '@root/area/custom-MapAreaContainer'
 import { ArmEnd, ArmRuntime, ArmRuntimeEntry, flatOutArmTopDown, forEveryArmEntry } from '@root/dungeon/dungeon-arm'
 import { Item } from '@root/room/item-handler'
+import { allLangs } from '@root/util/misc'
+import { AreaRect, Rect, doesRectArrayOverlapRectArray } from 'cc-map-util/src/rect'
 export class AreaInfo {
     name: string
     constructor(

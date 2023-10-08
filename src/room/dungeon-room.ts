@@ -1,6 +1,7 @@
-import { Dir, DirUtil, EntityPoint, EntityRect, MapPoint, MapRect, Rect } from '@root/util/pos'
+import { Dir, DirUtil, EntityPoint, MapPoint, } from 'cc-map-util/pos'
 import { Room, RoomIOTpr, Tpr, } from '@root/room/room'
 import { RoomIOTunnelClosed, } from '@root/room/tunnel-room'
+import { EntityRect, MapRect, Rect } from 'cc-map-util/src/rect'
 
 export class DungeonIntersectionRoom extends Room {
     tunnelSize: MapPoint = new MapPoint(5, 5)

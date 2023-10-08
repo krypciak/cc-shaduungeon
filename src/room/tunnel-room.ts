@@ -1,9 +1,11 @@
-import { assert, randomSeedInt } from '@root/util/misc'
-import { Dir, DirUtil, EntityPoint, EntityRect, MapPoint, MapRect, Point, PosDir, Rect } from '@root/util/pos'
+import { assert } from 'cc-map-util/util'
+import { Dir, DirUtil, EntityPoint, MapPoint, Point, PosDir, } from 'cc-map-util/pos'
 import { Room, RoomIO, RoomIODoorLike, RoomPlaceOrder, RoomType, Tpr } from '@root/room/room'
 import { MapDestructible, MapKeyPanel } from '@root/util/entity'
 import { RoomPlaceVars } from './map-builder'
 import { ArmRuntime } from '@root/dungeon/dungeon-arm'
+import { randomSeedInt } from '@root/util/misc'
+import { EntityRect, MapRect, Rect } from 'cc-map-util/src/rect'
 
 export class RoomIOTunnel implements RoomIO {
     protected constructor(public tunnel: TunnelRoom) {}

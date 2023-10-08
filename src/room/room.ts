@@ -1,11 +1,12 @@
 import { MapDoor, MapDoorLike, MapTeleportField, MapTransporter } from '@root/util/entity'
-import { Selection } from '@root/types'
-import { Coll } from '@root/util/map'
-import { Point, Rect, Dir, DirUtil, MapPoint, MapRect, EntityRect, EntityPoint, } from '@root/util/pos'
-import { assert, assertBool, round } from '@root/util/misc'
+import { Coll } from 'cc-map-util/map'
+import { EntityRect, MapRect, Rect, isVecInRectArr, parseArrAt2d, } from 'cc-map-util/rect'
+import { Point, Dir, DirUtil, MapPoint, EntityPoint } from 'cc-map-util/pos'
+import { assert, assertBool } from 'cc-map-util/util'
 import { MapBuilder, RoomPlaceVars } from '@root/room/map-builder'
-import { SelectionPools } from '@root/dungeon/dungeon-paths'
 import { ArmRuntime } from '@root/dungeon/dungeon-arm'
+import { round } from '@root/util/misc'
+import { Selection } from 'cc-blitzkrieg/src/selection'
 
 const tilesize: number = 16
 
@@ -97,7 +98,7 @@ export class RoomIODoorLike extends RoomIOTpr {
 
 export class Room extends MapRect {
     private addWalls: boolean
-    sel?: { sel: Selection, poolName: SelectionPools }
+    sel?: { sel: Selection, poolName: keyof typeof blitzkrieg.sels }
     ios: (RoomIO & { toDelete?: boolean })[] = []
     primaryEntarence!: RoomIO
     primaryExit?: RoomIO
@@ -133,9 +134,9 @@ export class Room extends MapRect {
         const entityOffset: EntityPoint = offset.to(EntityPoint)
 
         if (this.sel) {
-            const newPos: EntityPoint = EntityPoint.fromVec(this.sel.sel.size)
+            const newPos: EntityPoint = EntityPoint.fromVec(this.sel.sel.sizeRect)
             Vec2.add(newPos, entityOffset)
-            blitzkrieg.util.setSelPos(this.sel.sel, newPos.x, newPos.y)
+            blitzkrieg.SelectionManager.setSelPos(this.sel.sel, newPos.to(MapPoint))
         }
         this.ios.forEach(io => {
             if (io instanceof RoomIOTpr) {
@@ -228,8 +229,8 @@ export class Room extends MapRect {
                     this.placeWall(rpv, new MapPoint(x, this.y), Dir.NORTH)
                 }
             } else if (rpv.tc.addShadows) {
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomLeft!, this.x, this.y - 2)
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomRight!, this.x2() - 2, this.y - 2)
+                parseArrAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomLeft!, this.x, this.y - 2)
+                parseArrAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomRight!, this.x2() - 2, this.y - 2)
                 for (let x = this.x + 2; x < this.x2() - 2; x++) {
                     for (let y = this.y - 2; y < this.y; y++) {
                         rpv.shadow![y][x] = 0
@@ -242,8 +243,8 @@ export class Room extends MapRect {
                     this.placeWall(rpv, new MapPoint(this.x2(), y), Dir.EAST)
                 }
             } else if (rpv.tc.addShadows) {
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopLeft!, this.x2(), this.y)
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomLeft!, this.x2(), this.y2() - 2)
+                parseArrAt2d(rpv.shadow!, rpv.tc.edgeShadowTopLeft!, this.x2(), this.y)
+                parseArrAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomLeft!, this.x2(), this.y2() - 2)
                 for (let y = this.y + 2; y < this.y2() - 2; y++) {
                     for (let x = this.x2(); x < this.x2() + 2; x++) {
                         rpv.shadow![y][x] = 0
@@ -256,8 +257,8 @@ export class Room extends MapRect {
                     this.placeWall(rpv, new MapPoint(x, this.y2()), Dir.SOUTH)
                 }
             } else if (rpv.tc.addShadows) {
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopLeft!, this.x, this.y2())
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopRight!, this.x2() - 2, this.y2())
+                parseArrAt2d(rpv.shadow!, rpv.tc.edgeShadowTopLeft!, this.x, this.y2())
+                parseArrAt2d(rpv.shadow!, rpv.tc.edgeShadowTopRight!, this.x2() - 2, this.y2())
                 for (let x = this.x + 2; x < this.x2() - 2; x++) {
                     for (let y = this.y2(); y < this.y2() + 2; y++) {
                         rpv.shadow![y][x] = 0
@@ -270,8 +271,8 @@ export class Room extends MapRect {
                     this.placeWall(rpv, new MapPoint(this.x, y), Dir.WEST)
                 }
             } else if (rpv.tc.addShadows) {
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowTopRight!, this.x - 2, this.y)
-                blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomRight!, this.x - 2, this.y2() - 2)
+                parseArrAt2d(rpv.shadow!, rpv.tc.edgeShadowTopRight!, this.x - 2, this.y)
+                parseArrAt2d(rpv.shadow!, rpv.tc.edgeShadowBottomRight!, this.x - 2, this.y2() - 2)
                 for (let y = this.y + 2; y < this.y2() - 2; y++) {
                     for (let x = this.x - 2; x < this.x; x++) {
                         rpv.shadow![y][x] = 0
@@ -283,16 +284,16 @@ export class Room extends MapRect {
             if (rpv.tc.addShadows) {
                 // fix shadow corners
                 if (this.wallSides[Dir.NORTH] && this.wallSides[Dir.WEST]) {
-                    blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.cornerShadowTopLeft!, this.x, this.y)
+                    parseArrAt2d(rpv.shadow!, rpv.tc.cornerShadowTopLeft!, this.x, this.y)
                 }
                 if (this.wallSides[Dir.NORTH] && this.wallSides[Dir.EAST]) {
-                    blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.cornerShadowTopRight!, this.x2() - 2, this.y)
+                    parseArrAt2d(rpv.shadow!, rpv.tc.cornerShadowTopRight!, this.x2() - 2, this.y)
                 }
                 if (this.wallSides[Dir.SOUTH] && this.wallSides[Dir.WEST]) {
-                    blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.cornerShadowBottomLeft!, this.x, this.y2() - 2)
+                    parseArrAt2d(rpv.shadow!, rpv.tc.cornerShadowBottomLeft!, this.x, this.y2() - 2)
                 }
                 if (this.wallSides[Dir.SOUTH] && this.wallSides[Dir.EAST]) {
-                    blitzkrieg.util.parseArrayAt2d(rpv.shadow!, rpv.tc.cornerShadowBottomRight!, this.x2() - 2, this.y2() - 2)
+                    parseArrAt2d(rpv.shadow!, rpv.tc.cornerShadowBottomRight!, this.x2() - 2, this.y2() - 2)
                 }
             }
         
@@ -414,7 +415,7 @@ export class Room extends MapRect {
                         const point: MapPoint = new MapPoint(rect.x, y3)
                         const checkPoint: MapPoint = MapPoint.fromVec(point)
                         checkPoint.x -= 1/tilesize
-                        if (! blitzkrieg.puzzleSelections.isSelInPos(sel, checkPoint.to(EntityPoint))) {
+                        if (! isVecInRectArr(checkPoint.to(EntityPoint), sel.bb)) {
                             this.placeWall(rpv, point, Dir.WEST)
                         }
                     }
@@ -424,7 +425,7 @@ export class Room extends MapRect {
                         const point: MapPoint = new MapPoint(rect.x2() + 1, y3)
                         const checkPoint: MapPoint = MapPoint.fromVec(point)
                         checkPoint.x += 1/tilesize
-                        if (! blitzkrieg.puzzleSelections.isSelInPos(sel, checkPoint.to(EntityPoint))) {
+                        if (! isVecInRectArr(checkPoint.to(EntityPoint), sel.bb)) {
                             this.placeWall(rpv, point, Dir.EAST)
                         }
                     }
@@ -437,7 +438,7 @@ export class Room extends MapRect {
                         const point: MapPoint = new MapPoint(x3, rect.y)
                         const checkPoint: MapPoint = MapPoint.fromVec(point)
                         checkPoint.y -= 1/tilesize
-                        if (! blitzkrieg.puzzleSelections.isSelInPos(sel, checkPoint.to(EntityPoint))) {
+                        if (! isVecInRectArr(checkPoint.to(EntityPoint), sel.bb)) {
                             this.placeWall(rpv, point, Dir.NORTH)
                         }
                     }
@@ -447,7 +448,7 @@ export class Room extends MapRect {
                         const point: MapPoint = new MapPoint(x3, rect.y2() + 1)
                         const checkPoint: MapPoint = MapPoint.fromVec(point)
                         checkPoint.x += 1/tilesize
-                        if (! blitzkrieg.puzzleSelections.isSelInPos(sel, checkPoint.to(EntityPoint))) {
+                        if (! isVecInRectArr(checkPoint.to(EntityPoint), sel.bb)) {
                             this.placeWall(rpv, point, Dir.SOUTH)
                         }
                     }

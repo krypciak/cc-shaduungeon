@@ -1,10 +1,11 @@
 import { MapEnemyCounter, MapEventTrigger, MapGlowingLine, MapHiddenBlock, MapTouchTrigger, MapWall } from '@root/util/entity'
-import { assert } from '@root/util/misc'
-import { DirUtil, EntityPoint, EntityRect, MapPoint, MapRect } from '@root/util/pos'
+import { assert } from 'cc-map-util/util'
+import { DirUtil, EntityPoint, MapPoint, } from 'cc-map-util/pos'
 import { RoomPlaceVars } from '@root/room/map-builder'
 import { Room } from '@root/room/room'
 import { RoomIOTunnel, RoomIOTunnelOpen, TunnelRoom, } from '@root/room/tunnel-room'
 import { ArmRuntime } from '@root/dungeon/dungeon-arm'
+import { EntityRect, MapRect } from 'cc-map-util/src/rect'
 
 export class BattleRoom extends Room {
     primaryEntarence!: RoomIOTunnel
@@ -18,7 +19,7 @@ export class BattleRoom extends Room {
     }
 
     async place(rpv: RoomPlaceVars, arm: ArmRuntime): Promise<RoomPlaceVars | void> {
-        this.sel = { sel: blitzkrieg.util.getSelFromRect(this.to(EntityRect), rpv.map.name, 0), poolName: 'battle'  }
+        this.sel = { sel: blitzkrieg.SelectionManager.getSelFromRect(this, rpv.map.name, 0), poolName: 'battle'  }
         super.place(rpv, arm)
 
         if (dnggen.debug.decorateBattleRoom) {

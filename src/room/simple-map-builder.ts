@@ -1,12 +1,13 @@
 import { AreaInfo } from "@root/area/area-builder"
 import { MapBuilder } from "@root/room/map-builder"
 import { SimpleDoubleTunnelRoom, SimpleMultipleExitTunnelRoom, SimpleOpenTunnelRoom, SimpleRoom, SimpleTunnelEndRoom, SimpleTunnelRoom } from "@root/room/simple-room"
-import { Dir, DirUtil, EntityPoint, MapPoint, MapRect } from "@root/util/pos"
+import { Dir, DirUtil, EntityPoint, MapPoint, } from "cc-map-util/pos"
 import { Room, RoomIOTpr } from "@root/room/room"
-import { assertBool } from "@root/util/misc"
+import { assertBool } from "cc-map-util/util"
 import { RoomIOTunnelClosed } from "@root/room/tunnel-room"
 import { RoomTheme } from "@root/room/themes"
 import { ArmRuntime } from "@root/dungeon/dungeon-arm"
+import { MapRect } from "cc-map-util/src/rect"
 
 export class SimpleRoomMapBuilder extends MapBuilder {
     exitCount: number = 1

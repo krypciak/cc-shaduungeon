@@ -1,6 +1,7 @@
 import { MapBuilder } from "@root/room/map-builder"
 import { Room } from "@root/room/room"
-import { AreaPoint, AreaRect, PosDir } from "@root/util/pos"
+import { AreaPoint, PosDir } from "cc-map-util/pos"
+import { AreaRect } from "cc-map-util/src/rect"
 
 export enum ArmEnd {
     Item,

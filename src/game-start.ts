@@ -1,4 +1,4 @@
-import { godlikeStats } from '@root/util/misc'
+import { godlikeStats } from "@root/util/misc";
 
 const ngOptionName = 'dnggen'
 const ngOptionCategory = 'cc-shaduungeon'

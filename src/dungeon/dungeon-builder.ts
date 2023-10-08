@@ -1,4 +1,4 @@
-import { AreaPoint } from '@root/util/pos'
+import { AreaPoint } from 'cc-map-util/pos'
 import { AreaBuilder, AreaInfo } from '@root/area/area-builder'
 import { DungeonPaths } from '@root/dungeon/dungeon-paths'
 import { DungeonArranger, DungeonGenerateConfig, } from '@root/dungeon/dungeon-arrange'
@@ -62,8 +62,8 @@ export class DungeonBuilder {
         dngPaths.saveConfig()
         dngPaths.registerFiles()
 
-        await blitzkrieg.puzzleSelections.save()
-        await blitzkrieg.battleSelections.save()
+        await blitzkrieg.sels.puzzle.save()
+        await blitzkrieg.sels.battle.save()
 
         if (! dnggen.debug.dontFlushCacheOnGen) {
             if (sc.AreaLoadable.cache) {

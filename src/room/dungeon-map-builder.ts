@@ -1,8 +1,7 @@
 import { AreaInfo } from '@root/area/area-builder'
-import { Selection } from '@root/types'
-import { getMapDisplayName } from '@root/util/map'
-import { assertBool } from '@root/util/misc'
-import { Dir, DirUtil, EntityPoint, MapPoint } from '@root/util/pos'
+import { getMapDisplayName } from 'cc-map-util/map'
+import { assertBool } from 'cc-map-util/util'
+import { Dir, DirUtil, EntityPoint, MapPoint } from 'cc-map-util/pos'
 import { BattleRoom } from '@root/room/battle-room'
 import { MapBuilder } from '@root/room/map-builder'
 import { PuzzleRoom } from '@root/room/puzzle-room'
@@ -11,6 +10,7 @@ import { RoomTheme } from '@root/room/themes'
 import { RoomIOTunnelClosed, RoomIOTunnelOpen } from '@root/room/tunnel-room'
 import { ArmRuntime } from '@root/dungeon/dungeon-arm'
 import { DungeonIntersectionRoom } from './dungeon-room'
+import { PuzzleSelection } from 'cc-blitzkrieg'
 
 export const exitMarker: string = 'puzzleExit'
 export const entarenceMarker: string = 'battleEntarence'
@@ -29,7 +29,7 @@ export class PuzzleMapBuilder extends MapBuilder {
      
     constructor(
         public areaInfo: AreaInfo,
-        puzzleSel: Selection,
+        puzzleSel: PuzzleSelection,
         puzzleMap: sc.MapModel.Map,
         closedTunnel: boolean,
         entarenceCondition: string,
@@ -70,7 +70,7 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
 
     constructor(
         public areaInfo: AreaInfo,
-        puzzleSel: Selection,
+        puzzleSel: PuzzleSelection,
         puzzleMap: sc.MapModel.Map,
     ) {
         const battleStartCondition: string = 'tmp.battle1'

@@ -1,54 +1,11 @@
+import { Dir, MapPoint } from 'cc-map-util/pos'
+import { MapLayer, Coll } from 'cc-map-util/map'
+import { assert } from 'cc-map-util/util'
+import { RoomTheme } from '@root/room/themes'
 import { AreaInfo } from '@root/area/area-builder'
 import { RoomPlaceVars } from '@root/room/map-builder'
-import { RoomTheme } from '@root/room/themes'
-import { assert } from '@root/util/misc'
-import { Dir, MapPoint } from '@root/util/pos'
 
-const tilesize: number = 16
-
-export enum Coll {
-    None = 0,
-    Hole = 1,
-    Wall = 2,
-    Floor = 3,
-}
-export type Tileset = 'media/map/collisiontiles-16x16.png' | 'media/map/pathmap-tiles.png' | 'media/map/lightmap-tiles.png'
-                    | 'media/map/dungeon-shadow.png' | 'media/map/cold-dng.png' | 'media/map/rhombus-dungeon2.png'
-
-export class MapLayer implements sc.MapModel.MapLayer {
-    id: number
-    visible: number = 1
-    repeat: boolean = false
-    distance: number = 1
-    yDistance: number = 0
-    tilesize: number = tilesize
-    moveSpeed: Vec2 = { x: 0, y: 0 }
-    data: number[][]
-    lighter: boolean = false
-
-    constructor(public width: number, public height: number, public name: string,
-        public type: sc.MapModel.MapLayerType, public tilesetName: string, 
-        public level: sc.MapModel.MapLayerLevelType, data?: number[][]) {
-
-        this.data = data ?? []
-        this.id = 0
-    }
-
-    fill(tile: number) {
-        for (let y = 0; y < this.height; y++) {
-            this.data[y] = []
-            for (let x = 0; x < this.width; x++) {
-                this.data[y][x] = tile
-            }
-        }
-    }
-
-    toJSON() { return this as sc.MapModel.MapLayer }
-
-    static convertArray(arr: sc.MapModel.MapLayer[]): MapLayer[] {
-        return arr.map((layer) => new MapLayer(layer.width, layer.height, layer.name, layer.type, layer.tilesetName, layer.level, layer.data))
-    }
-}
+const tilesize = 16
 
 export class CCMap implements sc.MapModel.Map {
     screen: Vec2 = { x: 0, y: 0 }
@@ -74,30 +31,30 @@ export class CCMap implements sc.MapModel.Map {
         for (let level = 0; level < levelCount; level++) {
             levels.push({ height: level * tilesize*2 })
 
-            const backgroundLayer = new MapLayer(width, height, 'NEW_BACKGROUND', 'Background', theme.config.tileset, level)
+            const backgroundLayer = new MapLayer(width, height, 'NEW_BACKGROUND', 'Background', theme.config.tileset, level, -10)
             backgroundLayer.fill(level == 0 ? theme.config.blackTile : 0)
             if (level == 0) { background = backgroundLayer.data }
             layers.push(backgroundLayer)
 
             if (level == 0 && theme.config.addShadows) {
-                const shadowLayer = new MapLayer(width, height, 'NEW_SHADOW', 'Background', theme.config.shadowTileset!, level)
+                const shadowLayer = new MapLayer(width, height, 'NEW_SHADOW', 'Background', theme.config.shadowTileset!, level, -10)
                 shadowLayer.fill(0)
                 shadow = shadowLayer.data
                 layers.push(shadowLayer)
             }
-            const collisionLayer = new MapLayer(width, height, 'NEW_COLLISION', 'Collision', 'media/map/collisiontiles-16x16.png', level)
+            const collisionLayer = new MapLayer(width, height, 'NEW_COLLISION', 'Collision', 'media/map/collisiontiles-16x16.png', level, -10)
             collisionLayer.fill(Coll.Wall)
             colls.push(collisionLayer.data)
             layers.push(collisionLayer)
 
-            const navigationLayer = new MapLayer(width, height, 'NEW_NAVIGATION', 'Navigation', 'media/map/pathmap-tiles.png', level)
+            const navigationLayer = new MapLayer(width, height, 'NEW_NAVIGATION', 'Navigation', 'media/map/pathmap-tiles.png', level, -10)
             navigationLayer.fill(0)
             navs.push(navigationLayer.data)
             layers.push(navigationLayer)
         }
 
 
-        const lightLayer = new MapLayer(width, height, 'NEW_LIGHT', 'Light', 'media/map/lightmap-tiles.png', 'last')
+        const lightLayer = new MapLayer(width, height, 'NEW_LIGHT', 'Light', 'media/map/lightmap-tiles.png', 'last', -10)
         lightLayer.fill(0)
         const light: number[][] = lightLayer.data
         layers.push(lightLayer)
@@ -145,36 +102,4 @@ export class Stamp {
         }
         return new Stamp(area, type, { x: pos.x/8, y: pos.y/8 }, level)
     }
-}
-
-
-const mapNameToMapDisplayName: Map<string, string> = new Map<string, string>()
-
-export async function getMapDisplayName(map: sc.MapModel.Map): Promise<string> {
-    return new Promise<string>(async (resolve) => {
-        const mapName = map.name.split('.').join('/')
-        if (mapNameToMapDisplayName.has(mapName)) {
-            resolve(mapNameToMapDisplayName.get(mapName) ?? 'maploadingerror')
-            return
-        }
-        const areaName: string = map.attributes.area
-        const area: sc.AreaLoadable = await loadArea(areaName)
-
-        for (const floor of area.data.floors) {
-            for (const map of floor.maps) {
-                const displayName = map.name.en_US!
-                mapNameToMapDisplayName.set(map.path.split('.').join('/'), displayName)
-            }
-        }
-        resolve(getMapDisplayName(map))
-    })
-}
-
-export async function loadArea(areaName: string): Promise<sc.AreaLoadable> {
-    return new Promise((resolve) => {
-        const area: sc.AreaLoadable = new sc.AreaLoadable(areaName)
-        area.load(() => {
-            resolve(area)
-        })
-    })
 }

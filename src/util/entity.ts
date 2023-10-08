@@ -1,5 +1,6 @@
-import { Dir, DirUtil, EntityPoint, EntityRect, Point } from '@root/util/pos'
+import { Dir, DirUtil, EntityPoint, Point } from 'cc-map-util/src/pos'
 import { allLangs } from './misc'
+import { EntityRect } from 'cc-map-util/src/rect'
 
 let mapId: number = 1000
 

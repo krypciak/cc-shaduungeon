@@ -1,18 +1,14 @@
 import { DungeonBuilder } from '@root/dungeon/dungeon-builder'
-import { VimLogic } from '../node_modules/cc-vim/src/logic'
 import { AreaDrawer } from '@root/area/area-drawer'
-import { Blitzkrieg } from '@root/types'
 import { overrideMapAreaContainer } from '@root/area/custom-MapAreaContainer'
 import { poststartGameStart, prestartGameStart, startDnggenGame } from '@root/game-start'
 import { DungeonPaths } from '@root/dungeon/dungeon-paths'
+import { Mod1 } from 'cc-blitzkrieg/types'
 
 declare global {
-    const blitzkrieg: Blitzkrieg
     const dnggen: DngGen
-    const vim: VimLogic
     interface Window {
         dnggen: DngGen
-        vim: VimLogic
     }
 }
 

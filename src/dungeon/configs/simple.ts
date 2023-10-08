@@ -1,4 +1,4 @@
-import { Dir, DirUtil } from '@root/util/pos'
+import { Dir, DirUtil } from 'cc-map-util/pos'
 import { AreaInfo } from '@root/area/area-builder'
 import { DungeonGenerateConfig, } from '@root/dungeon/dungeon-arrange'
 import { SimpleMultipleExitMapBuilder, SimpleSingleTunnelEndMapBuilder } from '@root/room/simple-map-builder'

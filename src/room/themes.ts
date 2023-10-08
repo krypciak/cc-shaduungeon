@@ -1,4 +1,4 @@
-import { Tileset } from '@root/util/map'
+import { Tileset } from 'cc-map-util/map'
 
 export interface RoomThemeConfig {
     bgm: string

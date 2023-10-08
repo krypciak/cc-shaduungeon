@@ -2,7 +2,8 @@ import { ArmRuntime, flatOutArmTopDown } from '@root/dungeon/dungeon-arm'
 import { DungeonGenerateConfig, } from '@root/dungeon/dungeon-arrange'
 import { Room } from '@root/room/room'
 import { TunnelRoom } from '@root/room/tunnel-room'
-import { AreaPoint, AreaRect, Dir, MapPoint, MapRect, Point, Rect } from '@root/util/pos'
+import { AreaPoint, Dir, MapPoint, Point, } from 'cc-map-util/pos'
+import { AreaRect, MapRect, Rect } from 'cc-map-util/src/rect'
 
 const canvasIndex = 0
 

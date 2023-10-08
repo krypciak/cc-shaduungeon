@@ -1,7 +1,8 @@
 import { AreaBuilder, AreaInfo } from "@root/area/area-builder"
-import { assert, assertBool, randomSeedInt, setRandomSeed, shuffleArray, } from "@root/util/misc"
-import { AreaPoint, Dir, PosDir } from "@root/util/pos"
+import { assert, assertBool, } from "cc-map-util/util"
+import { AreaPoint, Dir, PosDir } from "cc-map-util/pos"
 import { Arm, ArmEnd, ArmRuntime, ArmRuntimeEntry, ExclusiveMapBuilder, MapBuilderPool, copyArmRuntime, copyBuilderPool, } from "@root/dungeon/dungeon-arm"
+import { randomSeedInt, setRandomSeed, shuffleArray } from "@root/util/misc"
 
 export interface DungeonGenerateConfig<T extends Arm = Arm> {
     arm?: T

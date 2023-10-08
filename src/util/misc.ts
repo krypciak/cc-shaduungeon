@@ -1,27 +1,6 @@
-export class Stack<T> {
-    array: T[] = []
-
-    constructor(array: T[] = []) {
-        this.array = [...array]
-    }
-
-    push(elements: T) {
-        this.array.push(elements)
-    }
-    pop(): T {
-        return this.array.splice(this.array.length - 1, 1)[0]
-    }
-    peek(): T {
-        return this.array.last()
-    }
-    shift(): T | undefined {
-        return this.array.shift()
-    }
-    length(): number {
-        return this.array.length
-    }
-}
-
+import { Dir, Point, } from 'cc-map-util/src/pos'
+import { Selection } from 'cc-blitzkrieg/selection'
+import { EntityRect, Rect } from 'cc-map-util/src/rect'
 
 let langUid = 30000
 
@@ -40,18 +19,6 @@ export function allLangs(text: string): ig.LangLabel.Data {
 export function round(num: number): number {
     if (Math.ceil(num) - num < 0.3) { return Math.ceil(num) }
     return Math.floor(num)
-}
-
-export function assert(arg: any, msg: string = ''): asserts arg {
-    if (arg != 0 && ! arg) {
-        throw new Error(`Assertion failed: ${msg}`)
-    }
-}
-
-export function assertBool(arg: boolean, msg: string = ''): asserts arg {
-    if (! arg) {
-        throw new Error(`Assertion failed: ${msg}`)
-    }
 }
 
 export function deepCopy<T>(obj: T, ignoreSet: Set<string> = new Set(), seen = new WeakMap()): T {
@@ -126,4 +93,17 @@ export function godlikeStats() {
     for (let i = 0; i < 400; i++) { sc.model.player.learnSkill(i) }
     for (let i = 0; i < sc.model.player.skillPoints.length; i++) { sc.model.player.skillPoints[i] = 0 }
     sc.model.player.updateStats()
+}
+
+export function setToClosestSelSide(pos: Vec2, sel: Selection): { distance: number, dir: Dir, pos: Vec2 } {
+    let minObj: { distance: number, dir: Dir, pos: Vec2 } = { distance: 10000, dir: 0, pos: new Point(0, 0) }
+    for (let rect of sel.bb) {
+        const obj = Rect.new(EntityRect, rect).setToClosestRectSide({ x: pos.x, y: pos.y })
+        if (obj.distance < minObj.distance) {
+            minObj = obj
+        }
+    }
+    pos.x = minObj.pos.x
+    pos.y = minObj.pos.y
+    return minObj
 }

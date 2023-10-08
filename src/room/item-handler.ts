@@ -1,7 +1,7 @@
 import { AreaInfo } from "@root/area/area-builder";
 import { ArmItemType } from "@root/dungeon/dungeon-arm";
 import { MapChest } from "@root/util/entity";
-import { EntityPoint } from "@root/util/pos";
+import { EntityPoint } from "cc-map-util/pos";
 
 export enum Item {
     FajroKey = 146,

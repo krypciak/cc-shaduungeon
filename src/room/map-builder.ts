@@ -1,12 +1,15 @@
 import { MapEntity } from '@root/util/entity'
 import { AreaInfo } from '@root/area/area-builder'
 import { RoomTheme, RoomThemeConfig } from '@root/room/themes'
-import { CCMap, MapLayer } from '@root/util/map'
-import { Dir, MapPoint, MapRect, PosDir } from '@root/util/pos'
-import { assert, assertBool, deepCopy } from '@root/util/misc'
+import { MapLayer } from 'cc-map-util/map'
+import { Dir, MapPoint, PosDir } from 'cc-map-util/pos'
+import { assert, assertBool } from 'cc-map-util/util'
 import { Room, RoomIO, RoomIOTpr, Tpr } from '@root/room/room'
 import { getPosDirFromRoomIO } from '@root/room/tunnel-room'
 import { ArmRuntime, ArmRuntimeEntry } from '@root/dungeon/dungeon-arm'
+import { CCMap } from '@root/util/map'
+import { deepCopy } from '@root/util/misc'
+import { MapRect } from 'cc-map-util/src/rect'
 
 export namespace RoomPlaceVars {
     export function fromRawMap(map: sc.MapModel.Map, theme: RoomTheme, areaInfo: AreaInfo): RoomPlaceVars {

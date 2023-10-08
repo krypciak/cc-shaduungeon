@@ -3,19 +3,19 @@ import { DungeonGenerateConfig, } from '@root/dungeon/dungeon-arrange'
 import { ArmEnd, ArmItemType, MapBuilderArrayGenerate } from '@root/dungeon/dungeon-arm'
 import { DungeonConfigFactory } from '@root/dungeon/dungeon-builder'
 import { PuzzleRoom } from '@root/room/puzzle-room'
-import { Selection } from '@root/types'
 import { MapBuilder } from '@root/room/map-builder'
 import { BattlePuzzleMapBuilder, DungeonIntersectionMapBuilder, PuzzleMapBuilder } from '@root/room/dungeon-map-builder'
-import { DirUtil } from '@root/util/pos'
+import { DirUtil } from 'cc-map-util/pos'
 import { SimpleSingleTunnelEndMapBuilder } from '@root/room/simple-map-builder'
 import { randomSeedInt, setRandomSeed } from '@root/util/misc'
+import { PuzzleSelection } from 'cc-blitzkrieg'
 
 export class DungeonConfigMainFactory implements DungeonConfigFactory {
     async get(areaInfo: AreaInfo, seed: string): Promise<DungeonGenerateConfig> {
         await PuzzleRoom.preloadPuzzleList()
         const puzzleList = PuzzleRoom.puzzleList
 
-        const puzzles: Readonly<Selection>[] = []
+        const puzzles: Readonly<PuzzleSelection>[] = []
         for (let i = 0; i < puzzleList.length; i++) {
             puzzles.push(puzzleList[i])
         }
@@ -29,7 +29,7 @@ export class DungeonConfigMainFactory implements DungeonConfigFactory {
         // const battlePuzzleB: MapBuilderArrayGenerate = { arr: [], randomize: true, index: index++ }
         for (let i = 0; i < puzzles.length; i++) {
             const sel = puzzles[i]
-            const puzzleMap: sc.MapModel.Map = await blitzkrieg.util.getMapObject(sel.map)
+            const puzzleMap: sc.MapModel.Map = await blitzkrieg.mapUtil.getMapObject(sel.mapName)
             let builder: MapBuilder
             if (randomSeedInt(0, 1) == 0) {
                 builder = new PuzzleMapBuilder(areaInfo, sel, puzzleMap, true, '')

@@ -1,7 +1,8 @@
 import { RoomType } from '@root/room/room'
-import { assert, assertBool } from '@root/util/misc'
-import { Dir, bareRect } from '@root/util/pos'
+import { assert, assertBool } from 'cc-map-util/util'
+import { Dir, } from 'cc-map-util/pos'
 import { GuiHookMapRoomList } from '@root/types'
+import { bareRect } from 'cc-map-util/src/rect'
 
 export enum AreaViewFloorTypes {
     Grid, /* default */

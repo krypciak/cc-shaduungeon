@@ -1,15 +1,12 @@
 import { AreaBuilder } from '@root/area/area-builder'
 import { MapBuilder } from '@root/room/map-builder'
-import { Selection, Selections } from '@root/types'
-import { FsUtil } from '@root/util/fsutil'
-import { assert } from '@root/util/misc'
-
-export type SelectionPools = 'puzzle' | 'battle'
+import { Selection } from 'cc-blitzkrieg/src/selection'
+import { assert } from 'cc-map-util/util'
 
 interface DungeonSaveConfig {
     paths: Record<string, string>
     areaDbEntries: Record<string, sc.MapModel.Area>
-    sels: Record<SelectionPools, string>
+    sels: Record<keyof typeof blitzkrieg.sels, string>
 }
 
 export class DungeonPaths {
@@ -85,38 +82,38 @@ export class DungeonPaths {
     }
 
     clearDir() {
-        FsUtil.mkdirsClear(this.baseDir)
+        blitzkrieg.FsUtil.mkdirsClear(this.baseDir)
     }
 
     saveMap(builder: MapBuilder): Promise<void> {
         assert(builder.rpv)
         console.log('map: ', ig.copy(builder.rpv.map))
-        FsUtil.mkdirs(`${this.mapsDir}/${builder.pathParent}`)
+        blitzkrieg.FsUtil.mkdirs(`${this.mapsDir}/${builder.pathParent}`)
         const path = `${this.mapsDir}/${builder.path}.json`
         const gamePath = `${this.mapsDirGame}/${builder.path}.json`
 
         this.config.paths[gamePath] = path
-        return FsUtil.writeFile(path, builder.rpv.map)
+        return blitzkrieg.FsUtil.writeFile(path, builder.rpv.map)
     }
 
     saveArea(builder: AreaBuilder) {
         assert(builder.builtArea, 'called saveToFile() before finalizing build') 
         assert(builder.dbEntry, 'area db entry not generated')
     
-        FsUtil.mkdirs(this.areaDir)
+        blitzkrieg.FsUtil.mkdirs(this.areaDir)
         const path = this.areaFile
         this.config.paths[this.areaFileGame] = path
         this.config.areaDbEntries[builder.areaInfo.name] = builder.dbEntry
-        FsUtil.writeFileSync(path, builder.builtArea)
+        blitzkrieg.FsUtil.writeFileSync(path, builder.builtArea)
     }
 
     saveConfig() {
-        FsUtil.writeFileSync(this.configFile, this.config)
+        blitzkrieg.FsUtil.writeFileSync(this.configFile, this.config)
     }
 
     loadConfig(): boolean {
-        if (! FsUtil.doesFileExist(this.configFile)) { return false }
-        this.config = JSON.parse(FsUtil.readFileSync(this.configFile))
+        if (! blitzkrieg.FsUtil.doesFileExist(this.configFile)) { return false }
+        this.config = JSON.parse(blitzkrieg.FsUtil.readFileSync(this.configFile))
 
         return true
     }
@@ -142,33 +139,30 @@ export class DungeonPaths {
 
     registerSelections(load: boolean = false) {
         for (const selEntry of Object.entries(this.config.sels)) {
-            const [ poolName, path ] = selEntry
-            const pool = (blitzkrieg[poolName + 'Selections'] as Selections)
-            while (pool.jsonfiles.includes(path)) {
-                const indexToDel: number = pool.jsonfiles.indexOf(path)
-                Object.keys(pool.selHashMap).forEach(k => {
-                    const val = pool.selHashMap[k]
+            const [ poolName, path ] = selEntry as [keyof typeof blitzkrieg.sels, string]
+            const pool: SelectionManager = blitzkrieg.sels[poolName] as SelectionManager
+            while (pool.jsonFiles.includes(path)) {
+                const indexToDel: number = pool.jsonFiles.indexOf(path)
+                Object.keys(pool.selMap).forEach(k => {
+                    const val = pool.selMap[k]
                     if (val.fileIndex == indexToDel) {
-                        delete pool.selHashMap[k]
+                        delete pool.selMap[k]
                     }
                 })
-                pool.jsonfiles.splice(indexToDel)
+                pool.jsonFiles.splice(indexToDel)
             }
-            const index = this.selIndexes[poolName] = pool.jsonfiles.length
-            pool.jsonfiles.push(path)
+            const index = this.selIndexes[poolName] = pool.jsonFiles.length
+            pool.jsonFiles.push(path)
             if (load) {
                 pool.load(index)
             }
         }
     }
 
-    addSelectionToPool(poolName: SelectionPools, sel: Selection) {
+    addSelectionToPool(poolName: keyof typeof blitzkrieg.sels, sel: Selection) {
         const index: number = this.selIndexes[poolName]
         if (index === undefined) { throw new Error('pool name doesnt exist: ' + poolName) }
-        const pool: Selections = blitzkrieg[poolName + 'Selections'] as Selections
-        pool.setSelHashMapEntry(sel.map, {
-            sels: [ sel ],
-            fileIndex: index,
-        })
+        const pool: SelectionManager = blitzkrieg.sels[poolName] as SelectionManager
+        pool.setMapEntry(sel.mapName, new SelectionMapEntry([ sel ], index))
     }
 }
