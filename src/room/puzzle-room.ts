@@ -7,12 +7,12 @@ import { MapBuilder, RoomPlaceVars } from '@root/room/map-builder'
 import { ArmEnd, ArmRuntime } from '@root/dungeon/dungeon-arm'
 import { ItemHandler } from './item-handler'
 import { setToClosestSelSide } from '@root/util/misc'
-import { PuzzleSelection, } from 'cc-blitzkrieg/src/puzzle-selection'
+import type { PuzzleSelection, PuzzleRoomType, PuzzleCompletionType } from 'cc-blitzkrieg/src/puzzle-selection'
 import { EntityRect, MapRect, Rect, generateUniqueId } from 'cc-map-util/src/rect'
 
 interface PuzzleData {
-    roomType: blitzkrieg.PuzzleRoomType
-    completion: blitzkrieg.PuzzleCompletionType
+    roomType: PuzzleRoomType
+    completion: PuzzleCompletionType
     map: sc.MapModel.Map
     sel: PuzzleSelection
     usel: {

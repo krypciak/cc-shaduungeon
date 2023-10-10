@@ -1,5 +1,5 @@
 import { Dir, Point, } from 'cc-map-util/src/pos'
-import { Selection } from 'cc-blitzkrieg/selection'
+import type { Selection } from 'cc-blitzkrieg/types/selection'
 import { EntityRect, Rect } from 'cc-map-util/src/rect'
 
 let langUid = 30000

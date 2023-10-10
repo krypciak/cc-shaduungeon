@@ -8,7 +8,7 @@ import { BattlePuzzleMapBuilder, DungeonIntersectionMapBuilder, PuzzleMapBuilder
 import { DirUtil } from 'cc-map-util/pos'
 import { SimpleSingleTunnelEndMapBuilder } from '@root/room/simple-map-builder'
 import { randomSeedInt, setRandomSeed } from '@root/util/misc'
-import { PuzzleSelection } from 'cc-blitzkrieg'
+import type { PuzzleSelection } from 'cc-blitzkrieg/types/puzzle-selection'
 
 export class DungeonConfigMainFactory implements DungeonConfigFactory {
     async get(areaInfo: AreaInfo, seed: string): Promise<DungeonGenerateConfig> {

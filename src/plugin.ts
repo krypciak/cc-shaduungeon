@@ -3,7 +3,7 @@ import { AreaDrawer } from '@root/area/area-drawer'
 import { overrideMapAreaContainer } from '@root/area/custom-MapAreaContainer'
 import { poststartGameStart, prestartGameStart, startDnggenGame } from '@root/game-start'
 import { DungeonPaths } from '@root/dungeon/dungeon-paths'
-import { Mod1 } from 'cc-blitzkrieg/types'
+import { Mod1 } from 'cc-blitzkrieg/src/types'
 
 declare global {
     const dnggen: DngGen

@@ -1,6 +1,7 @@
 import { AreaBuilder } from '@root/area/area-builder'
 import { MapBuilder } from '@root/room/map-builder'
 import { Selection } from 'cc-blitzkrieg/src/selection'
+import type { SelectionManager } from 'cc-blitzkrieg/types/selection'
 import { assert } from 'cc-map-util/util'
 
 interface DungeonSaveConfig {
@@ -163,6 +164,6 @@ export class DungeonPaths {
         const index: number = this.selIndexes[poolName]
         if (index === undefined) { throw new Error('pool name doesnt exist: ' + poolName) }
         const pool: SelectionManager = blitzkrieg.sels[poolName] as SelectionManager
-        pool.setMapEntry(sel.mapName, new SelectionMapEntry([ sel ], index))
+        pool.setMapEntry(sel.mapName, new blitzkrieg.SelectionMapEntry([ sel ], index))
     }
 }

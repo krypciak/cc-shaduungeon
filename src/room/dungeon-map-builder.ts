@@ -10,7 +10,7 @@ import { RoomTheme } from '@root/room/themes'
 import { RoomIOTunnelClosed, RoomIOTunnelOpen } from '@root/room/tunnel-room'
 import { ArmRuntime } from '@root/dungeon/dungeon-arm'
 import { DungeonIntersectionRoom } from './dungeon-room'
-import { PuzzleSelection } from 'cc-blitzkrieg'
+import type { PuzzleSelection } from 'cc-blitzkrieg/types/puzzle-selection'
 
 export const exitMarker: string = 'puzzleExit'
 export const entarenceMarker: string = 'battleEntarence'
