@@ -4,6 +4,7 @@ import { overrideMapAreaContainer } from '@root/area/custom-MapAreaContainer'
 import { poststartGameStart, prestartGameStart, startDnggenGame } from '@root/game-start'
 import { DungeonPaths } from '@root/dungeon/dungeon-paths'
 import { Mod1 } from 'cc-blitzkrieg/src/types'
+import { godlikeStats } from './util/misc'
 
 declare global {
     const dnggen: DngGen
@@ -47,6 +48,8 @@ export default class DngGen {
     mod: Mod1
     dungeonBuilder!: DungeonBuilder
     areaDrawer!: AreaDrawer
+
+    godStats = godlikeStats
 
     debug: DngGenDebug = {
         /* if all all true everything should be as intended */

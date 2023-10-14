@@ -86,6 +86,10 @@ export function shuffleArray<T>(array: T[]): T[] {
 }
 
 export function godlikeStats() {
+    for (const k of Object.keys(sc.model.player.core) as unknown as sc.PLAYER_CORE[]) {
+        sc.model.player.core[k] = true
+    }
+
     sc.model.player.setSpLevel(4)
     sc.model.player.setLevel(99)
     sc.model.player.equip = {head:657,leftArm:577,rightArm:607,torso:583,feet:596}
