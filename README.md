@@ -11,7 +11,7 @@
 
 | Dependencies |  |
 | --------------------------------------- | --------------------------------------- |
-| [cc-blitzkrieg](https://github.com/krypciak/cc-blitzkrieg) | **_[Quick download](https://github.com/krypciak/cc-blitzkrieg/releases/latest)_** |
+| [cc-blitzkrieg v0.3.5](https://github.com/krypciak/cc-blitzkrieg) | **_[Quick download](https://github.com/krypciak/cc-blitzkrieg/releases/tag/v0.3.5)_** |
 | [input-api](https://github.com/CCDirectLink/input-api)    | **_[Quick download](https://github.com/CCDirectLink/input-api/releases/latest)_** |  
   
 ### [cc-vim](https://github.com/krypciak/cc-vim) commands
