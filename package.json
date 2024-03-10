@@ -5,11 +5,13 @@
     "scripts": {
         "start": "esbuild --target=es2018 --format=esm --platform=node --bundle --sourcemap=inline --outfile=plugin.js src/plugin.ts",
         "watch": "esbuild --target=es2018 --format=esm --platform=node --bundle --sourcemap=inline --watch --outfile=plugin.js src/plugin.ts",
-        "build": "esbuild --target=es2018 --format=esm --platform=node --bundle --outfile='plugin.js' 'src/plugin.ts'"
+        "build": "esbuild --target=es2018 --format=esm --platform=node --bundle --outfile='plugin.js' 'src/plugin.ts'",
+        "format": "prettier ./src -w; npx prettier ./assets -w --tab-width 4 --no-semi --print-width 500 --bracket-same-line"
     },
     "author": "krypek",
     "license": "GPLv3",
     "devDependencies": {
+        "@types/jquery": "^3.5.29",
         "@types/node": "^20.4.4",
         "@typescript-eslint/eslint-plugin": "^6.2.0",
         "@typescript-eslint/parser": "^6.2.0",
@@ -17,6 +19,7 @@
         "cc-map-util": "github:krypciak/cc-map-util",
         "cc-vim": "github:krypciak/cc-vim",
         "esbuild": "^0.18.15",
+        "nax-ccuilib": "github:conorlawton/nax-ccuilib",
         "typescript": "^5.2.2",
         "ultimate-crosscode-typedefs": "github:krypciak/ultimate-crosscode-typedefs"
     }

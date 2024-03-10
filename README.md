@@ -21,10 +21,10 @@
 ```bash
 git clone https://github.com/krypciak/cc-shaduungeon
 cd cc-shaduungeon
-npm install
+pnpm install
 # you can switch to the main branch if you want
 # git checkout main
-npm run start
+pnpm run start
 # this should return no errors (hopefully)
 npx tsc
 ```
