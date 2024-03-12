@@ -4,19 +4,25 @@ on:
     workflow_dispatch:
     push:
         branches:
-          - dev
-
+            - dev
 
 jobs:
     build:
         runs-on: ubuntu-latest
 
         steps:
-            # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-            - uses: actions/checkout@v2
-            
-            - name: Install dependencies
-              run: sudo apt update; sudo apt install npm
+            - uses: actions/checkout@v4
+
+            - name: Install Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+
+            - uses: pnpm/action-setup@v3
+              name: Install pnpm
+              with:
+                  version: 8
+                  run_install: false
 
             - name: Compile
-              run: npm install; npm run build
+              run: pnpm install; pnpm run start
