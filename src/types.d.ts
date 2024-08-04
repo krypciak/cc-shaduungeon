@@ -13,7 +13,7 @@ declare global {
 
     namespace sc {
         interface NEW_GAME_OPTIONS {
-            dnggen: sc.NewGameOption;
+            dnggen: sc.NewGameOption
         }
     }
     namespace ig {
@@ -24,7 +24,7 @@ declare global {
 }
 /* custom area related */
 export type GuiHookMapRoomList = ig.GuiHook & {
-    gui: { floor: sc.AreaLoadable.Floor, room: sc.AreaRoomBounds, unlocked: boolean }
+    gui: { floor: sc.AreaLoadable.Floor; room: sc.AreaRoomBounds; unlocked: boolean }
 }
 
 declare global {
@@ -37,28 +37,30 @@ declare global {
             interface Floor {
                 type?: AreaViewFloorTypes
             }
-            type FloorCustom = ({
-                type?: undefined | AreaViewFloorTypes.Grid
-                level: number
-                name: ig.LangLabel.Data
-                tiles: number[][]
-                maps: Map[]
-                connections: Connection[]
-                icons: Icon[]
-                landmarks: Landmark[]
-            } | {
-                type: AreaViewFloorTypes.RoomList
-                level: number
-                name: ig.LangLabel.Data
-                tiles: number[][]
-                maps: sc.AreaLoadable.MapRoomList[]
-                connections: sc.AreaLoadable.ConnectionRoomList[]
-                icons: Icon[]
-                landmarks: Landmark[]
-                size?: Vec2
-                rooms?: sc.AreaRoomBounds[]
-                connections: sc.AreaLoadable.ConnectionRoomList[]
-            })
+            type FloorCustom =
+                | {
+                      type?: undefined | AreaViewFloorTypes.Grid
+                      level: number
+                      name: ig.LangLabel.Data
+                      tiles: number[][]
+                      maps: Map[]
+                      connections: Connection[]
+                      icons: Icon[]
+                      landmarks: Landmark[]
+                  }
+                | {
+                      type: AreaViewFloorTypes.RoomList
+                      level: number
+                      name: ig.LangLabel.Data
+                      tiles: number[][]
+                      maps: sc.AreaLoadable.MapRoomList[]
+                      connections: sc.AreaLoadable.ConnectionRoomList[]
+                      icons: Icon[]
+                      landmarks: Landmark[]
+                      size?: Vec2
+                      rooms?: sc.AreaRoomBounds[]
+                      connections: sc.AreaLoadable.ConnectionRoomList[]
+                  }
             interface Map {
                 // unused??
                 minZ?: number
@@ -75,7 +77,7 @@ declare global {
             interface MapRoomList extends sc.AreaLoadable.Map {
                 rects: MapRoomListRect[]
                 id: number
-                min: Vec2 
+                min: Vec2
                 max: Vec2
             }
             interface ConnectionRoomList {
@@ -114,7 +116,7 @@ declare global {
         /* MapFloor */
         interface MapFloor extends ig.GuiElementBase {
             floor: sc.AreaLoadable.FloorCustom
-            name: string 
+            name: string
             nameGui: string
             rooms: sc.AreaRoomBounds[]
             activeRoom: sc.AreaRoomBounds | null
@@ -133,7 +135,7 @@ declare global {
         var MapFloor: MapFloorConstructor
         /* MapFloor end */
         /* MapArea */
-        interface MapArea extends ig.GuiElementBase { }
+        interface MapArea extends ig.GuiElementBase {}
         interface MapAreaConstructor extends ImpactClass<MapArea> {
             new (): MapArea
         }
@@ -142,7 +144,7 @@ declare global {
         /* MapNameGui */
         interface MapNameGui extends ig.BoxGui {
             text: string
-            
+
             setText(text: string, wait?: any, skip?: boolean): void
         }
         interface MapNameGuiConstructor extends ImpactClass<MapNameGui> {
@@ -199,14 +201,21 @@ declare global {
         }
         /* MenuModel end */
         /* MapCurrentRoomWrapper */
-        interface MapCurrentRoomWrapper extends ig.GuiElementBase { }
+        interface MapCurrentRoomWrapper extends ig.GuiElementBase {}
         interface MapCurrentRoomWrapperConstructor extends ImpactClass<MapCurrentRoomWrapper> {
-            new(hook: ig.GuiHook | { pos: Vec2, size: Vec2 }): MapCurrentRoomWrapper
+            new (hook: ig.GuiHook | { pos: Vec2; size: Vec2 }): MapCurrentRoomWrapper
         }
         var MapCurrentRoomWrapper: MapCurrentRoomWrapperConstructor
 
         interface AREA_CONNECTIONS_TYPE1 {
-            x: number; y: number; w: number; h: number; ox: number; oy: number; w2: number; h2: number
+            x: number
+            y: number
+            w: number
+            h: number
+            ox: number
+            oy: number
+            w2: number
+            h2: number
         }
         interface AREA_CONNECTIONS_TYPE {
             first: sc.AREA_CONNECTIONS_TYPE1
@@ -237,7 +246,7 @@ declare global {
                 fragment?: unknown,
                 fragmentAlpha?: number,
                 filtered?: unknown
-            ): void;
+            ): void
         }
     }
 }

@@ -1,8 +1,8 @@
 import { ArmRuntime, flatOutArmTopDown } from '@root/dungeon/dungeon-arm'
-import { DungeonGenerateConfig, } from '@root/dungeon/dungeon-arrange'
+import { DungeonGenerateConfig } from '@root/dungeon/dungeon-arrange'
 import { Room } from '@root/room/room'
 import { TunnelRoom } from '@root/room/tunnel-room'
-import { AreaPoint, Dir, MapPoint, Point, } from 'cc-map-util/pos'
+import { AreaPoint, Dir, MapPoint, Point } from 'cc-map-util/pos'
 import { AreaRect, MapRect, Rect } from 'cc-map-util/src/rect'
 
 const canvasIndex = 0
@@ -21,7 +21,7 @@ export class CCCanvas {
     htmlWindow: string
     canvasId: string
 
-    constructor(public external: boolean) { 
+    constructor(public external: boolean) {
         this.divId = `div_custon_canvas_${canvasIndex}`
         this.canvasId = `custon_canvas_${canvasIndex}`
         this.htmlDiv = `
@@ -39,7 +39,7 @@ export class CCCanvas {
             ">
                 <canvas id="${this.canvasId}" style="
                     display: block;
-                    ${external ? "" : "width: 100%; height: 100%;"}
+                    ${external ? '' : 'width: 100%; height: 100%;'}
                 "></canvas>
             </div> 
         `
@@ -62,7 +62,7 @@ export class CCCanvas {
             this.hide()
             this.window = undefined
         }
-        this.window = window.open("", "_blank")!
+        this.window = window.open('', '_blank')!
         this.window.document.write(this.htmlWindow)
 
         this.div = this.window.document.getElementById(this.divId) as HTMLDivElement
@@ -74,8 +74,7 @@ export class CCCanvas {
         })
     }
 
-    resizeEvent() {
-    }
+    resizeEvent() {}
 
     initInternal() {
         document.body.insertAdjacentHTML('beforeend', this.htmlDiv)
@@ -104,7 +103,7 @@ export class CCCanvas {
         }
         this.visible = true
     }
-    
+
     clear(newPos: Point = new Point(this.canvas.width / this.scale, this.canvas.height / this.scale)) {
         this.canvas.width = newPos.x * this.scale
         this.canvas.height = newPos.y * this.scale
@@ -124,16 +123,11 @@ export class CCCanvas {
         const ctx = this.canvas.getContext('2d')!
         ctx.imageSmoothingEnabled = false
         ctx.lineWidth = this.scale
-        const r: Rect = new Rect(
-            rect.x*this.scale,
-            rect.y*this.scale,
-            rect.width*this.scale,
-            rect.height*this.scale,
-        )
+        const r: Rect = new Rect(rect.x * this.scale, rect.y * this.scale, rect.width * this.scale, rect.height * this.scale)
         ctx.strokeRect(r.x, r.y, r.width, r.height)
 
         if (bgColor) {
-            Vec2.addC(r, ctx.lineWidth/2)
+            Vec2.addC(r, ctx.lineWidth / 2)
             r.width -= ctx.lineWidth
             r.height -= ctx.lineWidth
             const colorBackup = this.color
@@ -142,7 +136,7 @@ export class CCCanvas {
             this.setColor(colorBackup)
         }
     }
-    
+
     drawArrow(pos: Point, dir: Dir) {
         const ctx = this.canvas.getContext('2d')!
         ctx.beginPath()
@@ -150,23 +144,23 @@ export class CCCanvas {
         Vec2.mulF(pos, this.scale, pos)
         ctx.moveTo(pos.x, pos.y)
 
-        const num: number = 2*this.scale
+        const num: number = 2 * this.scale
         switch (dir) {
             case Dir.NORTH:
-                ctx.lineTo(pos.x - num, pos.y + num*2)
-                ctx.lineTo(pos.x + num, pos.y + num*2)
+                ctx.lineTo(pos.x - num, pos.y + num * 2)
+                ctx.lineTo(pos.x + num, pos.y + num * 2)
                 break
             case Dir.EAST:
-                ctx.lineTo(pos.x - num*2, pos.y - num)
-                ctx.lineTo(pos.x - num*2, pos.y + num)
+                ctx.lineTo(pos.x - num * 2, pos.y - num)
+                ctx.lineTo(pos.x - num * 2, pos.y + num)
                 break
             case Dir.SOUTH:
-                ctx.lineTo(pos.x - num, pos.y - num*2)
-                ctx.lineTo(pos.x + num, pos.y - num*2)
+                ctx.lineTo(pos.x - num, pos.y - num * 2)
+                ctx.lineTo(pos.x + num, pos.y - num * 2)
                 break
             case Dir.WEST:
-                ctx.lineTo(pos.x + num*2, pos.y - num)
-                ctx.lineTo(pos.x + num*2, pos.y + num)
+                ctx.lineTo(pos.x + num * 2, pos.y - num)
+                ctx.lineTo(pos.x + num * 2, pos.y + num)
                 break
         }
 
@@ -176,35 +170,36 @@ export class CCCanvas {
 
     drawText(pos: Point, str: string) {
         const ctx = this.canvas.getContext('2d')!
-        ctx.font = `${5*this.scale}px Arial`
+        ctx.font = `${5 * this.scale}px Arial`
         ctx.fillText(str, pos.x * this.scale, pos.y * this.scale)
     }
 
     copyToClipboard() {
         const copy = () => {
-            const dataURL = this.canvas.toDataURL('image/png');
-            (this.external ? this.window!.navigator : navigator).clipboard.writeText(dataURL).then(() => {
-                console.log('Image copied to clipboard')
-            })
-            .catch((error) => {
-                console.error('Error copying image to clipboard:', error)
-            })
+            const dataURL = this.canvas.toDataURL('image/png')
+            ;(this.external ? this.window!.navigator : navigator).clipboard
+                .writeText(dataURL)
+                .then(() => {
+                    console.log('Image copied to clipboard')
+                })
+                .catch(error => {
+                    console.error('Error copying image to clipboard:', error)
+                })
         }
-        if (this.window) { 
+        if (this.window) {
             this.window.focus()
             this.window.addEventListener('focus', copy)
         } else {
-            copy() 
+            copy()
         }
     }
 }
 
-
 export class AreaDrawer extends CCCanvas {
-    static colorList: string[] = [ 'black', 'blue', ]
+    static colorList: string[] = ['black', 'blue']
     colorIndex: number = 0
     scale: number = 4
-    
+
     constructor() {
         super(true)
     }
@@ -233,7 +228,9 @@ export class AreaDrawer extends CCCanvas {
     }
 
     drawArea(dngConfig: DungeonGenerateConfig<ArmRuntime>, size: AreaPoint) {
-        if (! dngConfig.arm) { return }
+        if (!dngConfig.arm) {
+            return
+        }
         this.show()
         this.colorIndex = 0
 
@@ -260,7 +257,8 @@ export class AreaDrawer extends CCCanvas {
             for (const exit of Array.isArray(e.lastExit) ? e.lastExit : [e.lastExit]) {
                 this.drawArrow(exit.to(MapPoint), exit.dir)
 
-                const pos = AreaPoint.fromVec(e.areaRects[0]); Vec2.addC(pos, 0.4, 1)
+                const pos = AreaPoint.fromVec(e.areaRects[0])
+                Vec2.addC(pos, 0.4, 1)
                 this.drawText(pos.to(MapPoint), i.toString())
             }
         }

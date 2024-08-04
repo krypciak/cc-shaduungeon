@@ -1,7 +1,7 @@
-import { AreaPoint, Dir, MapPoint, PosDir, } from 'cc-map-util/pos'
+import { AreaPoint, Dir, MapPoint, PosDir } from 'cc-map-util/pos'
 import { loadArea } from 'cc-map-util/map'
 import { assert, assertBool } from 'cc-map-util/util'
-import { Room, Tpr, } from '@root/room/room'
+import { Room, Tpr } from '@root/room/room'
 import { MapBuilder } from '@root/room/map-builder'
 import { DungeonPaths } from '@root/dungeon/dungeon-paths'
 import { AreaViewFloorTypes } from '@root/area/custom-MapAreaContainer'
@@ -19,20 +19,22 @@ export class AreaInfo {
         public pos: Vec2,
         public keyItem: Item,
         public masterKeyItem: Item,
-        public boosterItem: Item,
+        public boosterItem: Item
     ) {
         this.name = paths.nameAndId
     }
 }
 
-type FlattenedArmBuilders = { entry: ArmRuntimeEntry, parentArm: ArmRuntime, index: number }
+type FlattenedArmBuilders = { entry: ArmRuntimeEntry; parentArm: ArmRuntime; index: number }
 
 export class AreaBuilder {
-    static tryGetAreaRects(builder: MapBuilder, lastExit: AreaPoint, arm: ArmRuntime):
-        { exits: (PosDir<AreaPoint> | null)[], rects: AreaRect[], rooms: Room[] } | undefined {
-
+    static tryGetAreaRects(
+        builder: MapBuilder,
+        lastExit: AreaPoint,
+        arm: ArmRuntime
+    ): { exits: (PosDir<AreaPoint> | null)[]; rects: AreaRect[]; rooms: Room[] } | undefined {
         assert(builder.entarenceRoom)
-        
+
         let entPosDir: PosDir<MapPoint> | null = builder.entarenceOnWall
         if (entPosDir == null) {
             entPosDir = Object.assign(new MapPoint(0, 0), { dir: Dir.SOUTH })
@@ -42,7 +44,7 @@ export class AreaBuilder {
         const offset: AreaPoint = new AreaPoint(lastExit.x - ent.x, lastExit.y - ent.y)
 
         const rects: AreaRect[] = []
-        
+
         builder.rooms.forEach(r => {
             const ar = r.to(AreaRect)
             Vec2.add(ar, offset)
@@ -54,35 +56,49 @@ export class AreaBuilder {
             const armsChecked: WeakSet<ArmRuntime> = new WeakSet()
 
             function doesCollide(arm: ArmRuntime): boolean {
-                if (arm.rootArm) { hitRoot = true }
-                for (const e of (arm.stack ?? [])) {
-                    if (doesRectArrayOverlapRectArray(e.areaRects, rects)) { return true }
+                if (arm.rootArm) {
+                    hitRoot = true
+                }
+                for (const e of arm.stack ?? []) {
+                    if (doesRectArrayOverlapRectArray(e.areaRects, rects)) {
+                        return true
+                    }
                 }
                 armsChecked.add(arm)
                 if (arm.end == ArmEnd.Arm) {
                     for (const childArm of arm.arms) {
-                        if (! armsChecked.has(childArm) && doesCollide(childArm)) { return true }
+                        if (!armsChecked.has(childArm) && doesCollide(childArm)) {
+                            return true
+                        }
                     }
                 }
-                if (arm.parentArm && ! armsChecked.has(arm.parentArm)) {
-                    if(arm.parentArmIndex !== undefined) {
+                if (arm.parentArm && !armsChecked.has(arm.parentArm)) {
+                    if (arm.parentArmIndex !== undefined) {
                         if (arm.parentArm.arms[arm.parentArmIndex] !== arm) {
                             arm.parentArm.arms[arm.parentArmIndex] = arm
                         }
                     }
-                    if (doesCollide(arm.parentArm)) { return true }
+                    if (doesCollide(arm.parentArm)) {
+                        return true
+                    }
                 }
                 return false
             }
-            if (doesCollide(arm)) { return } else { assertBool(hitRoot) }
+            if (doesCollide(arm)) {
+                return
+            } else {
+                assertBool(hitRoot)
+            }
         }
-        
+
         const exits: (PosDir<AreaPoint> | null)[] = builder.mapIOsOnWall.map(e => {
             if (e) {
                 const pos = e.to(AreaPoint)
                 Vec2.add(pos, offset)
                 return Object.assign(pos, { dir: e.dir })
-            } else { return null }
+            } else {
+                return null
+            }
         })
 
         return {
@@ -135,9 +151,9 @@ export class AreaBuilder {
     }
 
     constructor(
-        public areaInfo: AreaInfo, 
+        public areaInfo: AreaInfo,
         public arm: ArmRuntime,
-        public size: AreaPoint,
+        public size: AreaPoint
     ) {
         this.size = new AreaPoint(Math.ceil(size.x), Math.ceil(size.y))
     }
@@ -152,9 +168,7 @@ export class AreaBuilder {
             height: this.size.y,
             chests: chestCount,
             defaultFloor: 0,
-            floors: [
-                await this.generateFloor(0, 'G', this.size, this.arm)
-            ],
+            floors: [await this.generateFloor(0, 'G', this.size, this.arm)],
             type: AreaViewFloorTypes.RoomList,
         }
         this.builtArea = builtArea
@@ -165,25 +179,22 @@ export class AreaBuilder {
         const displayName = builder.displayName!
         assertBool(rects.length == rooms.length)
 
-        const obj = rects.map((r, i) => [r, rooms[i]] as [AreaRect, Room])
-            .sort((a, b) => a[1].placeOrder - b[1].placeOrder)
+        const obj = rects.map((r, i) => [r, rooms[i]] as [AreaRect, Room]).sort((a, b) => a[1].placeOrder - b[1].placeOrder)
 
         rects = obj.map(e => e[0])
         rooms = obj.map(e => e[1])
 
         const { min, max } = Rect.getMinMaxPosFromRectArr(rects)
-        const trimmedRecs: sc.AreaLoadable.MapRoomListRect[] = rects.map(
-            (r, i) => ({
-                x: (Math.floor((r.x - min.x) * 8)/8),
-                y: Math.floor((r.y - min.y) * 8)/8,
-                width: Math.floor(r.width * 8)/8,
-                height: Math.floor(r.height * 8)/8,
-                roomType: rooms[i].type,
-                placeOrder: rooms[i].placeOrder,
-                /* if the room has no walls make it have all walls (so it renders properly) */
-                wallSides: rooms[i].wallSides.every(v => !v) ? [true, true, true, true] : rooms[i].wallSides,
-            })
-        )
+        const trimmedRecs: sc.AreaLoadable.MapRoomListRect[] = rects.map((r, i) => ({
+            x: Math.floor((r.x - min.x) * 8) / 8,
+            y: Math.floor((r.y - min.y) * 8) / 8,
+            width: Math.floor(r.width * 8) / 8,
+            height: Math.floor(r.height * 8) / 8,
+            roomType: rooms[i].type,
+            placeOrder: rooms[i].placeOrder,
+            /* if the room has no walls make it have all walls (so it renders properly) */
+            wallSides: rooms[i].wallSides.every(v => !v) ? [true, true, true, true] : rooms[i].wallSides,
+        }))
         maps.push({
             path: path.split('/').join('.'),
             name: allLangs(displayName),
@@ -201,7 +212,7 @@ export class AreaBuilder {
             const builder = obj.entry.builder
             builder.pathParent = this.areaInfo.name
             assertBool(builder.path === undefined, 'MapBuilder copy fail')
-            builder.path = builder.pathParent + '/' + (mapIndex.v.toLocaleString('en-US', {minimumIntegerDigits: 3, useGrouping: false}))
+            builder.path = builder.pathParent + '/' + mapIndex.v.toLocaleString('en-US', { minimumIntegerDigits: 3, useGrouping: false })
 
             await builder.decideDisplayName(mapIndex.v)
             assert(builder.displayName)
@@ -213,7 +224,7 @@ export class AreaBuilder {
             this.handleBuilder(obj)
         }
     }
-    
+
     private handleBuilder(obj: FlattenedArmBuilders) {
         const builder: MapBuilder = obj.entry.builder
         const pa: ArmRuntime = obj.parentArm
@@ -243,7 +254,8 @@ export class AreaBuilder {
                 entTpr.destMap = 'none'
                 entTpr.destMarker = 'none'
             } else {
-                assert(prevBuilder.path); assert(prevTpr.name)
+                assert(prevBuilder.path)
+                assert(prevTpr.name)
                 entTpr.destMap = prevBuilder.path
                 entTpr.destMarker = prevTpr.name
             }
@@ -259,7 +271,8 @@ export class AreaBuilder {
                         const nextEntry: ArmRuntimeEntry = nextArm.stack[0]
                         const destMap: string = nextEntry.builder.path!
                         const destMarker: string = nextEntry.builder.entarenceRoom.primaryEntarence.getTpr().name
-                        assert(destMap); assert(destMarker)
+                        assert(destMap)
+                        assert(destMarker)
 
                         const tpr: Tpr = obj1.io.getTpr()
                         Tpr.checkDest(tpr)
@@ -291,8 +304,10 @@ export class AreaBuilder {
     async generateFloor(level: number, name: string, size: AreaPoint, rootArm: ArmRuntime): Promise<sc.AreaLoadable.FloorCustom> {
         /* level filtering not implemented */
         const entries: FlattenedArmBuilders[] = []
-        forEveryArmEntry(rootArm, (entry: ArmRuntimeEntry, parentArm: ArmRuntime, index: number) => { entries.push({ entry, parentArm, index }) })
-        
+        forEveryArmEntry(rootArm, (entry: ArmRuntimeEntry, parentArm: ArmRuntime, index: number) => {
+            entries.push({ entry, parentArm, index })
+        })
+
         const connections: sc.AreaLoadable.ConnectionRoomList[] = []
         // const mapConnectionSize = 3
         const landmarks: sc.AreaLoadable.Landmark[] = []
@@ -300,7 +315,6 @@ export class AreaBuilder {
 
         const maps: sc.AreaLoadable.MapRoomList[] = []
         const mapType: 'DUNGEON' | 'NO_DUNGEON' = this.areaInfo.type == 'DUNGEON' ? 'DUNGEON' : 'NO_DUNGEON'
-
 
         let mapIndex = { v: 0 }
         await this.handleBuilders(maps, mapType, mapIndex, entries)
@@ -382,18 +396,18 @@ export class AreaBuilder {
     }
 
     addToDb() {
-        if (! this.dbEntry) {
+        if (!this.dbEntry) {
             this.createDbEntry()
             assert(this.dbEntry)
         }
-        
+
         ig.database.data.areas[this.areaInfo.name] = this.dbEntry
     }
 
     saveToFile() {
         this.areaInfo.paths.saveArea(this)
     }
-    
+
     /*
     addStamps(mapBuilder: DungeonMapBuilder, offset: EntityPoint, exitPoint: AreaPoint) {
         const area: string = mapBuilder.areaInfo.name

@@ -14,12 +14,11 @@ export class DungeonPaths {
     static baseName: string = 'dnggen'
     static registeredIds: Set<string> = new Set()
 
-
     static registerAutoLoadDungeon() {
         ig.Game.inject({
             preloadLevel(mapName: string) {
                 this.parent(DungeonPaths.loadIfNeeded(mapName) ?? mapName)
-            }
+            },
         })
     }
     /* example: getIdFromName('dnggen-0') -> '0' */
@@ -31,7 +30,7 @@ export class DungeonPaths {
         if (mapName.startsWith(DungeonPaths.baseName)) {
             mapName = mapName.replace(/\//g, '.')
             const id: string = DungeonPaths.getIdFromName(mapName.substring(0, mapName.indexOf('.')))
-            if (! DungeonPaths.registeredIds.has(id)) {
+            if (!DungeonPaths.registeredIds.has(id)) {
                 const paths = new DungeonPaths(id)
                 if (paths.loadConfig()) {
                     paths.register(true)
@@ -78,7 +77,7 @@ export class DungeonPaths {
             sels: {
                 puzzle: `${this.baseDir}/selPuzzle.json`,
                 battle: `${this.baseDir}/selBattle.json`,
-            }
+            },
         }
     }
 
@@ -98,9 +97,9 @@ export class DungeonPaths {
     }
 
     saveArea(builder: AreaBuilder) {
-        assert(builder.builtArea, 'called saveToFile() before finalizing build') 
+        assert(builder.builtArea, 'called saveToFile() before finalizing build')
         assert(builder.dbEntry, 'area db entry not generated')
-    
+
         blitzkrieg.FsUtil.mkdirs(this.areaDir)
         const path = this.areaFile
         this.config.paths[this.areaFileGame] = path
@@ -113,7 +112,9 @@ export class DungeonPaths {
     }
 
     loadConfig(): boolean {
-        if (! blitzkrieg.FsUtil.doesFileExist(this.configFile)) { return false }
+        if (!blitzkrieg.FsUtil.doesFileExist(this.configFile)) {
+            return false
+        }
         this.config = JSON.parse(blitzkrieg.FsUtil.readFileSync(this.configFile))
 
         return true
@@ -140,7 +141,7 @@ export class DungeonPaths {
 
     registerSelections(load: boolean = false) {
         for (const selEntry of Object.entries(this.config.sels)) {
-            const [ poolName, path ] = selEntry as [keyof typeof blitzkrieg.sels, string]
+            const [poolName, path] = selEntry as [keyof typeof blitzkrieg.sels, string]
             const pool: SelectionManager = blitzkrieg.sels[poolName] as SelectionManager
             while (pool.jsonFiles.includes(path)) {
                 const indexToDel: number = pool.jsonFiles.indexOf(path)
@@ -152,7 +153,7 @@ export class DungeonPaths {
                 })
                 pool.jsonFiles.splice(indexToDel)
             }
-            const index = this.selIndexes[poolName] = pool.jsonFiles.length
+            const index = (this.selIndexes[poolName] = pool.jsonFiles.length)
             pool.jsonFiles.push(path)
             if (load) {
                 pool.load(index)
@@ -162,8 +163,10 @@ export class DungeonPaths {
 
     addSelectionToPool(poolName: keyof typeof blitzkrieg.sels, sel: Selection) {
         const index: number = this.selIndexes[poolName]
-        if (index === undefined) { throw new Error('pool name doesnt exist: ' + poolName) }
+        if (index === undefined) {
+            throw new Error('pool name doesnt exist: ' + poolName)
+        }
         const pool: SelectionManager = blitzkrieg.sels[poolName] as SelectionManager
-        pool.setMapEntry(sel.mapName, new blitzkrieg.SelectionMapEntry([ sel ], index))
+        pool.setMapEntry(sel.mapName, new blitzkrieg.SelectionMapEntry([sel], index))
     }
 }

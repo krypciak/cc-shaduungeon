@@ -1,4 +1,4 @@
-import { godlikeStats } from "@root/util/misc";
+import { godlikeStats } from '@root/util/misc'
 
 const ngOptionName = 'dnggen'
 const ngOptionCategory = 'cc-shaduungeon'
@@ -19,15 +19,12 @@ export function prestartGameStart() {
         init() {
             this.parent()
             ig.lang.labels.sc.gui['title-screen'].generateDungeon = 'Generate dungeon'
-            const self1  = this
-            this._createButton(
-                'generateDungeon',
-                this.buttons.last().hook.pos.y + 39,
-                this.buttons.length,
-                () => { startDnggenGame(self1) },
-            );
+            const self1 = this
+            this._createButton('generateDungeon', this.buttons.last().hook.pos.y + 39, 100 - this.buttons.length, () => {
+                startDnggenGame(self1)
+            })
         },
-    });
+    })
 }
 
 export function poststartGameStart() {
@@ -35,7 +32,8 @@ export function poststartGameStart() {
     registerStyles()
 }
 
-function registerNewgamePlusOptionsPrestart() { /* runs in prestart */
+function registerNewgamePlusOptionsPrestart() {
+    /* runs in prestart */
     sc.NEW_GAME_SETS[ngOptionCategory] = {
         type: sc.TOGGLE_SET_TYPE.MULTI,
         order: 10,
@@ -56,17 +54,19 @@ function registerNewgamePlusOptionsPrestart() { /* runs in prestart */
             } else {
                 this.parent()
             }
-        }
+        },
     })
 }
 
-function registerNewgamePlusOptionsPoststart() { /* runs in poststart */
+function registerNewgamePlusOptionsPoststart() {
+    /* runs in poststart */
     ig.lang.labels.sc.gui.menu['new-game'].sets[ngOptionCategory] = ngOptionCategory
     ig.lang.labels.sc.gui.menu['new-game'].options.names[ngOptionName] = 'Generate Dungeon'
     ig.lang.labels.sc.gui.menu['new-game'].options.descriptions[ngOptionName] = 'Generate a dungeon'
 }
 
-async function registerStyles() { /* runs in poststart */
+async function registerStyles() {
+    /* runs in poststart */
     ig.MapStyle.registerStyle('default', 'puzzle2', { sheet: 'media/entity/style/default-puzzle-2-fix.png' })
     ig.MapStyle.registerStyle('default', 'magnet', { sheet: 'media/map/shockwave-dng.png', x: 160, y: 272 })
     ig.MapStyle.registerStyle('default', 'bouncer', { sheet: 'media/map/shockwave-dng-props.png', x: 0, y: 0 })
@@ -84,11 +84,11 @@ async function registerStyles() { /* runs in poststart */
 }
 
 export async function startDnggenGame(titleGuiInstance?: sc.TitleScreenButtonGui) {
-    ig.bgm.clear('MEDIUM_OUT');
+    ig.bgm.clear('MEDIUM_OUT')
     if (titleGuiInstance) {
         ig.interact.removeEntry(titleGuiInstance.buttonInteract)
     } else {
-        ig.interact.entries.forEach((e) => ig.interact.removeEntry(e))
+        ig.interact.entries.forEach(e => ig.interact.removeEntry(e))
     }
     sc.newgame.active = true
     sc.newgame.options[ngOptionName] = true

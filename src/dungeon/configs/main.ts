@@ -1,5 +1,5 @@
 import { AreaInfo } from '@root/area/area-builder'
-import { DungeonGenerateConfig, } from '@root/dungeon/dungeon-arrange'
+import { DungeonGenerateConfig } from '@root/dungeon/dungeon-arrange'
 import { ArmEnd, ArmItemType, MapBuilderArrayGenerate } from '@root/dungeon/dungeon-arm'
 import { DungeonConfigFactory } from '@root/dungeon/dungeon-builder'
 import { PuzzleRoom } from '@root/room/puzzle-room'
@@ -20,7 +20,6 @@ export class DungeonConfigMainFactory implements DungeonConfigFactory {
             puzzles.push(puzzleList[i])
         }
         console.log('puzzles:', puzzles)
-
 
         setRandomSeed(seed)
         let index: number = 0
@@ -50,8 +49,7 @@ export class DungeonConfigMainFactory implements DungeonConfigFactory {
 
         bPool.push(_sb)
         const _db1: MapBuilderArrayGenerate = { arr: [], randomize: true, index: index++ }
-        DirUtil.forEachUniqueDir4((d1, d2, d3, d4) => 
-            _db1.arr.push(Object.assign(new DungeonIntersectionMapBuilder(areaInfo, 2, d1, d2, d3, d4), { exclusive: true })))
+        DirUtil.forEachUniqueDir4((d1, d2, d3, d4) => _db1.arr.push(Object.assign(new DungeonIntersectionMapBuilder(areaInfo, 2, d1, d2, d3, d4), { exclusive: true })))
         bPool.push(_db1)
 
         const dngGenConfig: DungeonGenerateConfig = {
@@ -102,43 +100,51 @@ export class DungeonConfigMainFactory implements DungeonConfigFactory {
                 builderPool: puzzleB.index,
                 endBuilderPool: _db1.index,
                 end: ArmEnd.Arm,
-                arms: [{
-                    length: 3,
-                    builderPool: puzzleB.index,
-                    endBuilderPool: _db1.index,
-                    end: ArmEnd.Arm,
-                    arms: [{
-                        length: 0,
-                        builderPool: NaN,
-                        endBuilderPool: _sb.index,
-                        end: ArmEnd.Item,
-                        itemType: ArmItemType.DungeonKey,
-                    }, {
+                arms: [
+                    {
                         length: 3,
+                        builderPool: puzzleB.index,
+                        endBuilderPool: _db1.index,
+                        end: ArmEnd.Arm,
+                        arms: [
+                            {
+                                length: 0,
+                                builderPool: NaN,
+                                endBuilderPool: _sb.index,
+                                end: ArmEnd.Item,
+                                itemType: ArmItemType.DungeonKey,
+                            },
+                            {
+                                length: 3,
+                                builderPool: puzzleB.index,
+                                endBuilderPool: puzzleB.index,
+                                end: ArmEnd.Item,
+                                itemType: ArmItemType.DungeonKey,
+                            },
+                            {
+                                length: 3,
+                                builderPool: puzzleB.index,
+                                endBuilderPool: puzzleB.index,
+                                end: ArmEnd.Item,
+                                itemType: ArmItemType.DungeonKey,
+                            },
+                        ],
+                    },
+                    {
+                        length: 2,
                         builderPool: puzzleB.index,
                         endBuilderPool: puzzleB.index,
                         end: ArmEnd.Item,
                         itemType: ArmItemType.DungeonKey,
-                    }, {
-                        length: 3,
+                    },
+                    {
+                        length: 2,
                         builderPool: puzzleB.index,
                         endBuilderPool: puzzleB.index,
                         end: ArmEnd.Item,
                         itemType: ArmItemType.DungeonKey,
-                    }]
-                }, {
-                    length: 2,
-                    builderPool: puzzleB.index,
-                    endBuilderPool: puzzleB.index,
-                    end: ArmEnd.Item,
-                    itemType: ArmItemType.DungeonKey,
-                }, {
-                    length: 2,
-                    builderPool: puzzleB.index,
-                    endBuilderPool: puzzleB.index,
-                    end: ArmEnd.Item,
-                    itemType: ArmItemType.DungeonKey,
-                }]
+                    },
+                ],
             },
             //*/
         }

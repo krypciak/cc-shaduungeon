@@ -14,19 +14,34 @@ declare global {
 }
 
 function addVimBindings() {
-    if (window.vim) { /* optional dependency https://github.com/krypciak/cc-vim */
+    if (window.vim) {
+        /* optional dependency https://github.com/krypciak/cc-vim */
         const isInGenMap = (ingame: boolean) => ingame && ig.game.mapName.startsWith('dnggen')
-        vim.addAlias('dnggen', 'generate-dungeon', 'Generate dungeon', 'global', (seed = '', roomTp: string = '0') => {
-            vim.executeString('title-screen')
-            dnggen.debug.roomTp = parseInt(roomTp)
-            dnggen.debug.seed = seed
-            startDnggenGame()
-        }, [{
-            type: 'string', description: 'seed',
-        }, {
-            type: 'number', description: 'room to teleport to',
-        }])
-        vim.addAlias('dnggen', 'skip-battle', 'Skips the battle', isInGenMap, () => { ig.vars.set('map.battle1done', true) })
+        vim.addAlias(
+            'dnggen',
+            'generate-dungeon',
+            'Generate dungeon',
+            'global',
+            (seed = '', roomTp: string = '0') => {
+                vim.executeString('title-screen')
+                dnggen.debug.roomTp = parseInt(roomTp)
+                dnggen.debug.seed = seed
+                startDnggenGame()
+            },
+            [
+                {
+                    type: 'string',
+                    description: 'seed',
+                },
+                {
+                    type: 'number',
+                    description: 'room to teleport to',
+                },
+            ]
+        )
+        vim.addAlias('dnggen', 'skip-battle', 'Skips the battle', isInGenMap, () => {
+            ig.vars.set('map.battle1done', true)
+        })
     }
 }
 
@@ -73,7 +88,9 @@ export default class DngGen {
     }
 
     async prestart() {
-        if (! blitzkrieg) { return }
+        if (!blitzkrieg) {
+            return
+        }
 
         this.dungeonBuilder = new DungeonBuilder()
 

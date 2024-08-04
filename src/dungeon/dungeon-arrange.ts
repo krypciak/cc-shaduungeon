@@ -1,8 +1,8 @@
-import { AreaBuilder, AreaInfo } from "@root/area/area-builder"
-import { assert, assertBool, } from "cc-map-util/util"
-import { AreaPoint, Dir, PosDir } from "cc-map-util/pos"
-import { Arm, ArmEnd, ArmRuntime, ArmRuntimeEntry, ExclusiveMapBuilder, MapBuilderPool, copyArmRuntime, copyBuilderPool, } from "@root/dungeon/dungeon-arm"
-import { randomSeedInt, setRandomSeed, shuffleArray } from "@root/util/misc"
+import { AreaBuilder, AreaInfo } from '@root/area/area-builder'
+import { assert, assertBool } from 'cc-map-util/util'
+import { AreaPoint, Dir, PosDir } from 'cc-map-util/pos'
+import { Arm, ArmEnd, ArmRuntime, ArmRuntimeEntry, ExclusiveMapBuilder, MapBuilderPool, copyArmRuntime, copyBuilderPool } from '@root/dungeon/dungeon-arm'
+import { randomSeedInt, setRandomSeed, shuffleArray } from '@root/util/misc'
 
 export interface DungeonGenerateConfig<T extends Arm = Arm> {
     arm?: T
@@ -76,9 +76,12 @@ export class DungeonArranger {
                 assertBool(lastEntry.builder.exitCount == lastEntry.lastExit.length)
                 assertBool(retArm.arms.length == lastEntry.builder.exitCount, 'exit count missmatch with arm count')
                 retArm = this.tryArmBranch(arm, 0)?.parentArm /* this has to return the same as arm */
-                if (! retArm) { return undefined }
-            } 
-            if (retArm.parentArmIndex !== undefined) { /* if doing arm branch filling */
+                if (!retArm) {
+                    return undefined
+                }
+            }
+            if (retArm.parentArmIndex !== undefined) {
+                /* if doing arm branch filling */
                 assert(retArm.parentArm)
                 retArm.parentArm.arms[retArm.parentArmIndex].stack = arm.stack
                 if (retArm.parentArmIndex == retArm.parentArm.arms.length - 1) {
@@ -102,7 +105,9 @@ export class DungeonArranger {
         let skipPoolCopy: boolean = false
         if (arm.stack.length == 0 && arm.bPool) {
             skipPoolCopy = true
-            if (! lastEntry.bPool) { lastEntry.bPool = [] }
+            if (!lastEntry.bPool) {
+                lastEntry.bPool = []
+            }
             for (const overrideEntry of Object.values(arm.bPool)) {
                 lastEntry.bPool[overrideEntry.index] = overrideEntry
             }
@@ -117,21 +122,33 @@ export class DungeonArranger {
                 assertBool(arm.stack.length == len, 'why')
             }
             const retArm = this.recursiveTryArmBuilder(possibleBuilder, arm, lastEntry, poolIndex, skipPoolCopy, isEnd, armIndex)
-            if (retArm) { return retArm }
+            if (retArm) {
+                return retArm
+            }
         }
         return undefined /* hit end, popping */
     }
 
-    private recursiveTryArmBuilder(builder: ExclusiveMapBuilder, arm: ArmRuntime, lastEntry: ArmRuntimeEntry,
-        bPoolIndex: number, skipPoolCopy: boolean, isEnd: boolean, armIndex: number | undefined ) {
-
+    private recursiveTryArmBuilder(
+        builder: ExclusiveMapBuilder,
+        arm: ArmRuntime,
+        lastEntry: ArmRuntimeEntry,
+        bPoolIndex: number,
+        skipPoolCopy: boolean,
+        isEnd: boolean,
+        armIndex: number | undefined
+    ) {
         const lastExit: PosDir<AreaPoint> = lastEntry.lastExit[armIndex ?? 0]
-        if (! builder.prepareToArrange(lastExit.dir, isEnd, arm)) { return }
-     
+        if (!builder.prepareToArrange(lastExit.dir, isEnd, arm)) {
+            return
+        }
+
         const obj = AreaBuilder.tryGetAreaRects(builder, lastExit, arm)
-        if (! obj) { return /* map overlaps */ }
+        if (!obj) {
+            return /* map overlaps */
+        }
         assertBool(obj.rooms.length == obj.rects.length)
-     
+
         // shallow copy
         const newArm = copyArmRuntime(arm)
         assert(lastEntry.bPool)
@@ -149,7 +166,7 @@ export class DungeonArranger {
             bPool,
         })
         lastEntry = newArm.stack.last()
-     
+
         return this.recursiveTryPlaceArmEntry(newArm, lastEntry)
     }
 
@@ -165,4 +182,3 @@ export class DungeonArranger {
         return this.c
     }
 }
-

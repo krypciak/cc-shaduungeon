@@ -29,20 +29,30 @@ export namespace RoomPlaceVars {
                 }
             }
             switch (layer.type) {
-                case 'Collision': colls.push(layer.data); break
-                case 'Navigation': navs.push(layer.data); break
-                case 'Light': light = layer.data; break
-             }
+                case 'Collision':
+                    colls.push(layer.data)
+                    break
+                case 'Navigation':
+                    navs.push(layer.data)
+                    break
+                case 'Light':
+                    light = layer.data
+                    break
+            }
         }
         assert(background)
         assert(light)
 
         return {
-            map: new CCMap(map.name, map.levels, map.mapWidth, map.mapHeight,
-                map.masterLevel, map.attributes, map.entities, MapLayer.convertArray(map.layer)),
-            background, shadow, light, colls, navs,
+            map: new CCMap(map.name, map.levels, map.mapWidth, map.mapHeight, map.masterLevel, map.attributes, map.entities, MapLayer.convertArray(map.layer)),
+            background,
+            shadow,
+            light,
+            colls,
+            navs,
             entities: map.entities,
-            theme, tc: theme.config,
+            theme,
+            tc: theme.config,
             masterLevel: map.masterLevel,
             areaInfo,
         }
@@ -64,34 +74,38 @@ export interface RoomPlaceVars {
 }
 
 export abstract class MapBuilder {
-    static async placeBuilders(entries: { entry: ArmRuntimeEntry, arm: ArmRuntime }[]): Promise<void[]> {
-        let roomPreplaceFunctions = (entries.flatMap(e => {
-            const builder = e.entry.builder
-            assertBool(e.arm.stack.findIndex(e1 => e1.builder === builder) != -1)
-            const isArmEnd: boolean = e.arm.stack.last().builder === builder
-            return builder.rooms.flatMap(r => {
-                r.isArmEnd = isArmEnd
-                r.preplaceFunctions.forEach(e1 => {
-                    e1.func = e1.func.bind(r, e.arm, builder)
+    static async placeBuilders(entries: { entry: ArmRuntimeEntry; arm: ArmRuntime }[]): Promise<void[]> {
+        let roomPreplaceFunctions = (
+            entries.flatMap(e => {
+                const builder = e.entry.builder
+                assertBool(e.arm.stack.findIndex(e1 => e1.builder === builder) != -1)
+                const isArmEnd: boolean = e.arm.stack.last().builder === builder
+                return builder.rooms.flatMap(r => {
+                    r.isArmEnd = isArmEnd
+                    r.preplaceFunctions.forEach(e1 => {
+                        e1.func = e1.func.bind(r, e.arm, builder)
+                    })
+                    return r.preplaceFunctions
                 })
-                return r.preplaceFunctions
-            })}) as ({ order: number, func: () => void }[]))
-            .sort((e1, e2) => e1.order - e2.order)
+            }) as { order: number; func: () => void }[]
+        ).sort((e1, e2) => e1.order - e2.order)
         roomPreplaceFunctions.forEach(o => o.func())
 
         entries.forEach(e => e.entry.builder.preplace(e.arm))
 
-        return new Promise<void[]>(async (resolve) => {
+        return new Promise<void[]>(async resolve => {
             const promises: Promise<void>[] = []
             for (const e of entries) {
                 const b = e.entry.builder
-                promises.push(new Promise<void>((resolve) => {
-                    b.place(e.arm).then(() => {
-                        b.save().then(() => {
-                            resolve()
+                promises.push(
+                    new Promise<void>(resolve => {
+                        b.place(e.arm).then(() => {
+                            b.save().then(() => {
+                                resolve()
+                            })
                         })
                     })
-                }))
+                )
             }
             resolve(Promise.all(promises))
         })
@@ -105,7 +119,7 @@ export abstract class MapBuilder {
     abstract exitCount: number
 
     entarenceOnWall!: PosDir<MapPoint> | null
-    mapIOs: { io: RoomIO; room: Room, toDelete?: boolean }[] = []
+    mapIOs: { io: RoomIO; room: Room; toDelete?: boolean }[] = []
     mapIOsOnWall!: (PosDir<MapPoint> | null)[]
 
     /* place vars */
@@ -122,8 +136,8 @@ export abstract class MapBuilder {
     constructor(
         public levelCount: number,
         public areaInfo: AreaInfo,
-        public theme: RoomTheme,
-    ) { }
+        public theme: RoomTheme
+    ) {}
 
     addRoom(room: Room) {
         this.rooms.push(room)
@@ -145,20 +159,24 @@ export abstract class MapBuilder {
     getAllTeleportFields(): RoomIOTpr[] {
         const arr: RoomIOTpr[] = []
         this.rooms.forEach(r => {
-            if (r.teleportFields) { arr.push(...r.teleportFields) }
+            if (r.teleportFields) {
+                arr.push(...r.teleportFields)
+            }
         })
         return arr
     }
 
     abstract prepareToArrange(dir: Dir, isEnd: boolean, arm: ArmRuntime): boolean
-    
+
     abstract decideDisplayName(index: number): Promise<string>
 
     preplace(arm: ArmRuntime) {
         if (arm.parentArm) {
             for (const obj1 of this.mapIOs) {
                 const tpr: Tpr = obj1.io.getTpr()
-                if (! tpr.backToArm) { continue }
+                if (!tpr.backToArm) {
+                    continue
+                }
                 assert(arm.parentArmIndex)
                 const parentArmEndEntry: ArmRuntimeEntry = arm.parentArm.stack.last()
                 tpr.destMap = parentArmEndEntry.builder.path
@@ -182,19 +200,25 @@ export abstract class MapBuilder {
 
         for (const room of this.rooms) {
             const rect = room
-            if (rect.x < newSize.x) { newSize.x = rect.x }
-            if (rect.y < newSize.y) { newSize.y = rect.y }
-            if (rect.x2() > newSize.width ) { newSize.width = rect.x2() }
-            if (rect.y2() > newSize.height ) { newSize.height = rect.y2() }
+            if (rect.x < newSize.x) {
+                newSize.x = rect.x
+            }
+            if (rect.y < newSize.y) {
+                newSize.y = rect.y
+            }
+            if (rect.x2() > newSize.width) {
+                newSize.width = rect.x2()
+            }
+            if (rect.y2() > newSize.height) {
+                newSize.height = rect.y2()
+            }
         }
 
         const offset: MapPoint = MapPoint.fromVec(newSize)
         offset.x -= additionalSpace.x
         offset.y -= additionalSpace.y
         this.trimOffset = offset
-        this.size = new MapPoint(
-            Math.ceil(newSize.width - offset.x + additionalSpace.width),
-            Math.ceil(newSize.height - offset.y + additionalSpace.height))
+        this.size = new MapPoint(Math.ceil(newSize.width - offset.x + additionalSpace.width), Math.ceil(newSize.height - offset.y + additionalSpace.height))
 
         Vec2.mulC(offset, -1)
         for (const room of this.rooms) {
@@ -203,7 +227,9 @@ export abstract class MapBuilder {
     }
 
     createEmptyMap() {
-        assert(this.theme); assert(this.path); assert(this.size)
+        assert(this.theme)
+        assert(this.path)
+        assert(this.size)
         const rpv: RoomPlaceVars = CCMap.getEmpty(this.size, this.levelCount, this.theme, this.path, this.areaInfo)
         this.rpv = rpv
     }
@@ -221,7 +247,7 @@ export abstract class MapBuilder {
             }
         }
 
-        if (! dnggen.debug.dontDiscoverAllMaps) {
+        if (!dnggen.debug.dontDiscoverAllMaps) {
             ig.vars.storage.maps[this.path] = {}
         }
     }

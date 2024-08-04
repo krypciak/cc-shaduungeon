@@ -1,7 +1,7 @@
-import { MapBuilder } from "@root/room/map-builder"
-import { Room } from "@root/room/room"
-import { AreaPoint, PosDir } from "cc-map-util/pos"
-import { AreaRect } from "cc-map-util/src/rect"
+import { MapBuilder } from '@root/room/map-builder'
+import { Room } from '@root/room/room'
+import { AreaPoint, PosDir } from 'cc-map-util/pos'
+import { AreaRect } from 'cc-map-util/src/rect'
 
 export enum ArmEnd {
     Item,
@@ -55,18 +55,21 @@ export type ArmRuntime = {
 
     stack: ArmRuntimeEntry[]
     rootArm: boolean
-    flatRuntimeCache?: { entry: ArmRuntimeEntry, arm: ArmRuntime }[]
-} & TEMP$BaseArm & (TEMP$ItemArm | TEMP$ArmArm<ArmRuntime>)
+    flatRuntimeCache?: { entry: ArmRuntimeEntry; arm: ArmRuntime }[]
+} & TEMP$BaseArm &
+    (TEMP$ItemArm | TEMP$ArmArm<ArmRuntime>)
 
 export function copyArmRuntime(arm: ArmRuntime): ArmRuntime {
-    const newArm: ArmRuntime = {...arm}
+    const newArm: ArmRuntime = { ...arm }
     newArm.stack = [...newArm.stack]
     return newArm
 }
 
 export function forEveryArmEntry(arm: ArmRuntime, func: (entry: ArmRuntimeEntry, arm: ArmRuntime, index: number) => void) {
     const entries: ArmRuntimeEntry[] = []
-    if (arm.stack) { arm.stack.forEach((e, i) => func(e, arm, i)) }
+    if (arm.stack) {
+        arm.stack.forEach((e, i) => func(e, arm, i))
+    }
     if (arm.end == ArmEnd.Arm) {
         arm.arms.forEach(a => {
             forEveryArmEntry(a, func)
@@ -75,9 +78,11 @@ export function forEveryArmEntry(arm: ArmRuntime, func: (entry: ArmRuntimeEntry,
     return entries
 }
 
-export function flatOutArmTopDown(arm: ArmRuntime, allowCache: boolean = true): { entry: ArmRuntimeEntry, arm: ArmRuntime }[] {
-    if (allowCache && arm.flatRuntimeCache) { return arm.flatRuntimeCache }
-    const entries: { entry: ArmRuntimeEntry, arm: ArmRuntime }[] = []
+export function flatOutArmTopDown(arm: ArmRuntime, allowCache: boolean = true): { entry: ArmRuntimeEntry; arm: ArmRuntime }[] {
+    if (allowCache && arm.flatRuntimeCache) {
+        return arm.flatRuntimeCache
+    }
+    const entries: { entry: ArmRuntimeEntry; arm: ArmRuntime }[] = []
     forEveryArmEntry(arm, (entry: ArmRuntimeEntry, arm: ArmRuntime) => {
         entries.push({ entry, arm })
     })
@@ -91,6 +96,6 @@ export function copyBuilderPool(pool: MapBuilderPool): MapBuilderPool {
     return Object.values(pool).map(e => ({
         arr: [...e.arr],
         randomize: e.randomize,
-        index: e.index
+        index: e.index,
     }))
 }

@@ -1,6 +1,6 @@
 import { MapDoor, MapDoorLike, MapTeleportField, MapTransporter } from '@root/util/entity'
 import { Coll } from 'cc-map-util/map'
-import { EntityRect, MapRect, Rect, isVecInRectArr, parseArrAt2d, } from 'cc-map-util/rect'
+import { EntityRect, MapRect, Rect, isVecInRectArr, parseArrAt2d } from 'cc-map-util/rect'
 import { Point, Dir, DirUtil, MapPoint, EntityPoint } from 'cc-map-util/pos'
 import { assert, assertBool } from 'cc-map-util/util'
 import { MapBuilder, RoomPlaceVars } from '@root/room/map-builder'
@@ -13,15 +13,23 @@ const tilesize: number = 16
 export function getPosOnRectSide<T extends Point>(init: new (x: number, y: number) => T, dir: Dir, rect: Rect, prefPos?: T): T {
     const pos: T = new init(0, 0)
     switch (dir) {
-        case Dir.NORTH: pos.y = rect.y - tilesize;  break
-        case Dir.EAST:  pos.x = rect.x2() + tilesize; break
-        case Dir.SOUTH: pos.y = rect.y2() + tilesize; break
-        case Dir.WEST: pos.x = rect.x - tilesize; break
+        case Dir.NORTH:
+            pos.y = rect.y - tilesize
+            break
+        case Dir.EAST:
+            pos.x = rect.x2() + tilesize
+            break
+        case Dir.SOUTH:
+            pos.y = rect.y2() + tilesize
+            break
+        case Dir.WEST:
+            pos.x = rect.x - tilesize
+            break
     }
     if (DirUtil.isVertical(dir)) {
-        pos.x = prefPos ? prefPos.x : (rect.x + (rect.x2() - rect.x)/2)
+        pos.x = prefPos ? prefPos.x : rect.x + (rect.x2() - rect.x) / 2
     } else {
-        pos.y = prefPos ? prefPos.y : (rect.y + (rect.y2() - rect.y)/2)
+        pos.y = prefPos ? prefPos.y : rect.y + (rect.y2() - rect.y) / 2
     }
 
     return pos
@@ -34,12 +42,10 @@ export namespace Tpr {
     export function getReference(name: string, dir: Dir, pos: EntityPoint, mtpr: MapTransporter, backToArm: boolean = false, condition?: string): Tpr {
         return { name, dir, pos, entityType: mtpr.type as MapTransporter.Types, entity: mtpr, entityCondition: condition, backToArm }
     }
-    
+
     export function replaceConditionTarget(tpr: Tpr, targetTpr: Tpr) {
         if (tpr.condition) {
-            tpr.condition = tpr.condition
-                .replace(/@TARGET_MAP/, tpr.destMap!)
-                .replace(/@TARGET_CONDITION/, targetTpr.condition!)
+            tpr.condition = tpr.condition.replace(/@TARGET_MAP/, tpr.destMap!).replace(/@TARGET_CONDITION/, targetTpr.condition!)
         }
     }
     export function checkDest(tpr: Tpr) {
@@ -68,7 +74,6 @@ export interface TprDoorLike extends Tpr {
     entity?: MapDoorLike
 }
 
-
 // IO: in-out
 export interface RoomIO {
     getTpr(): Tpr
@@ -80,7 +85,9 @@ export class RoomIOTpr implements RoomIO {
         this.tpr = tpr
     }
 
-    getTpr(): Tpr { return this.tpr }
+    getTpr(): Tpr {
+        return this.tpr
+    }
 }
 export class RoomIODoorLike extends RoomIOTpr {
     tpr: TprDoorLike
@@ -98,7 +105,7 @@ export class RoomIODoorLike extends RoomIOTpr {
 
 export class Room extends MapRect {
     private addWalls: boolean
-    sel?: { sel: Selection, poolName: keyof typeof blitzkrieg.sels }
+    sel?: { sel: Selection; poolName: keyof typeof blitzkrieg.sels }
     ios: (RoomIO & { toDelete?: boolean })[] = []
     primaryEntarence!: RoomIO
     primaryExit?: RoomIO
@@ -112,13 +119,16 @@ export class Room extends MapRect {
         public wallSides: boolean[],
         public addNavMap: boolean = true,
         public placeOrder: RoomPlaceOrder = RoomPlaceOrder.Room,
-        public type: RoomType = RoomType.Room,
+        public type: RoomType = RoomType.Room
     ) {
         const mapRect = rect.to(MapRect)
         super(mapRect.x, mapRect.y, mapRect.width, mapRect.height)
         this.addWalls = false
         for (const addSide of this.wallSides) {
-            if (addSide) { this.addWalls = true; break }
+            if (addSide) {
+                this.addWalls = true
+                break
+            }
         }
     }
 
@@ -148,9 +158,17 @@ export class Room extends MapRect {
     getDoorLikeTpr(type: MapDoorLike.Types, name: string, dir: Dir, prefPos?: EntityPoint): TprDoorLike {
         const doorPos: EntityPoint = getPosOnRectSide(EntityPoint, dir, this.to(EntityRect), prefPos)
 
-        if (DirUtil.isVertical(dir)) { doorPos.x -= tilesize } else { doorPos.y -= tilesize }
-        if (dir == Dir.SOUTH) { doorPos.y -= tilesize }
-        if (dir == Dir.EAST) { doorPos.x -= tilesize }
+        if (DirUtil.isVertical(dir)) {
+            doorPos.x -= tilesize
+        } else {
+            doorPos.y -= tilesize
+        }
+        if (dir == Dir.SOUTH) {
+            doorPos.y -= tilesize
+        }
+        if (dir == Dir.EAST) {
+            doorPos.x -= tilesize
+        }
 
         return Tpr.get(name, dir, doorPos, type) as TprDoorLike
     }
@@ -159,16 +177,20 @@ export class Room extends MapRect {
         arr.push(this)
         this.ios.forEach(io => {
             // @ts-expect-error cant import RoomIOTunnel because of a circular dependency so im doing this
-            if (io.tunnel) { arr.push(io.tunnel) }
+            if (io.tunnel) {
+                arr.push(io.tunnel)
+            }
         })
     }
 
-    preplaceFunctions: { order: number, func: ((arm: ArmRuntime, builder: MapBuilder) => void) }[]  = []
+    preplaceFunctions: { order: number; func: (arm: ArmRuntime, builder: MapBuilder) => void }[] = []
     // place functions
-    
+
     async place(rpv: RoomPlaceVars, _arm: ArmRuntime): Promise<RoomPlaceVars | void> {
         assert(this.isArmEnd)
-        if (this.placeOrder == RoomPlaceOrder.NoPlace) { return }
+        if (this.placeOrder == RoomPlaceOrder.NoPlace) {
+            return
+        }
         this.placeRoom(rpv, this.addNavMap)
         this.placeTprs(rpv)
 
@@ -187,17 +209,19 @@ export class Room extends MapRect {
             return tpr.entity
         }
         let e: MapTransporter
-        assert(tpr.destMap); assert(tpr.destMarker)
+        assert(tpr.destMap)
+        assert(tpr.destMarker)
         switch (tpr.entityType) {
             case 'Door':
                 e = MapDoor.new(tpr.pos, rpv.masterLevel, tpr.dir, tpr.name, tpr.destMap, tpr.destMarker, tpr.condition)
                 break
-            case 'TeleportGround': throw new Error('not implemented')
+            case 'TeleportGround':
+                throw new Error('not implemented')
             case 'TeleportField':
-                e = MapTeleportField.new(tpr.pos, rpv.masterLevel, tpr.dir, tpr.name,
-                    tpr.destMap, tpr.destMarker, 'AR', tpr.name, 'false', tpr.condition)
+                e = MapTeleportField.new(tpr.pos, rpv.masterLevel, tpr.dir, tpr.name, tpr.destMap, tpr.destMarker, 'AR', tpr.name, 'false', tpr.condition)
                 break
-            default: throw new Error('not implemented')
+            default:
+                throw new Error('not implemented')
         }
         rpv.entities.push(e)
         return e
@@ -205,7 +229,7 @@ export class Room extends MapRect {
 
     private placeTprs(rpv: RoomPlaceVars) {
         for (const io of this.ios) {
-            if (io instanceof RoomIOTpr && ! io.tpr.noPlace) {
+            if (io instanceof RoomIOTpr && !io.tpr.noPlace) {
                 Room.placeTpr(rpv, io.tpr)
             }
         }
@@ -217,10 +241,18 @@ export class Room extends MapRect {
             for (let y = this.y; y < this.y2(); y++) {
                 for (let x = this.x; x < this.x2(); x++) {
                     rpv.background[y][x] = rpv.tc.floorTile
-                    if (rpv.tc.addShadows) { rpv.shadow![y][x] = 0 }
-                    for (const coll of rpv.colls) { coll[y][x] = 0 }
+                    if (rpv.tc.addShadows) {
+                        rpv.shadow![y][x] = 0
+                    }
+                    for (const coll of rpv.colls) {
+                        coll[y][x] = 0
+                    }
                     rpv.light[y][x] = 0
-                    if (addNavMap) { for (const nav of rpv.navs) { nav[y][x] = 1 } }
+                    if (addNavMap) {
+                        for (const nav of rpv.navs) {
+                            nav[y][x] = 1
+                        }
+                    }
                 }
             }
 
@@ -265,7 +297,7 @@ export class Room extends MapRect {
                     }
                 }
             }
-            
+
             if (this.wallSides[Dir.WEST]) {
                 for (let y = this.y; y < this.y2(); y++) {
                     this.placeWall(rpv, new MapPoint(this.x, y), Dir.WEST)
@@ -279,7 +311,6 @@ export class Room extends MapRect {
                     }
                 }
             }
-
 
             if (rpv.tc.addShadows) {
                 // fix shadow corners
@@ -296,33 +327,45 @@ export class Room extends MapRect {
                     parseArrAt2d(rpv.shadow!, rpv.tc.cornerShadowBottomRight!, this.x2() - 2, this.y2() - 2)
                 }
             }
-        
 
             if (rpv.tc.addLight) {
-                assert(rpv.tc.lightStep); assert(rpv.tc.lightTile);
+                assert(rpv.tc.lightStep)
+                assert(rpv.tc.lightTile)
                 const distFromWall = 5
                 const lx1 = this.x + distFromWall - 1
                 const ly1 = this.y + distFromWall - 1
                 const lx2 = this.x2() - distFromWall
                 const ly2 = this.y2() - distFromWall
 
-                const mx = Math.floor(lx1 + (lx2 - lx1)/2)
-                const my = Math.floor(ly1 + (ly2 - ly1)/2)
+                const mx = Math.floor(lx1 + (lx2 - lx1) / 2)
+                const my = Math.floor(ly1 + (ly2 - ly1) / 2)
                 rpv.light[my][mx] = rpv.tc.lightTile
 
                 for (let x = lx1; x <= mx; x += rpv.tc.lightStep) {
-                    for (let y = ly1; y <= my; y += rpv.tc.lightStep) { rpv.light[y][x] = rpv.tc.lightTile }
-                    for (let y = ly2; y >= my; y -= rpv.tc.lightStep) { rpv.light[y][x] = rpv.tc.lightTile }
+                    for (let y = ly1; y <= my; y += rpv.tc.lightStep) {
+                        rpv.light[y][x] = rpv.tc.lightTile
+                    }
+                    for (let y = ly2; y >= my; y -= rpv.tc.lightStep) {
+                        rpv.light[y][x] = rpv.tc.lightTile
+                    }
                     rpv.light[my][x] = rpv.tc.lightTile
                 }
                 for (let x = lx2; x >= mx; x -= rpv.tc.lightStep) {
-                    for (let y = ly1; y <= my; y += rpv.tc.lightStep) { rpv.light[y][x] = rpv.tc.lightTile }
-                    for (let y = ly2; y >= my; y -= rpv.tc.lightStep) { rpv.light[y][x] = rpv.tc.lightTile }
+                    for (let y = ly1; y <= my; y += rpv.tc.lightStep) {
+                        rpv.light[y][x] = rpv.tc.lightTile
+                    }
+                    for (let y = ly2; y >= my; y -= rpv.tc.lightStep) {
+                        rpv.light[y][x] = rpv.tc.lightTile
+                    }
                     rpv.light[my][x] = rpv.tc.lightTile
                 }
 
-                for (let y = ly1; y <= ly2; y += rpv.tc.lightStep) { rpv.light[y][mx] = rpv.tc.lightTile }
-                for (let y = ly2; y >= my; y -= rpv.tc.lightStep) { rpv.light[y][mx] = rpv.tc.lightTile }
+                for (let y = ly1; y <= ly2; y += rpv.tc.lightStep) {
+                    rpv.light[y][mx] = rpv.tc.lightTile
+                }
+                for (let y = ly2; y >= my; y -= rpv.tc.lightStep) {
+                    rpv.light[y][mx] = rpv.tc.lightTile
+                }
             }
         }
     }
@@ -335,15 +378,17 @@ export class Room extends MapRect {
                     if (rpv.tc.wallUp[i]) {
                         rpv.background[y][pos.x] = rpv.tc.wallUp[i]
                     }
-                    if (rpv.tc.addShadows && rpv.tc.wallUpShadow![i]) { rpv.shadow![y][pos.x] = rpv.tc.wallUpShadow![i] }
+                    if (rpv.tc.addShadows && rpv.tc.wallUpShadow![i]) {
+                        rpv.shadow![y][pos.x] = rpv.tc.wallUpShadow![i]
+                    }
                 }
                 for (let i = rpv.masterLevel; i < rpv.colls.length; i++) {
                     const ri = i - rpv.masterLevel
                     const coll: number[][] = rpv.colls[i]
                     for (let y = pos.y - 3; y <= pos.y; y++) {
-                        coll[y - ri*2][pos.x] = Coll.None
+                        coll[y - ri * 2][pos.x] = Coll.None
                     }
-                    let y: number = pos.y - ri*2 - 1
+                    let y: number = pos.y - ri * 2 - 1
                     coll[y][pos.x] = Coll.Wall
                 }
                 break
@@ -352,14 +397,18 @@ export class Room extends MapRect {
                 for (let i = 0; i < rpv.tc.wallRight.length; i++) {
                     const x = pos.x - rpv.tc.wallRight.length + i + 1
                     if (rpv.tc.wallRight[i]) {
-                        if (! rpv.background[pos.y][x]) { rpv.background[pos.y][x] = rpv.tc.wallRight[i] }
+                        if (!rpv.background[pos.y][x]) {
+                            rpv.background[pos.y][x] = rpv.tc.wallRight[i]
+                        }
 
                         for (const coll of rpv.colls) {
                             coll[pos.y][x] = Coll.Wall
                             coll[pos.y][x + 1] = Coll.Wall
                         }
                     }
-                    if (rpv.tc.addShadows && rpv.tc.wallRightShadow![i]) { rpv.shadow![pos.y][x] = rpv.tc.wallRightShadow![i] }
+                    if (rpv.tc.addShadows && rpv.tc.wallRightShadow![i]) {
+                        rpv.shadow![pos.y][x] = rpv.tc.wallRightShadow![i]
+                    }
                 }
                 break
             }
@@ -369,15 +418,17 @@ export class Room extends MapRect {
                     if (rpv.tc.wallDown[i]) {
                         rpv.background[y][pos.x] = rpv.tc.wallDown[i]
                     }
-                    if (rpv.tc.addShadows && rpv.tc.wallDownShadow![i]) { rpv.shadow![y][pos.x] = rpv.tc.wallDownShadow![i] }
+                    if (rpv.tc.addShadows && rpv.tc.wallDownShadow![i]) {
+                        rpv.shadow![y][pos.x] = rpv.tc.wallDownShadow![i]
+                    }
                 }
                 for (let i = rpv.masterLevel; i < rpv.colls.length; i++) {
                     const ri = i - rpv.masterLevel
                     const coll: number[][] = rpv.colls[i]
                     for (let y = pos.y; y >= pos.y - 3; y--) {
-                        coll[y - ri*2][pos.x] = Coll.None
+                        coll[y - ri * 2][pos.x] = Coll.None
                     }
-                    const y: number = pos.y - ri*2
+                    const y: number = pos.y - ri * 2
                     coll[y][pos.x] = Coll.Wall
                 }
                 break
@@ -386,7 +437,7 @@ export class Room extends MapRect {
                 for (let i = 0; i < rpv.tc.wallLeft.length; i++) {
                     const x = pos.x + i - 1
                     if (rpv.tc.wallLeft[i]) {
-                        if (! rpv.background[pos.y][x]) { 
+                        if (!rpv.background[pos.y][x]) {
                             rpv.background[pos.y][x] = rpv.tc.wallLeft[i]
                         }
                         for (const coll of rpv.colls) {
@@ -394,7 +445,9 @@ export class Room extends MapRect {
                             coll[pos.y][x - 1] = Coll.Wall
                         }
                     }
-                    if (rpv.tc.addShadows && rpv.tc.wallLeftShadow![i]) { rpv.shadow![pos.y][x] = rpv.tc.wallLeftShadow![i] }
+                    if (rpv.tc.addShadows && rpv.tc.wallLeftShadow![i]) {
+                        rpv.shadow![pos.y][x] = rpv.tc.wallLeftShadow![i]
+                    }
                 }
                 break
             }
@@ -414,8 +467,8 @@ export class Room extends MapRect {
                     for (let y3 = y - additional; y3 < y + additional + 1; y3++) {
                         const point: MapPoint = new MapPoint(rect.x, y3)
                         const checkPoint: MapPoint = MapPoint.fromVec(point)
-                        checkPoint.x -= 1/tilesize
-                        if (! isVecInRectArr(checkPoint.to(EntityPoint), sel.bb)) {
+                        checkPoint.x -= 1 / tilesize
+                        if (!isVecInRectArr(checkPoint.to(EntityPoint), sel.bb)) {
                             this.placeWall(rpv, point, Dir.WEST)
                         }
                     }
@@ -424,8 +477,8 @@ export class Room extends MapRect {
                     for (let y3 = y - additional; y3 < y + additional + 1; y3++) {
                         const point: MapPoint = new MapPoint(rect.x2() + 1, y3)
                         const checkPoint: MapPoint = MapPoint.fromVec(point)
-                        checkPoint.x += 1/tilesize
-                        if (! isVecInRectArr(checkPoint.to(EntityPoint), sel.bb)) {
+                        checkPoint.x += 1 / tilesize
+                        if (!isVecInRectArr(checkPoint.to(EntityPoint), sel.bb)) {
                             this.placeWall(rpv, point, Dir.EAST)
                         }
                     }
@@ -437,8 +490,8 @@ export class Room extends MapRect {
                     for (let x3 = x - additional; x3 < x + additional + 1; x3++) {
                         const point: MapPoint = new MapPoint(x3, rect.y)
                         const checkPoint: MapPoint = MapPoint.fromVec(point)
-                        checkPoint.y -= 1/tilesize
-                        if (! isVecInRectArr(checkPoint.to(EntityPoint), sel.bb)) {
+                        checkPoint.y -= 1 / tilesize
+                        if (!isVecInRectArr(checkPoint.to(EntityPoint), sel.bb)) {
                             this.placeWall(rpv, point, Dir.NORTH)
                         }
                     }
@@ -447,8 +500,8 @@ export class Room extends MapRect {
                     for (let x3 = x - additional; x3 < x + additional + 1; x3++) {
                         const point: MapPoint = new MapPoint(x3, rect.y2() + 1)
                         const checkPoint: MapPoint = MapPoint.fromVec(point)
-                        checkPoint.x += 1/tilesize
-                        if (! isVecInRectArr(checkPoint.to(EntityPoint), sel.bb)) {
+                        checkPoint.x += 1 / tilesize
+                        if (!isVecInRectArr(checkPoint.to(EntityPoint), sel.bb)) {
                             this.placeWall(rpv, point, Dir.SOUTH)
                         }
                     }

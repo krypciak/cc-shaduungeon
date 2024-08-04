@@ -32,18 +32,18 @@ export interface RoomThemeConfig {
 }
 
 export class RoomTheme {
-    constructor(public config: RoomThemeConfig) { }
-    
+    constructor(public config: RoomThemeConfig) {}
+
     getMapAttributes(areaName: string): sc.MapModel.MapAttributes {
-        return { 
+        return {
             bgm: this.config.bgm,
-            "map-sounds": this.config.mapSounds,
+            'map-sounds': this.config.mapSounds,
             mapStyle: this.config.mapStyle,
             weather: this.config.weather,
             area: areaName,
             saveMode: 'ENABLED',
             cameraInBounds: false,
-            npcRunners: ''
+            npcRunners: '',
         }
     }
 
@@ -73,29 +73,37 @@ export class RoomTheme {
             wallLeftShadow: [0, 201, 169],
             cornerShadowTopRight: [
                 [200, 200],
-                [171, 217]],
+                [171, 217],
+            ],
             cornerShadowTopLeft: [
                 [200, 200],
-                [201, 170]],
-            cornerShadowBottomRight: [ 
+                [201, 170],
+            ],
+            cornerShadowBottomRight: [
                 [187, 217],
-                [216, 216]],
-            cornerShadowBottomLeft: [ 
+                [216, 216],
+            ],
+            cornerShadowBottomLeft: [
                 [201, 186],
-                [216, 216]],
+                [216, 216],
+            ],
 
             edgeShadowTopRight: [
                 [185, 198],
-                [166, 168]],
+                [166, 168],
+            ],
             edgeShadowBottomRight: [
                 [182, 184],
-                [185, 214]],
+                [185, 214],
+            ],
             edgeShadowTopLeft: [
                 [197, 169],
-                [168, 165]],
+                [168, 165],
+            ],
             edgeShadowBottomLeft: [
                 [184, 181],
-                [213, 169]],
+                [213, 169],
+            ],
         }),
         'cold-dng': new RoomTheme({
             bgm: 'coldDungeon',
@@ -127,5 +135,3 @@ export class RoomTheme {
         }
     }
 }
-
-

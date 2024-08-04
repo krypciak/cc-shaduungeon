@@ -1,7 +1,7 @@
-import { AreaInfo } from "@root/area/area-builder";
-import { ArmItemType } from "@root/dungeon/dungeon-arm";
-import { MapChest } from "@root/util/entity";
-import { EntityPoint } from "cc-map-util/pos";
+import { AreaInfo } from '@root/area/area-builder'
+import { ArmItemType } from '@root/dungeon/dungeon-arm'
+import { MapChest } from '@root/util/entity'
+import { EntityPoint } from 'cc-map-util/pos'
 
 export enum Item {
     FajroKey = 146,
@@ -37,7 +37,8 @@ export class ItemHandler {
                 chestType = 'Default'
                 itemId = Item.BlazingBun
                 break
-            default: throw new Error('not implemented')
+            default:
+                throw new Error('not implemented')
         }
         return MapChest.new(pos, level, name, chestType, itemId, spawnCondition, 1)
     }

@@ -1,5 +1,5 @@
 import { Dir, MapPoint, EntityPoint, DirUtil, Point } from 'cc-map-util/pos'
-import { Room, RoomIO, RoomIODoorLike, RoomIOTpr, Tpr, } from '@root/room/room'
+import { Room, RoomIO, RoomIODoorLike, RoomIOTpr, Tpr } from '@root/room/room'
 import { assert, assertBool } from 'cc-map-util/util'
 import { MapChest, MapDestructible, MapDoorLike, MapEntity, MapEventTrigger, MapFloorSwitch, MapTeleportField, MapTransporter } from '@root/util/entity'
 import { RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen } from '@root/room/tunnel-room'
@@ -23,12 +23,12 @@ interface PuzzleData {
     }
     finishCondition: string
     end: {
-        pos: Vec3 & { level: number },
-        dir: Dir,
+        pos: Vec3 & { level: number }
+        dir: Dir
     }
     start: {
-        pos: Vec3 & { level: number },
-        dir: Dir,
+        pos: Vec3 & { level: number }
+        dir: Dir
     }
 }
 
@@ -37,17 +37,19 @@ export class PuzzleRoom extends Room {
     static puzzleList: Readonly<Readonly<PuzzleSelection>[]>
 
     static async preloadPuzzleList() {
-        if (! PuzzleRoom.puzzleMap) {
-            const puzzleMap = new Map<string, Readonly<PuzzleSelection>[]>
+        if (!PuzzleRoom.puzzleMap) {
+            const puzzleMap = new Map<string, Readonly<PuzzleSelection>[]>()
             const puzzleList: Readonly<PuzzleSelection>[] = []
             PuzzleRoom.puzzleList = []
             for (const mapName in blitzkrieg.sels.puzzle.selMap) {
                 const entry = blitzkrieg.sels.puzzle.selMap[mapName]
                 /* entry is from blitzkrieg puzzle list */
                 if (entry.fileIndex == 0 && entry.sels.length > 0) {
-                    const filtered: Readonly<PuzzleSelection>[] = entry.sels.filter((sel) => sel.data.type != 'dis').map(e => Object.freeze(e as PuzzleSelection))
+                    const filtered: Readonly<PuzzleSelection>[] = entry.sels.filter(sel => sel.data.type != 'dis').map(e => Object.freeze(e as PuzzleSelection))
                     puzzleMap.set(mapName, filtered)
-                    for (const sel of filtered) { puzzleList.push(Object.freeze(sel)) }
+                    for (const sel of filtered) {
+                        puzzleList.push(Object.freeze(sel))
+                    }
                 }
             }
             PuzzleRoom.puzzleMap = Object.freeze(puzzleMap)
@@ -62,29 +64,34 @@ export class PuzzleRoom extends Room {
 
     private oldFC?: string
 
-    private preplaceFuncionsEntries = [{ order: 0, func: function(this: PuzzleRoom, arm: ArmRuntime, builder: MapBuilder) {
-        assert(this.isArmEnd)
-        if (this.isArmEnd) {
-            this.primaryExit.tpr.noPlace = true
-            const origTpr = this.origExit.tpr
-            if (origTpr.entity) {
-                origTpr.entityCondition = 'false'
-                origTpr.destMap = 'none'
-                origTpr.destMarker = 'none'
-                origTpr.noPlace = true
-                this.ios.push(Object.assign(this.origExit, { toDelete: true }))
-            }
-            if (arm.end == ArmEnd.Item) {
-                this.oldFC = this.puzzle.finishCondition
-                this.puzzle.finishCondition = this.primaryExit.tpr.condition = `maps.${builder.path!}.puzzleFinished`
-            }
-        }
-    }}]
+    private preplaceFuncionsEntries = [
+        {
+            order: 0,
+            func: function (this: PuzzleRoom, arm: ArmRuntime, builder: MapBuilder) {
+                assert(this.isArmEnd)
+                if (this.isArmEnd) {
+                    this.primaryExit.tpr.noPlace = true
+                    const origTpr = this.origExit.tpr
+                    if (origTpr.entity) {
+                        origTpr.entityCondition = 'false'
+                        origTpr.destMap = 'none'
+                        origTpr.destMarker = 'none'
+                        origTpr.noPlace = true
+                        this.ios.push(Object.assign(this.origExit, { toDelete: true }))
+                    }
+                    if (arm.end == ArmEnd.Item) {
+                        this.oldFC = this.puzzle.finishCondition
+                        this.puzzle.finishCondition = this.primaryExit.tpr.condition = `maps.${builder.path!}.puzzleFinished`
+                    }
+                }
+            },
+        },
+    ]
 
     constructor(
         puzzleSel: PuzzleSelection,
         puzzleMap: sc.MapModel.Map,
-        public enterCondition: string,
+        public enterCondition: string
     ) {
         const puzzle: Partial<PuzzleData> = {
             roomType: puzzleSel.data.type,
@@ -92,31 +99,35 @@ export class PuzzleRoom extends Room {
             map: puzzleMap,
             sel: puzzleSel,
         }
-        assert(puzzle.sel); assert(puzzle.map);
+        assert(puzzle.sel)
+        assert(puzzle.map)
         /* extract data from original puzzle selection */ {
-        const id = generateUniqueId()
-        const sel = puzzle.sel ///blitzkrieg.selectionCopyManager .createUniquePuzzleSelection(puzzle.sel, 0, 0, id)
+            const id = generateUniqueId()
+            const sel = puzzle.sel ///blitzkrieg.selectionCopyManager .createUniquePuzzleSelection(puzzle.sel, 0, 0, id)
 
-        let solveCondition: string | undefined
-        let solveConditionUnique: string | undefined
-        switch (puzzle.completion) {
-            case blitzkrieg.PuzzleCompletionType.Normal:
-                solveCondition = blitzkrieg.PuzzleSelectionManager.getPuzzleSolveCondition(puzzle.sel)
-                break
-            case blitzkrieg.PuzzleCompletionType.GetTo:
-                if (puzzle.roomType == blitzkrieg.PuzzleRoomType.WholeRoom) {
-                    solveCondition = ''
-                } else if (puzzle.roomType == blitzkrieg.PuzzleRoomType.AddWalls) {
-                    solveCondition = 'map.puzzleSolution1'; break
+            let solveCondition: string | undefined
+            let solveConditionUnique: string | undefined
+            switch (puzzle.completion) {
+                case blitzkrieg.PuzzleCompletionType.Normal:
+                    solveCondition = blitzkrieg.PuzzleSelectionManager.getPuzzleSolveCondition(puzzle.sel)
+                    break
+                case blitzkrieg.PuzzleCompletionType.GetTo:
+                    if (puzzle.roomType == blitzkrieg.PuzzleRoomType.WholeRoom) {
+                        solveCondition = ''
+                    } else if (puzzle.roomType == blitzkrieg.PuzzleRoomType.AddWalls) {
+                        solveCondition = 'map.puzzleSolution1'
+                        break
+                    }
+                case blitzkrieg.PuzzleCompletionType.Item:
+                    solveCondition = undefined
+            }
+            if (solveCondition) {
+                solveConditionUnique = solveCondition
+                if (solveCondition && !solveCondition.includes('_destroyed')) {
+                    solveConditionUnique += '_' + id
                 }
-            case blitzkrieg.PuzzleCompletionType.Item:
-                solveCondition = undefined
-        }
-        if (solveCondition) {
-            solveConditionUnique = solveCondition
-            if (solveCondition && ! solveCondition.includes('_destroyed')) { solveConditionUnique += '_' + id }
-        }
-        puzzle.usel = { id, sel, solveCondition, solveConditionUnique }
+            }
+            puzzle.usel = { id, sel, solveCondition, solveConditionUnique }
         } /* end */
 
         /* prepare for super() call */
@@ -128,24 +139,26 @@ export class PuzzleRoom extends Room {
             wallSides = [true, true, true, true]
             roomRect = Rect.new(MapRect, puzzle.usel.sel.sizeRect)
             roomRect.extend(3)
-        } else { throw new Error('not implemented') }
+        } else {
+            throw new Error('not implemented')
+        }
         /* end */
         super('puzzle', roomRect, wallSides)
 
         /* set start pos */ {
-        const pos: Vec3  & { level: number } = ig.copy(puzzle.usel.sel.data.startPos)
-        const dir: Dir = (puzzle.roomType == blitzkrieg.PuzzleRoomType.WholeRoom ?
-            setToClosestSelSide(pos, puzzle.usel.sel) :
-            Rect.new(EntityRect, this).setToClosestRectSide(pos)).dir
-        puzzle.start = { pos, dir }
+            const pos: Vec3 & { level: number } = ig.copy(puzzle.usel.sel.data.startPos)
+            const dir: Dir = (
+                puzzle.roomType == blitzkrieg.PuzzleRoomType.WholeRoom ? setToClosestSelSide(pos, puzzle.usel.sel) : Rect.new(EntityRect, this).setToClosestRectSide(pos)
+            ).dir
+            puzzle.start = { pos, dir }
         } /* end */
         /* set end pos */ {
-        const pos: Vec3  & { level: number } = ig.copy(puzzle.usel.sel.data.endPos)
-        const dir: Dir = (puzzle.roomType == blitzkrieg.PuzzleRoomType.WholeRoom ?
-            setToClosestSelSide(pos, puzzle.usel.sel) :
-            Rect.new(EntityRect, this).setToClosestRectSide(pos)).dir
+            const pos: Vec3 & { level: number } = ig.copy(puzzle.usel.sel.data.endPos)
+            const dir: Dir = (
+                puzzle.roomType == blitzkrieg.PuzzleRoomType.WholeRoom ? setToClosestSelSide(pos, puzzle.usel.sel) : Rect.new(EntityRect, this).setToClosestRectSide(pos)
+            ).dir
 
-        puzzle.end = { pos, dir }
+            puzzle.end = { pos, dir }
         } /* end */
 
         /* figure out exit io */
@@ -194,8 +207,12 @@ export class PuzzleRoom extends Room {
         puzzle.finishCondition = this.origExit.tpr.condition
 
         /* at this point all variables in PuzzleData are satisfied */
-        assert(puzzle.roomType); assert(puzzle.completion); assert(puzzle.map); assert(puzzle.usel)
-        assert(puzzle.end); assert(puzzle.start)
+        assert(puzzle.roomType)
+        assert(puzzle.completion)
+        assert(puzzle.map)
+        assert(puzzle.usel)
+        assert(puzzle.end)
+        assert(puzzle.start)
         this.puzzle = puzzle as PuzzleData
 
         this.preplaceFunctions.push(...this.preplaceFuncionsEntries)
@@ -209,7 +226,9 @@ export class PuzzleRoom extends Room {
     }
 
     setEntarenceTunnel(closedTunnel: boolean, sizeOrig: MapPoint) {
-        if (this.primaryEntarence) { throw new Error('cannot add entarence io twice') }
+        if (this.primaryEntarence) {
+            throw new Error('cannot add entarence io twice')
+        }
         const puzzle = this.puzzle
         /* create entarence io */
         const setPos = EntityPoint.fromVec(puzzle.start.pos)
@@ -217,27 +236,28 @@ export class PuzzleRoom extends Room {
         const size: MapPoint = sizeOrig.copy()
 
         const preffedPos: boolean = puzzle.roomType == blitzkrieg.PuzzleRoomType.AddWalls
-        if (! preffedPos) {
+        if (!preffedPos) {
             const sidePos: EntityPoint = setPos.copy()
             this.to(EntityRect).setPosToSide(sidePos, dir)
             const distEntity: number = Vec2.distance(sidePos, setPos)
             const dist: number = distEntity / (EntityRect.multiplier / MapRect.multiplier)
             size.y += dist
         }
-        const entIO: RoomIOTunnel = closedTunnel ? 
-            new RoomIOTunnelClosed(this, dir, size, setPos, preffedPos) :
-            new RoomIOTunnelOpen(this, dir, size, DirUtil.flip(dir), setPos, preffedPos)
+        const entIO: RoomIOTunnel = closedTunnel
+            ? new RoomIOTunnelClosed(this, dir, size, setPos, preffedPos)
+            : new RoomIOTunnelOpen(this, dir, size, DirUtil.flip(dir), setPos, preffedPos)
 
         this.primaryEntarence = entIO
         this.ios.push(this.primaryEntarence)
     }
 
     pushExit(isEnd: boolean) {
-        this.ios = this.ios.filter(io => ! io.toDelete)
+        this.ios = this.ios.filter(io => !io.toDelete)
         if (isEnd) {
             const oldTpr: Tpr = this.origExit.getTpr()
-            this.primaryExit = new RoomIOTpr(Tpr.get('puzzle-exit-to-arm', oldTpr.dir,
-                EntityPoint.fromVec(this.puzzle.usel.sel.data.endPos), 'TeleportField', true, this.puzzle.finishCondition))
+            this.primaryExit = new RoomIOTpr(
+                Tpr.get('puzzle-exit-to-arm', oldTpr.dir, EntityPoint.fromVec(this.puzzle.usel.sel.data.endPos), 'TeleportField', true, this.puzzle.finishCondition)
+            )
             if (oldTpr.entity) {
                 oldTpr.entity.settings.condition = 'false'
                 oldTpr.destMap = 'none'
@@ -252,7 +272,7 @@ export class PuzzleRoom extends Room {
     async place(rpv: RoomPlaceVars, arm: ArmRuntime): Promise<RoomPlaceVars | void> {
         const puzzle = this.puzzle
         puzzle.usel.sel.mapName = rpv.map.name
-        rpv = await super.place(rpv, arm) ?? rpv
+        rpv = (await super.place(rpv, arm)) ?? rpv
 
         if (puzzle.roomType == blitzkrieg.PuzzleRoomType.WholeRoom) {
             this.placeWallsInEmptySpace(rpv, puzzle.usel.sel)
@@ -262,13 +282,19 @@ export class PuzzleRoom extends Room {
             /* delete all tprs other than the optional tpr (when whole room) */
             puzzle.map = ig.copy(puzzle.map)
             const keepArr: MapEntity[] = []
-            if (this.primaryExit.tpr.entity) { keepArr.push(this.primaryExit.tpr.entity) }
+            if (this.primaryExit.tpr.entity) {
+                keepArr.push(this.primaryExit.tpr.entity)
+            }
             /* remove some unwanted entities */
             puzzle.map.entities = puzzle.map.entities.filter(e => {
                 if (MapTransporter.check(e)) {
-                    if (e.settings.condition == 'false' && e.type != 'TeleportGround') { return true }
+                    if (e.settings.condition == 'false' && e.type != 'TeleportGround') {
+                        return true
+                    }
                     for (const e1 of keepArr) {
-                        if (e.x == e1.x && e.y == e1.y) { return true }
+                        if (e.x == e1.x && e.y == e1.y) {
+                            return true
+                        }
                     }
                     return false
                 } else if (MapEventTrigger.check(e)) {
@@ -280,14 +306,16 @@ export class PuzzleRoom extends Room {
                     }
                     return true
                 } else if (MapDestructible.check(e)) {
-                    if (e.settings.desType == 'keyPillar' || e.settings.desType == 'keyPillarAR') { return false }
+                    if (e.settings.desType == 'keyPillar' || e.settings.desType == 'keyPillarAR') {
+                        return false
+                    }
                     return true
                 } else if (MapChest.check(e)) {
                     return false
                 } else {
                     return true
                 }
-            });
+            })
 
             const pastePos: MapPoint = MapPoint.fromVec(puzzle.usel.sel.sizeRect)
             const map: sc.MapModel.Map = blitzkrieg.mapUtil.copySelMapAreaTo(rpv.map, puzzle.map, puzzle.sel, pastePos, [], {
@@ -323,16 +351,24 @@ export class PuzzleRoom extends Room {
 
                     const eventTriggerPos: EntityPoint = endPosVec.copy()
                     Point.moveInDirection(eventTriggerPos, this.primaryExit.tpr.dir, 24)
-                    const eventTrigger: MapEventTrigger = MapEventTrigger.new(eventTriggerPos, rpv.masterLevel,
-                    'eventTriggerTurnOnTeleportField', 'PARALLEL', triggerCond, 'ONCE', 'true', [
-                        { ignoreSlowDown: false, type: 'WAIT', time: 0.5 },
-                        {
-                            changeType: 'set',
-                            type: 'CHANGE_VAR_BOOL',
-                            varName: puzzle.finishCondition,
-                            value: true,
-                        },
-                    ])
+                    const eventTrigger: MapEventTrigger = MapEventTrigger.new(
+                        eventTriggerPos,
+                        rpv.masterLevel,
+                        'eventTriggerTurnOnTeleportField',
+                        'PARALLEL',
+                        triggerCond,
+                        'ONCE',
+                        'true',
+                        [
+                            { ignoreSlowDown: false, type: 'WAIT', time: 0.5 },
+                            {
+                                changeType: 'set',
+                                type: 'CHANGE_VAR_BOOL',
+                                varName: puzzle.finishCondition,
+                                value: true,
+                            },
+                        ]
+                    )
                     rpv.entities.push(eventTrigger)
                 }
                 assertBool(this.primaryExit.tpr.entityType == 'TeleportField')
@@ -340,7 +376,7 @@ export class PuzzleRoom extends Room {
                 const entity: MapTeleportField = Room.placeTpr(rpv, this.primaryExit.tpr) as MapTeleportField
                 entity.level = endPos.level
             }
-     
+
             if (puzzle.completion == blitzkrieg.PuzzleCompletionType.GetTo && puzzle.roomType == blitzkrieg.PuzzleRoomType.AddWalls) {
                 assert(puzzle.usel.solveConditionUnique)
                 rpv.entities.push(MapFloorSwitch.new(endPosVec, endPos.level, 'puzzleSolveSwitch', puzzle.usel.solveConditionUnique))
@@ -350,4 +386,3 @@ export class PuzzleRoom extends Room {
         return rpv
     }
 }
-

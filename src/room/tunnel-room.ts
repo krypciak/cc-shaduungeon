@@ -1,5 +1,5 @@
 import { assert } from 'cc-map-util/util'
-import { Dir, DirUtil, EntityPoint, MapPoint, Point, PosDir, } from 'cc-map-util/pos'
+import { Dir, DirUtil, EntityPoint, MapPoint, Point, PosDir } from 'cc-map-util/pos'
 import { Room, RoomIO, RoomIODoorLike, RoomPlaceOrder, RoomType, Tpr } from '@root/room/room'
 import { MapDestructible, MapKeyPanel } from '@root/util/entity'
 import { RoomPlaceVars } from './map-builder'
@@ -10,14 +10,18 @@ import { EntityRect, MapRect, Rect } from 'cc-map-util/src/rect'
 export class RoomIOTunnel implements RoomIO {
     protected constructor(public tunnel: TunnelRoom) {}
 
-    getTpr(): Tpr { throw new Error('invalid call on RoomIOTunnel') }
+    getTpr(): Tpr {
+        throw new Error('invalid call on RoomIOTunnel')
+    }
 }
 export class RoomIOTunnelOpen extends RoomIOTunnel {
     _open = true
     constructor(parentRoom: Room, dir: Dir, size: MapPoint, exitDir: Dir, setPos: EntityPoint, preffedPos: boolean, keyCount?: number) {
         super(new TunnelRoom(parentRoom, dir, size, exitDir, setPos, preffedPos, keyCount))
     }
-    getTpr(): Tpr { throw new Error('invalid call on RoomIOTunnelOpen: these dont have tprs') }
+    getTpr(): Tpr {
+        throw new Error('invalid call on RoomIOTunnelOpen: these dont have tprs')
+    }
 }
 export class RoomIOTunnelClosed extends RoomIOTunnel {
     _closed = true
@@ -52,7 +56,7 @@ export class TunnelRoom extends Room {
         public exitDir: Dir | null,
         setPos: EntityPoint,
         preffedPos: boolean,
-        public keyCount?: number,
+        public keyCount?: number
     ) {
         const pos: EntityPoint = setPos.copy()
         preffedPos && parentRoom.to(EntityRect).setPosToSide(pos, dir)
@@ -61,23 +65,23 @@ export class TunnelRoom extends Room {
         if (keyCount) {
             rect.height += keyCount * (TunnelRoom.keyDestSpacing + 16)
         }
-        if (! DirUtil.isVertical(dir)) {
-            [rect.width, rect.height] = [rect.height, rect.width]
+        if (!DirUtil.isVertical(dir)) {
+            ;[rect.width, rect.height] = [rect.height, rect.width]
         }
         switch (dir) {
             case Dir.NORTH:
-                rect.x -= rect.width/2
+                rect.x -= rect.width / 2
                 rect.y -= rect.height
                 break
             case Dir.EAST:
-                rect.y -= rect.height/2
+                rect.y -= rect.height / 2
                 break
             case Dir.SOUTH:
-                rect.x -= rect.width/2
+                rect.x -= rect.width / 2
                 break
             case Dir.WEST:
                 rect.x -= rect.width
-                rect.y -= rect.height/2
+                rect.y -= rect.height / 2
                 break
         }
         const wallSides: boolean[] = [true, true, true, true]
@@ -94,20 +98,26 @@ export class TunnelRoom extends Room {
     }
 
     getRoomPosThatConnectsToTheMiddle(roomSize: MapPoint): MapPoint {
-        if (this.exitDir === null) { throw new Error('cannot call getRoomPosThatConnectsToTheMiddle() when tunnel is closed') }
+        if (this.exitDir === null) {
+            throw new Error('cannot call getRoomPosThatConnectsToTheMiddle() when tunnel is closed')
+        }
 
         const exitDir = DirUtil.flip(this.exitDir)
         const exitWallRect: MapRect = this.getSide(exitDir, 0) as MapRect
         /* get the tunnel middle point */
-        exitWallRect.x += exitWallRect.width/2
-        exitWallRect.y += exitWallRect.height/2
+        exitWallRect.x += exitWallRect.width / 2
+        exitWallRect.y += exitWallRect.height / 2
         /* calculate the room pos */
         if (DirUtil.isVertical(exitDir)) {
-            exitWallRect.x -= roomSize.x/2
-            if (exitDir == Dir.NORTH) { exitWallRect.y -= roomSize.y }
+            exitWallRect.x -= roomSize.x / 2
+            if (exitDir == Dir.NORTH) {
+                exitWallRect.y -= roomSize.y
+            }
         } else {
-            exitWallRect.y -= roomSize.y/2
-            if (exitDir == Dir.WEST) { exitWallRect.x -= roomSize.x }
+            exitWallRect.y -= roomSize.y / 2
+            if (exitDir == Dir.WEST) {
+                exitWallRect.x -= roomSize.x
+            }
         }
         return MapPoint.fromVec(exitWallRect)
     }
@@ -116,8 +126,11 @@ export class TunnelRoom extends Room {
         super.place(rpv, arm)
         if (this.keyCount) {
             const initKeyArrRect: EntityRect = Rect.new(MapRect, this.getSide(DirUtil.flip(this.dir), 0)).to(EntityRect)
-            if (this.dir == Dir.NORTH) { initKeyArrRect.y -= 16 }
-            else if (this.dir == Dir.WEST) { initKeyArrRect.x -= 16 }
+            if (this.dir == Dir.NORTH) {
+                initKeyArrRect.y -= 16
+            } else if (this.dir == Dir.WEST) {
+                initKeyArrRect.x -= 16
+            }
 
             const keyArrLen: number = this.size.x
             let lastRealKeyPos: number = -1
@@ -126,11 +139,10 @@ export class TunnelRoom extends Room {
                 Point.moveInDirection(keyArrPos, this.dir, (16 + TunnelRoom.keyDestSpacing) * i)
                 let keyPos: number = -2
                 do {
-                    keyPos = randomSeedInt(2, keyArrLen - 1) 
+                    keyPos = randomSeedInt(2, keyArrLen - 1)
                 } while (keyPos == lastRealKeyPos)
 
-                const keyDestArr: MapDestructible[] = MapDestructible.keyPillarChain(keyArrPos, rpv.masterLevel, this.dir,
-                    `${this.name}_keyChain`, keyArrLen, keyPos)
+                const keyDestArr: MapDestructible[] = MapDestructible.keyPillarChain(keyArrPos, rpv.masterLevel, this.dir, `${this.name}_keyChain`, keyArrLen, keyPos)
                 rpv.entities.push(...keyDestArr)
                 lastRealKeyPos = keyPos
             }

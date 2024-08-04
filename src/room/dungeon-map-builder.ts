@@ -5,7 +5,7 @@ import { Dir, DirUtil, EntityPoint, MapPoint } from 'cc-map-util/pos'
 import { BattleRoom } from '@root/room/battle-room'
 import { MapBuilder } from '@root/room/map-builder'
 import { PuzzleRoom } from '@root/room/puzzle-room'
-import { Room, RoomIOTpr, } from '@root/room/room'
+import { Room, RoomIOTpr } from '@root/room/room'
 import { RoomTheme } from '@root/room/themes'
 import { RoomIOTunnelClosed, RoomIOTunnelOpen } from '@root/room/tunnel-room'
 import { ArmRuntime } from '@root/dungeon/dungeon-arm'
@@ -22,17 +22,17 @@ export class PuzzleMapBuilder extends MapBuilder {
     exitCount: number = 1
     entarenceRoom: Room
     exitRoom: PuzzleRoom
-    
+
     puzzleRoom: PuzzleRoom
 
     prepareCheck: boolean = true
-     
+
     constructor(
         public areaInfo: AreaInfo,
         puzzleSel: PuzzleSelection,
         puzzleMap: sc.MapModel.Map,
         closedTunnel: boolean,
-        entarenceCondition: string,
+        entarenceCondition: string
     ) {
         super(3, areaInfo, RoomTheme.getFromArea(puzzleMap.attributes.area))
         this.puzzleRoom = new PuzzleRoom(puzzleSel, puzzleMap, entarenceCondition)
@@ -44,15 +44,16 @@ export class PuzzleMapBuilder extends MapBuilder {
     }
 
     prepareToArrange(dir: Dir, isEnd: boolean): boolean {
-        if (this.prepareCheck && this.puzzleRoom.puzzle.start.dir != DirUtil.flip(dir)) { return false }
+        if (this.prepareCheck && this.puzzleRoom.puzzle.start.dir != DirUtil.flip(dir)) {
+            return false
+        }
 
-        this.mapIOs = this.mapIOs.filter(obj => ! obj.toDelete)
+        this.mapIOs = this.mapIOs.filter(obj => !obj.toDelete)
         this.exitRoom.pushExit(isEnd)
         this.mapIOs.push({ io: this.puzzleRoom.primaryExit, room: this.puzzleRoom, toDelete: true })
         this.prepareCheck && this.setOnWallPositions()
         return true
     }
-
 
     async decideDisplayName(index: number): Promise<string> {
         const selMapDisplayName: string = await getMapDisplayName(this.puzzleRoom.puzzle.map)
@@ -71,7 +72,7 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
     constructor(
         public areaInfo: AreaInfo,
         puzzleSel: PuzzleSelection,
-        puzzleMap: sc.MapModel.Map,
+        puzzleMap: sc.MapModel.Map
     ) {
         const battleStartCondition: string = 'tmp.battle1'
         const battleDoneCondition: string = 'map.battle1done'
@@ -89,7 +90,9 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
 
     prepareToArrange(dir: Dir, isEnd: boolean): boolean {
         assertBool(this.puzzleRoom.primaryEntarence instanceof RoomIOTunnelOpen)
-        if (dir == this.puzzleRoom.primaryEntarence.tunnel.dir) { return false }
+        if (dir == this.puzzleRoom.primaryEntarence.tunnel.dir) {
+            return false
+        }
 
         this.prepareCheck = false
         super.prepareToArrange(dir, isEnd)
@@ -104,8 +107,10 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
         }
 
         const tunnelSize: MapPoint = new MapPoint(5, 4)
-        this.battleRoom.primaryEntarence = Object.assign(new RoomIOTunnelClosed(this.battleRoom, DirUtil.flip(dir), tunnelSize,
-            this.battleRoom.middlePoint(MapPoint).to(EntityPoint), true), { toDelete: true })
+        this.battleRoom.primaryEntarence = Object.assign(
+            new RoomIOTunnelClosed(this.battleRoom, DirUtil.flip(dir), tunnelSize, this.battleRoom.middlePoint(MapPoint).to(EntityPoint), true),
+            { toDelete: true }
+        )
         this.battleRoom.ios.push(this.battleRoom.primaryEntarence)
         this.battleRoom.pushAllRooms(this.rooms)
         this.setOnWallPositions()
@@ -119,23 +124,31 @@ export class DungeonIntersectionMapBuilder extends MapBuilder {
 
     entarenceRoom: DungeonIntersectionRoom
 
-    constructor(areaInfo: AreaInfo, keyCount: number, public entDir: Dir, aDir1: Dir, aDir2: Dir, keyDir: Dir) {
+    constructor(
+        areaInfo: AreaInfo,
+        keyCount: number,
+        public entDir: Dir,
+        aDir1: Dir,
+        aDir2: Dir,
+        keyDir: Dir
+    ) {
         super(3, areaInfo, RoomTheme.default)
-        this.entarenceRoom = this.simpleRoom =
-            new DungeonIntersectionRoom(new MapPoint(0, 0), new MapPoint(20, 20), keyCount, entDir, aDir1, aDir2, keyDir)
+        this.entarenceRoom = this.simpleRoom = new DungeonIntersectionRoom(new MapPoint(0, 0), new MapPoint(20, 20), keyCount, entDir, aDir1, aDir2, keyDir)
         this.simpleRoom.pushAllRooms(this.rooms)
         this.simpleRoom.exits.forEach(io => this.mapIOs.push({ io, room: this.simpleRoom }))
         this.setOnWallPositions()
     }
 
     prepareToArrange(dir: Dir, isEnd: boolean): boolean {
-        if (this.entDir != DirUtil.flip(dir)) { return false }
+        if (this.entDir != DirUtil.flip(dir)) {
+            return false
+        }
         assertBool(isEnd)
         return true
     }
 
     async decideDisplayName(index: number): Promise<string> {
-        return this.displayName = `DungeonIntersectionMapBuilder ${index}`
+        return (this.displayName = `DungeonIntersectionMapBuilder ${index}`)
     }
 
     preplace(arm: ArmRuntime): void {
