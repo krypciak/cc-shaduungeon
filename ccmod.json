@@ -1,32 +1,19 @@
 {
-	"id": "cc-shaduungeon",
-	"version": "0.6.2",
-	"title": {
-		"en_US": "Shadunngeon",
-		"de_DE": "Shaduungeon",
-		"fr_FR": "Shaduungeon",
-		"zh_CN": "Shaduungeon",
-		"zh_TW": "Shaduungeon",
-		"ja_JP": "Shaduungeon",
-		"ko_KR": "Shaduungeon"
-	},
-	"description": {
-		"en_US": "Dungeon Generator (WIP)",
-		"de_DE": "Dungeon Generator (WIP)",
-		"fr_FR": "Dungeon Generator (WIP)",
-		"zh_CN": "Dungeon Generator (WIP)",
-		"zh_TW": "Dungeon Generator (WIP)",
-		"ja_JP": "Dungeon Generator (WIP)",
-		"ko_KR": "Dungeon Generator (WIP)"
-	},
-	"icons": {
-		"24": "icon/icon.png"
-	},
-	"plugin": "plugin.js",
-	"dependencies": {
-		"input-api": ">=1.0.0",
-		"cc-blitzkrieg": ">=0.3.3",
-		"crosscode": ">=1.4.0",
-		"post-game": ">=1.4.0"
-	}
+    "id": "cc-shaduungeon",
+    "version": "0.6.2",
+    "title": "Shadunngeon",
+    "description": "Dungeon Generator (WIP)",
+    "repository": "https://github.com/krypciak/cc-shaduungeon",
+    "tags": [],
+    "authors": ["krypek"],
+    "icons": {
+        "24": "icon/icon.png"
+    },
+    "dependencies": {
+        "ccmodmanager": ">=0.9.20",
+        "cc-blitzkrieg": ">=0.5.9",
+        "crosscode": ">=1.4.0",
+        "post-game": ">=1.4.0"
+    },
+    "plugin": "plugin.js"
 }
