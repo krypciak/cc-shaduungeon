@@ -1,6 +1,6 @@
 {
-    "include": ["./src/test/*.ts"],
-    "setupFile": "./src/test/setup.ts",
+    "include": ["./src/**/*.spec.ts"],
+    "setupFile": "./src/setup-test.ts",
     "tsconfig": "./tsconfig.json",
     "reporters": {
         "standard": {

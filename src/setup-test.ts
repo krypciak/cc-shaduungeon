@@ -2,7 +2,7 @@ Array.prototype.flat = undefined as any
 Array.prototype.flatMap = undefined as any
 
 import { Mod1 } from 'cc-blitzkrieg/src/types'
-import DngGen from '../plugin'
+import DngGen from './plugin'
 
 new DngGen({
     baseDirectory: 'assets/mods/cc-shaduungeon',

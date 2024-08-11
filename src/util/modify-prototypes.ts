@@ -34,6 +34,12 @@ if (!Array.prototype.flatMap) {
     }
 }
 
+if (!Array.prototype.last) {
+    Array.prototype.last = function () {
+        return this[this.length - 1]
+    }
+}
+
 export const ObjectKeysT: <K extends string | number | symbol, V>(object: Record<K, V>) => K[] = Object.keys as any
 export const ObjectEntriesT: <K extends string | number | symbol, V>(object: { [key in K]?: V }) => [K, V][] =
     Object.entries as any

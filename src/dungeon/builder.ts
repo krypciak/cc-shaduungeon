@@ -1,3 +1,13 @@
+import { BuildQueue } from './build-queue'
+
+export type RoomBlueprint = {}
+
+export type MapId = number
+export type BlueprintRoot = Record<MapId, RoomBlueprint>
+
 export class DungeonBuilder {
-    build() {}
+    build(seed: number) {
+        const queue = new BuildQueue()
+        // queue.begin()
+    }
 }
