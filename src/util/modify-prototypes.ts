@@ -29,7 +29,7 @@ if (!Array.prototype.flat) {
 }
 
 if (!Array.prototype.flatMap) {
-    Array.prototype.flatMap = function (callback, ...args) {
-        return this.flat().map(callback, ...args)
+    Array.prototype.flatMap = function (callback) {
+        return this.map(callback).flat()
     }
 }

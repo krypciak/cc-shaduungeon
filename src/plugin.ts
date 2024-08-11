@@ -1,12 +1,17 @@
 import { registerOpts } from './options'
-import './util/modify-prototypes'
+import './setup'
 import { Mod1 } from 'cc-blitzkrieg/src/types'
 import ccmod from '../ccmod.json'
 
 declare global {
-    const dnggen: DngGen
+    let dnggen: DngGen
     interface Window {
         dnggen: DngGen
+    }
+    namespace NodeJS {
+        interface Global {
+            dnggen: DngGen
+        }
     }
 }
 
@@ -21,7 +26,11 @@ export default class DngGen {
         this.mod.isCCL3 = mod.findAllAssets ? true : false
         this.mod.isCCModPacked = mod.baseDirectory.endsWith('.ccmod/')
 
-        window.dnggen = this
+        if ('window' in global) {
+            window.dnggen = this
+        } else {
+            global.dnggen = this
+        }
     }
 
     async prestart() {

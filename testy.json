@@ -1,0 +1,9 @@
+{
+    "include": ["./src/test/*.ts"],
+    "setupFile": "./src/test/setup.ts",
+    "reporters": {
+        "standard": {
+            "color": true
+        }
+    }
+}
