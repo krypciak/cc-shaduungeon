@@ -83,13 +83,26 @@ export class DungeonPaths {
     }
 
     clearDir() {
-        blitzkrieg.FsUtil.mkdirsClear(this.baseDir)
+        const path = this.baseDir
+        clear(path)
+        function clear(path: string) {
+            fs.readdirSync(path).forEach((file: string) => {
+                const filePath = `${path}/${file}`
+
+                if (fs.lstatSync(filePath).isDirectory()) {
+                    clear(filePath)
+                    fs.rmdirSync(filePath)
+                } else {
+                    fs.unlinkSync(filePath)
+                }
+            })
+        }
     }
 
     saveMap(builder: MapBuilder): Promise<void> {
         assert(builder.rpv)
         console.log('map: ', ig.copy(builder.rpv.map))
-        blitzkrieg.FsUtil.mkdirs(`${this.mapsDir}/${builder.pathParent}`)
+        fs.mkdirSync(`${this.mapsDir}/${builder.pathParent}`, { recursive: true })
         const path = `${this.mapsDir}/${builder.path}.json`
         const gamePath = `${this.mapsDirGame}/${builder.path}.json`
 
@@ -101,7 +114,7 @@ export class DungeonPaths {
         assert(builder.builtArea, 'called saveToFile() before finalizing build')
         assert(builder.dbEntry, 'area db entry not generated')
 
-        blitzkrieg.FsUtil.mkdirs(this.areaDir)
+        fs.mkdirSync(this.areaDir, { recursive: true })
         const path = this.areaFile
         this.config.paths[this.areaFileGame] = path
         this.config.areaDbEntries[builder.areaInfo.name] = builder.dbEntry
