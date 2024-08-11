@@ -1,7 +1,6 @@
 {
     "include": [
         "src",
-        "node_modules/ultimate-crosscode-typedefs/crosscode-ccloader-all.d.ts"
     ],
     "compilerOptions": {
         "target": "ES2018" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,

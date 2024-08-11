@@ -1,6 +1,7 @@
 {
     "include": ["./src/test/*.ts"],
     "setupFile": "./src/test/setup.ts",
+    "tsconfig": "./tsconfig.json",
     "reporters": {
         "standard": {
             "color": true
