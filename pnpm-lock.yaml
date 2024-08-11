@@ -20,18 +20,9 @@ importers:
       '@typescript-eslint/parser':
         specifier: ^6.21.0
         version: 6.21.0(eslint@8.57.0)(typescript@5.5.4)
-      array-flat-polyfill:
-        specifier: ^1.0.1
-        version: 1.0.1
       cc-blitzkrieg:
         specifier: github:krypciak/cc-blitzkrieg
         version: https://codeload.github.com/krypciak/cc-blitzkrieg/tar.gz/be28d62634ffe5b797046c49846fb821a8d35c6d
-      cc-map-util:
-        specifier: github:krypciak/cc-map-util
-        version: https://codeload.github.com/krypciak/cc-map-util/tar.gz/256929a9a8b77021a953c92d048832ee789839f5
-      cc-vim:
-        specifier: github:krypciak/cc-vim
-        version: https://codeload.github.com/krypciak/cc-vim/tar.gz/e79fa2e909fc89904535efa5412a4ec0d62b8eb7
       ccmodmanager:
         specifier: github:CCDirectLink/CCModManager
         version: https://codeload.github.com/CCDirectLink/CCModManager/tar.gz/46a67246711879ecdaf620e670b86afdc2e6d5a2
@@ -335,10 +326,6 @@ packages:
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
 
-  array-flat-polyfill@1.0.1:
-    resolution: {integrity: sha512-hfJmKupmQN0lwi0xG6FQ5U8Rd97RnIERplymOv/qpq8AoNKPPAnxJadjFA23FNWm88wykh9HmpLJUUwUtNU/iw==}
-    engines: {node: '>=6.0.0'}
-
   array-union@2.1.0:
     resolution: {integrity: sha512-HGyxoOTYUyCM6stUe6EJgnd4EoewAI7zMdfqO+kGjnlZmBDz/cR5pf8r/cR4Wq60sL/p0IkcjUEEPwS3GFrIyw==}
     engines: {node: '>=8'}
@@ -363,14 +350,6 @@ packages:
   cc-blitzkrieg@https://codeload.github.com/krypciak/cc-blitzkrieg/tar.gz/be28d62634ffe5b797046c49846fb821a8d35c6d:
     resolution: {tarball: https://codeload.github.com/krypciak/cc-blitzkrieg/tar.gz/be28d62634ffe5b797046c49846fb821a8d35c6d}
     version: 0.5.9
-
-  cc-map-util@https://codeload.github.com/krypciak/cc-map-util/tar.gz/256929a9a8b77021a953c92d048832ee789839f5:
-    resolution: {tarball: https://codeload.github.com/krypciak/cc-map-util/tar.gz/256929a9a8b77021a953c92d048832ee789839f5}
-    version: 1.0.0
-
-  cc-vim@https://codeload.github.com/krypciak/cc-vim/tar.gz/e79fa2e909fc89904535efa5412a4ec0d62b8eb7:
-    resolution: {tarball: https://codeload.github.com/krypciak/cc-vim/tar.gz/e79fa2e909fc89904535efa5412a4ec0d62b8eb7}
-    version: 1.6.2
 
   ccmodmanager@https://codeload.github.com/CCDirectLink/CCModManager/tar.gz/46a67246711879ecdaf620e670b86afdc2e6d5a2:
     resolution: {tarball: https://codeload.github.com/CCDirectLink/CCModManager/tar.gz/46a67246711879ecdaf620e670b86afdc2e6d5a2}
@@ -1036,8 +1015,6 @@ snapshots:
 
   argparse@2.0.1: {}
 
-  array-flat-polyfill@1.0.1: {}
-
   array-union@2.1.0: {}
 
   balanced-match@1.0.2: {}
@@ -1060,10 +1037,6 @@ snapshots:
   cc-blitzkrieg@https://codeload.github.com/krypciak/cc-blitzkrieg/tar.gz/be28d62634ffe5b797046c49846fb821a8d35c6d:
     dependencies:
       '@types/jszip': 3.4.1
-
-  cc-map-util@https://codeload.github.com/krypciak/cc-map-util/tar.gz/256929a9a8b77021a953c92d048832ee789839f5: {}
-
-  cc-vim@https://codeload.github.com/krypciak/cc-vim/tar.gz/e79fa2e909fc89904535efa5412a4ec0d62b8eb7: {}
 
   ccmodmanager@https://codeload.github.com/CCDirectLink/CCModManager/tar.gz/46a67246711879ecdaf620e670b86afdc2e6d5a2: {}
 

@@ -1,7 +1,6 @@
 {
     "name": "cc-shaduungeon",
     "version": "0.6.2",
-    "description": "Dungeon Generator (WIP)",
     "scripts": {
         "start": "esbuild --target=es2018 --format=esm --platform=node --bundle --sourcemap=inline --outfile=plugin.js src/plugin.ts",
         "watch": "esbuild --target=es2018 --format=esm --platform=node --bundle --sourcemap=inline --watch --outfile=plugin.js src/plugin.ts",
@@ -15,10 +14,7 @@
         "@types/node": "^11.15.54",
         "@typescript-eslint/eslint-plugin": "^6.21.0",
         "@typescript-eslint/parser": "^6.21.0",
-        "array-flat-polyfill": "^1.0.1",
         "cc-blitzkrieg": "github:krypciak/cc-blitzkrieg",
-        "cc-map-util": "github:krypciak/cc-map-util",
-        "cc-vim": "github:krypciak/cc-vim",
         "ccmodmanager": "github:CCDirectLink/CCModManager",
         "esbuild": "^0.18.20",
         "nax-ccuilib": "github:conorlawton/nax-ccuilib",
