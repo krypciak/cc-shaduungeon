@@ -1,4 +1,11 @@
-import { MapEnemyCounter, MapEventTrigger, MapGlowingLine, MapHiddenBlock, MapTouchTrigger, MapWall } from '@root/util/entity'
+import {
+    MapEnemyCounter,
+    MapEventTrigger,
+    MapGlowingLine,
+    MapHiddenBlock,
+    MapTouchTrigger,
+    MapWall,
+} from '@root/util/entity'
 import { assert } from 'cc-map-util/util'
 import { DirUtil, EntityPoint, MapPoint } from 'cc-map-util/pos'
 import { RoomPlaceVars } from '@root/room/map-builder'
@@ -31,8 +38,17 @@ export class BattleRoom extends Room {
 
             const nextRoomEnterCondition = this.startCondition + ' && !' + this.doneCondition
             const puzzleTunnelExitRect: EntityRect = exitTunnel.getSideEntityRect(exitTunnel.dir)
-            rpv.entities.push(MapWall.new(puzzleTunnelExitRect, rpv.masterLevel, 'battleExitWall', nextRoomEnterCondition))
-            rpv.entities.push(MapHiddenBlock.newInvisibleBlocker(puzzleTunnelExitRect, rpv.masterLevel, 'battleExitBlocker', '!' + this.doneCondition))
+            rpv.entities.push(
+                MapWall.new(puzzleTunnelExitRect, rpv.masterLevel, 'battleExitWall', nextRoomEnterCondition)
+            )
+            rpv.entities.push(
+                MapHiddenBlock.newInvisibleBlocker(
+                    puzzleTunnelExitRect,
+                    rpv.masterLevel,
+                    'battleExitBlocker',
+                    '!' + this.doneCondition
+                )
+            )
 
             const middlePoint: EntityPoint = this.middlePoint(MapPoint).to(EntityPoint)
             Vec2.sub(middlePoint, { x: 16, y: 16 })
@@ -54,27 +70,58 @@ export class BattleRoom extends Room {
                 : Math.abs(middlePoint.x - puzzleTunnelExitRect.x)
 
             rpv.entities.push(
-                MapGlowingLine.newPerpendicular(puzzleTunnelExitRect, rpv.masterLevel, 'battle1GlowingLine', exitTunnel.dir, glowingLineSize, this.doneCondition)
+                MapGlowingLine.newPerpendicular(
+                    puzzleTunnelExitRect,
+                    rpv.masterLevel,
+                    'battle1GlowingLine',
+                    exitTunnel.dir,
+                    glowingLineSize,
+                    this.doneCondition
+                )
             )
 
             const battleTunnelEntarenceRect: EntityRect = entTunnel.getSideEntityRect(DirUtil.flip(entTunnel.dir))
-            rpv.entities.push(MapWall.new(battleTunnelEntarenceRect, rpv.masterLevel, 'battle1EntarenceWall', nextRoomEnterCondition))
             rpv.entities.push(
-                MapHiddenBlock.newInvisibleProjectileBlocker(battleTunnelEntarenceRect, rpv.masterLevel, 'battle1EntarencePBlocker', '!' + this.startCondition)
+                MapWall.new(battleTunnelEntarenceRect, rpv.masterLevel, 'battle1EntarenceWall', nextRoomEnterCondition)
             )
             rpv.entities.push(
-                MapTouchTrigger.newParallel(battleTunnelEntarenceRect, rpv.masterLevel, 'battle1TouchTriggerStart', entTunnel.dir, 10, 32, this.startCondition)
+                MapHiddenBlock.newInvisibleProjectileBlocker(
+                    battleTunnelEntarenceRect,
+                    rpv.masterLevel,
+                    'battle1EntarencePBlocker',
+                    '!' + this.startCondition
+                )
+            )
+            rpv.entities.push(
+                MapTouchTrigger.newParallel(
+                    battleTunnelEntarenceRect,
+                    rpv.masterLevel,
+                    'battle1TouchTriggerStart',
+                    entTunnel.dir,
+                    10,
+                    32,
+                    this.startCondition
+                )
             )
 
             rpv.entities.push(
-                MapEventTrigger.new(EntityPoint.fromVec(puzzleTunnelExitRect), rpv.masterLevel, 'battle1EndEvent', 'PARALLEL', this.doneCondition, 'ONCE_PER_ENTRY', '', [
-                    // {
-                    //     entity: { player: true },
-                    //     marker: { global: true, name: DungeonMapBuilder.roomEntarenceMarker },
-                    //     type: 'SET_RESPAWN_POINT',
-                    // },
-                    { type: 'SAVE' },
-                ])
+                MapEventTrigger.new(
+                    EntityPoint.fromVec(puzzleTunnelExitRect),
+                    rpv.masterLevel,
+                    'battle1EndEvent',
+                    'PARALLEL',
+                    this.doneCondition,
+                    'ONCE_PER_ENTRY',
+                    '',
+                    [
+                        // {
+                        //     entity: { player: true },
+                        //     marker: { global: true, name: DungeonMapBuilder.roomEntarenceMarker },
+                        //     type: 'SET_RESPAWN_POINT',
+                        // },
+                        { type: 'SAVE' },
+                    ]
+                )
             )
         }
     }

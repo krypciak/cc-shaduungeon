@@ -123,7 +123,12 @@ export class CCCanvas {
         const ctx = this.canvas.getContext('2d')!
         ctx.imageSmoothingEnabled = false
         ctx.lineWidth = this.scale
-        const r: Rect = new Rect(rect.x * this.scale, rect.y * this.scale, rect.width * this.scale, rect.height * this.scale)
+        const r: Rect = new Rect(
+            rect.x * this.scale,
+            rect.y * this.scale,
+            rect.width * this.scale,
+            rect.height * this.scale
+        )
         ctx.strokeRect(r.x, r.y, r.width, r.height)
 
         if (bgColor) {

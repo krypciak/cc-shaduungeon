@@ -109,7 +109,14 @@ declare global {
             index?: number
         }
         interface AreaRoomBoundsConstructor extends ImpactClass<AreaRoomBounds> {
-            new (map: sc.AreaLoadable.Map, id: number, minX: number, minY: number, tiles: number[][], max?: Vec2): AreaRoomBounds
+            new (
+                map: sc.AreaLoadable.Map,
+                id: number,
+                minX: number,
+                minY: number,
+                tiles: number[][],
+                max?: Vec2
+            ): AreaRoomBounds
         }
         var AreaRoomBounds: AreaRoomBoundsConstructor
         /* AreaRoomBounds end */

@@ -478,7 +478,7 @@ export class MapBallChanger implements MapEntity {
             name,
             mapId: mapId++,
             changerType: {
-                type: sc.BALL_CHANGER_TYPE.CHANGE_DIR,
+                type: "CHANGE_DIR",
                 options: { dir: DirUtil.convertToStringFace8(dir) },
             },
         })
@@ -489,7 +489,7 @@ export class MapBallChanger implements MapEntity {
             name,
             mapId: mapId++,
             changerType: {
-                type: sc.BALL_CHANGER_TYPE.CHANGE_SPEED,
+                type: "CHANGE_SPEED"
                 options: { factor },
             },
         })
@@ -500,19 +500,19 @@ export class MapBallChanger implements MapEntity {
             name,
             mapId: mapId++,
             changerType: {
-                type: sc.BALL_CHANGER_TYPE.RESET_SPEED,
-                options: {},
+                type: "RESET_SPEED",
+                settings: { }
             },
         })
     }
 
-    static newChangeElement(pos: EntityPoint, level: number, name: string, element: sc.ELEMENT): MapBallChanger {
+    static newChangeElement(pos: EntityPoint, level: number, name: string, element: Exclude<keyof typeof sc.ELEMENT, 'NEUTRAL'>): MapBallChanger {
         return new MapBallChanger(pos.x, pos.y, level, {
             name,
             mapId: mapId++,
             changerType: {
-                type: sc.BALL_CHANGER_TYPE.CHANGE_ELEMENT,
-                options: { element },
+                type: "CHANGE_ELEMENT",
+                settings: {element}
             },
         })
     }

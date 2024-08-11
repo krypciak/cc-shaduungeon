@@ -174,12 +174,21 @@ export class AreaBuilder {
         this.builtArea = builtArea
     }
 
-    private addMap(maps: sc.AreaLoadable.MapRoomList[], mapType: 'DUNGEON' | 'NO_DUNGEON', mapIndex: number, builder: MapBuilder, rects: AreaRect[], rooms: Room[]) {
+    private addMap(
+        maps: sc.AreaLoadable.MapRoomList[],
+        mapType: 'DUNGEON' | 'NO_DUNGEON',
+        mapIndex: number,
+        builder: MapBuilder,
+        rects: AreaRect[],
+        rooms: Room[]
+    ) {
         const path = builder.path!
         const displayName = builder.displayName!
         assertBool(rects.length == rooms.length)
 
-        const obj = rects.map((r, i) => [r, rooms[i]] as [AreaRect, Room]).sort((a, b) => a[1].placeOrder - b[1].placeOrder)
+        const obj = rects
+            .map((r, i) => [r, rooms[i]] as [AreaRect, Room])
+            .sort((a, b) => a[1].placeOrder - b[1].placeOrder)
 
         rects = obj.map(e => e[0])
         rooms = obj.map(e => e[1])
@@ -207,12 +216,20 @@ export class AreaBuilder {
         })
     }
 
-    private async handleBuilders(maps: sc.AreaLoadable.MapRoomList[], mapType: 'DUNGEON' | 'NO_DUNGEON', mapIndex: { v: number }, entries: FlattenedArmBuilders[]) {
+    private async handleBuilders(
+        maps: sc.AreaLoadable.MapRoomList[],
+        mapType: 'DUNGEON' | 'NO_DUNGEON',
+        mapIndex: { v: number },
+        entries: FlattenedArmBuilders[]
+    ) {
         for (const obj of entries) {
             const builder = obj.entry.builder
             builder.pathParent = this.areaInfo.name
             assertBool(builder.path === undefined, 'MapBuilder copy fail')
-            builder.path = builder.pathParent + '/' + mapIndex.v.toLocaleString('en-US', { minimumIntegerDigits: 3, useGrouping: false })
+            builder.path =
+                builder.pathParent +
+                '/' +
+                mapIndex.v.toLocaleString('en-US', { minimumIntegerDigits: 3, useGrouping: false })
 
             await builder.decideDisplayName(mapIndex.v)
             assert(builder.displayName)
@@ -301,7 +318,12 @@ export class AreaBuilder {
         }
     }
 
-    async generateFloor(level: number, name: string, size: AreaPoint, rootArm: ArmRuntime): Promise<sc.AreaLoadable.FloorCustom> {
+    async generateFloor(
+        level: number,
+        name: string,
+        size: AreaPoint,
+        rootArm: ArmRuntime
+    ): Promise<sc.AreaLoadable.FloorCustom> {
         /* level filtering not implemented */
         const entries: FlattenedArmBuilders[] = []
         forEveryArmEntry(rootArm, (entry: ArmRuntimeEntry, parentArm: ArmRuntime, index: number) => {

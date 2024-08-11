@@ -1,7 +1,16 @@
 import { Dir, MapPoint, EntityPoint, DirUtil, Point } from 'cc-map-util/pos'
 import { Room, RoomIO, RoomIODoorLike, RoomIOTpr, Tpr } from '@root/room/room'
 import { assert, assertBool } from 'cc-map-util/util'
-import { MapChest, MapDestructible, MapDoorLike, MapEntity, MapEventTrigger, MapFloorSwitch, MapTeleportField, MapTransporter } from '@root/util/entity'
+import {
+    MapChest,
+    MapDestructible,
+    MapDoorLike,
+    MapEntity,
+    MapEventTrigger,
+    MapFloorSwitch,
+    MapTeleportField,
+    MapTransporter,
+} from '@root/util/entity'
 import { RoomIOTunnel, RoomIOTunnelClosed, RoomIOTunnelOpen } from '@root/room/tunnel-room'
 import { MapBuilder, RoomPlaceVars } from '@root/room/map-builder'
 import { ArmEnd, ArmRuntime } from '@root/dungeon/dungeon-arm'
@@ -45,7 +54,9 @@ export class PuzzleRoom extends Room {
                 const entry = blitzkrieg.sels.puzzle.selMap[mapName]
                 /* entry is from blitzkrieg puzzle list */
                 if (entry.fileIndex == 0 && entry.sels.length > 0) {
-                    const filtered: Readonly<PuzzleSelection>[] = entry.sels.filter(sel => sel.data.type != 'dis').map(e => Object.freeze(e as PuzzleSelection))
+                    const filtered: Readonly<PuzzleSelection>[] = entry.sels
+                        .filter(sel => sel.data.type != 'dis')
+                        .map(e => Object.freeze(e as PuzzleSelection))
                     puzzleMap.set(mapName, filtered)
                     for (const sel of filtered) {
                         puzzleList.push(Object.freeze(sel))
@@ -81,7 +92,8 @@ export class PuzzleRoom extends Room {
                     }
                     if (arm.end == ArmEnd.Item) {
                         this.oldFC = this.puzzle.finishCondition
-                        this.puzzle.finishCondition = this.primaryExit.tpr.condition = `maps.${builder.path!}.puzzleFinished`
+                        this.puzzle.finishCondition =
+                            this.primaryExit.tpr.condition = `maps.${builder.path!}.puzzleFinished`
                     }
                 }
             },
@@ -148,14 +160,18 @@ export class PuzzleRoom extends Room {
         /* set start pos */ {
             const pos: Vec3 & { level: number } = ig.copy(puzzle.usel.sel.data.startPos)
             const dir: Dir = (
-                puzzle.roomType == blitzkrieg.PuzzleRoomType.WholeRoom ? setToClosestSelSide(pos, puzzle.usel.sel) : Rect.new(EntityRect, this).setToClosestRectSide(pos)
+                puzzle.roomType == blitzkrieg.PuzzleRoomType.WholeRoom
+                    ? setToClosestSelSide(pos, puzzle.usel.sel)
+                    : Rect.new(EntityRect, this).setToClosestRectSide(pos)
             ).dir
             puzzle.start = { pos, dir }
         } /* end */
         /* set end pos */ {
             const pos: Vec3 & { level: number } = ig.copy(puzzle.usel.sel.data.endPos)
             const dir: Dir = (
-                puzzle.roomType == blitzkrieg.PuzzleRoomType.WholeRoom ? setToClosestSelSide(pos, puzzle.usel.sel) : Rect.new(EntityRect, this).setToClosestRectSide(pos)
+                puzzle.roomType == blitzkrieg.PuzzleRoomType.WholeRoom
+                    ? setToClosestSelSide(pos, puzzle.usel.sel)
+                    : Rect.new(EntityRect, this).setToClosestRectSide(pos)
             ).dir
 
             puzzle.end = { pos, dir }
@@ -170,7 +186,10 @@ export class PuzzleRoom extends Room {
                 // check if there's a door near puzzle end
                 for (const entity of puzzle.map.entities) {
                     if (MapDoorLike.check(entity)) {
-                        const dist: number = Math.sqrt(Math.pow(entity.x - puzzle.sel.data.endPos.x, 2) + Math.pow(entity.y - puzzle.sel.data.endPos.y, 2))
+                        const dist: number = Math.sqrt(
+                            Math.pow(entity.x - puzzle.sel.data.endPos.x, 2) +
+                                Math.pow(entity.y - puzzle.sel.data.endPos.y, 2)
+                        )
                         if (dist < 200 && dist < closestDistance) {
                             closestDistance = dist
                             closestTransporter = entity
@@ -188,12 +207,30 @@ export class PuzzleRoom extends Room {
                         dir = DirUtil.flip(dir) /* TeleportGround dir is the opposite of the door for whatever reason */
                     }
 
-                    this.origExit = RoomIODoorLike.fromReference(name, dir, newPos, closestTransporter, puzzle.usel.solveCondition)
+                    this.origExit = RoomIODoorLike.fromReference(
+                        name,
+                        dir,
+                        newPos,
+                        closestTransporter,
+                        puzzle.usel.solveCondition
+                    )
                 } else {
-                    this.origExit = RoomIODoorLike.fromRoom('Door', this, name, puzzle.end.dir, EntityPoint.fromVec(puzzle.end.pos))
+                    this.origExit = RoomIODoorLike.fromRoom(
+                        'Door',
+                        this,
+                        name,
+                        puzzle.end.dir,
+                        EntityPoint.fromVec(puzzle.end.pos)
+                    )
                 }
             } else if (puzzle.roomType == blitzkrieg.PuzzleRoomType.AddWalls) {
-                this.origExit = RoomIODoorLike.fromRoom('Door', this, name, puzzle.end.dir, EntityPoint.fromVec(puzzle.end.pos))
+                this.origExit = RoomIODoorLike.fromRoom(
+                    'Door',
+                    this,
+                    name,
+                    puzzle.end.dir,
+                    EntityPoint.fromVec(puzzle.end.pos)
+                )
             }
 
             this.origExit.tpr.condition = puzzle.usel.solveConditionUnique
@@ -256,7 +293,14 @@ export class PuzzleRoom extends Room {
         if (isEnd) {
             const oldTpr: Tpr = this.origExit.getTpr()
             this.primaryExit = new RoomIOTpr(
-                Tpr.get('puzzle-exit-to-arm', oldTpr.dir, EntityPoint.fromVec(this.puzzle.usel.sel.data.endPos), 'TeleportField', true, this.puzzle.finishCondition)
+                Tpr.get(
+                    'puzzle-exit-to-arm',
+                    oldTpr.dir,
+                    EntityPoint.fromVec(this.puzzle.usel.sel.data.endPos),
+                    'TeleportField',
+                    true,
+                    this.puzzle.finishCondition
+                )
             )
             if (oldTpr.entity) {
                 oldTpr.entity.settings.condition = 'false'
@@ -318,12 +362,19 @@ export class PuzzleRoom extends Room {
             })
 
             const pastePos: MapPoint = MapPoint.fromVec(puzzle.usel.sel.sizeRect)
-            const map: sc.MapModel.Map = blitzkrieg.mapUtil.copySelMapAreaTo(rpv.map, puzzle.map, puzzle.sel, pastePos, [], {
-                disableEntities: false,
-                makePuzzlesUnique: true,
-                uniqueId: puzzle.usel.id,
-                // uniqueSel: puzzle.usel.sel,
-            })
+            const map: sc.MapModel.Map = blitzkrieg.mapUtil.copySelMapAreaTo(
+                rpv.map,
+                puzzle.map,
+                puzzle.sel,
+                pastePos,
+                [],
+                {
+                    disableEntities: false,
+                    makePuzzlesUnique: true,
+                    uniqueId: puzzle.usel.id,
+                    // uniqueSel: puzzle.usel.sel,
+                }
+            )
             // const map: sc.MapModel.Map = blitzkrieg.mapUtil.
             //    copySelToMap(ig.copy(rpv.map), puzzle.map, puzzle.sel, pastePos.x, pastePos.y, rpv.map.name, {
             //        disableEntities: false,
@@ -345,7 +396,14 @@ export class PuzzleRoom extends Room {
                     if (DirUtil.isVertical(this.primaryExit.tpr.dir)) {
                         chestPos.x += 3
                     }
-                    const chestE: MapChest = ItemHandler.get(rpv.areaInfo, arm.itemType, 'puzzle-exit-item', chestPos, endPos.level, this.oldFC)
+                    const chestE: MapChest = ItemHandler.get(
+                        rpv.areaInfo,
+                        arm.itemType,
+                        'puzzle-exit-item',
+                        chestPos,
+                        endPos.level,
+                        this.oldFC
+                    )
                     const triggerCond = 'map.chest_' + chestE.settings.mapId
                     rpv.entities.push(chestE)
 
@@ -377,9 +435,14 @@ export class PuzzleRoom extends Room {
                 entity.level = endPos.level
             }
 
-            if (puzzle.completion == blitzkrieg.PuzzleCompletionType.GetTo && puzzle.roomType == blitzkrieg.PuzzleRoomType.AddWalls) {
+            if (
+                puzzle.completion == blitzkrieg.PuzzleCompletionType.GetTo &&
+                puzzle.roomType == blitzkrieg.PuzzleRoomType.AddWalls
+            ) {
                 assert(puzzle.usel.solveConditionUnique)
-                rpv.entities.push(MapFloorSwitch.new(endPosVec, endPos.level, 'puzzleSolveSwitch', puzzle.usel.solveConditionUnique))
+                rpv.entities.push(
+                    MapFloorSwitch.new(endPosVec, endPos.level, 'puzzleSolveSwitch', puzzle.usel.solveConditionUnique)
+                )
             }
         }
 

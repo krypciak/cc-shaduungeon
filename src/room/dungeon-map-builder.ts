@@ -36,7 +36,10 @@ export class PuzzleMapBuilder extends MapBuilder {
     ) {
         super(3, areaInfo, RoomTheme.getFromArea(puzzleMap.attributes.area))
         this.puzzleRoom = new PuzzleRoom(puzzleSel, puzzleMap, entarenceCondition)
-        this.puzzleRoom.setEntarenceTunnel(closedTunnel, closedTunnel ? PuzzleMapBuilder.closedTunnelSize : PuzzleMapBuilder.openTunnelSize)
+        this.puzzleRoom.setEntarenceTunnel(
+            closedTunnel,
+            closedTunnel ? PuzzleMapBuilder.closedTunnelSize : PuzzleMapBuilder.openTunnelSize
+        )
         this.puzzleRoom.pushAllRooms(this.rooms)
 
         this.entarenceRoom = this.puzzleRoom
@@ -83,9 +86,16 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
 
         const battleSize: MapPoint = new MapPoint(15, 15)
         assertBool(this.puzzleRoom.primaryEntarence instanceof RoomIOTunnelOpen)
-        const battlePos: MapPoint = this.puzzleRoom.primaryEntarence.tunnel.getRoomPosThatConnectsToTheMiddle(battleSize)
+        const battlePos: MapPoint =
+            this.puzzleRoom.primaryEntarence.tunnel.getRoomPosThatConnectsToTheMiddle(battleSize)
 
-        this.battleRoom = this.entarenceRoom = new BattleRoom(battlePos, battleSize, battleStartCondition, battleDoneCondition, this.puzzleRoom.primaryEntarence)
+        this.battleRoom = this.entarenceRoom = new BattleRoom(
+            battlePos,
+            battleSize,
+            battleStartCondition,
+            battleDoneCondition,
+            this.puzzleRoom.primaryEntarence
+        )
     }
 
     prepareToArrange(dir: Dir, isEnd: boolean): boolean {
@@ -108,7 +118,13 @@ export class BattlePuzzleMapBuilder extends PuzzleMapBuilder {
 
         const tunnelSize: MapPoint = new MapPoint(5, 4)
         this.battleRoom.primaryEntarence = Object.assign(
-            new RoomIOTunnelClosed(this.battleRoom, DirUtil.flip(dir), tunnelSize, this.battleRoom.middlePoint(MapPoint).to(EntityPoint), true),
+            new RoomIOTunnelClosed(
+                this.battleRoom,
+                DirUtil.flip(dir),
+                tunnelSize,
+                this.battleRoom.middlePoint(MapPoint).to(EntityPoint),
+                true
+            ),
             { toDelete: true }
         )
         this.battleRoom.ios.push(this.battleRoom.primaryEntarence)
@@ -133,7 +149,15 @@ export class DungeonIntersectionMapBuilder extends MapBuilder {
         keyDir: Dir
     ) {
         super(3, areaInfo, RoomTheme.default)
-        this.entarenceRoom = this.simpleRoom = new DungeonIntersectionRoom(new MapPoint(0, 0), new MapPoint(20, 20), keyCount, entDir, aDir1, aDir2, keyDir)
+        this.entarenceRoom = this.simpleRoom = new DungeonIntersectionRoom(
+            new MapPoint(0, 0),
+            new MapPoint(20, 20),
+            keyCount,
+            entDir,
+            aDir1,
+            aDir2,
+            keyDir
+        )
         this.simpleRoom.pushAllRooms(this.rooms)
         this.simpleRoom.exits.forEach(io => this.mapIOs.push({ io, room: this.simpleRoom }))
         this.setOnWallPositions()
@@ -153,7 +177,10 @@ export class DungeonIntersectionMapBuilder extends MapBuilder {
 
     preplace(arm: ArmRuntime): void {
         if (arm.parentArm) {
-            const io: RoomIOTpr = this.simpleRoom.addTeleportField(this.simpleRoom.primaryEntarence, this.simpleRoom.teleportFields!.length)
+            const io: RoomIOTpr = this.simpleRoom.addTeleportField(
+                this.simpleRoom.primaryEntarence,
+                this.simpleRoom.teleportFields!.length
+            )
             this.simpleRoom.ios.push(io)
             this.mapIOs.push({ io, room: this.simpleRoom })
         }

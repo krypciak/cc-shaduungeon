@@ -24,10 +24,23 @@ export class DungeonIntersectionRoom extends Room {
         this.exitsDirs = exitsDirs
 
         this.teleportFields = []
-        this.primaryEntarence = new RoomIOTunnelClosed(this, entDir, this.tunnelSize, this.middlePoint(MapPoint).to(EntityPoint), true)
+        this.primaryEntarence = new RoomIOTunnelClosed(
+            this,
+            entDir,
+            this.tunnelSize,
+            this.middlePoint(MapPoint).to(EntityPoint),
+            true
+        )
 
         for (let i = 0; i < exitsDirs.length; i++) {
-            const exit = new RoomIOTunnelClosed(this, exitsDirs[i], this.tunnelSize, this.middlePoint(MapPoint).to(EntityPoint), true, i == 0 ? keyCount : undefined)
+            const exit = new RoomIOTunnelClosed(
+                this,
+                exitsDirs[i],
+                this.tunnelSize,
+                this.middlePoint(MapPoint).to(EntityPoint),
+                true,
+                i == 0 ? keyCount : undefined
+            )
             this.exits.push(exit)
             this.addTeleportField(exit, i)
         }
@@ -39,7 +52,9 @@ export class DungeonIntersectionRoom extends Room {
         const rect: EntityRect = Rect.new(MapRect, exit.tunnel.getSide(DirUtil.flip(dir), 0)).to(EntityRect)
         rect.x += rect.width / 2 - 12
         rect.y += rect.height / 2 - 12
-        const io = new RoomIOTpr(Tpr.get('Go back' + index, dir, EntityPoint.fromVec(rect), 'TeleportField', true, '@TARGET_CONDITION'))
+        const io = new RoomIOTpr(
+            Tpr.get('Go back' + index, dir, EntityPoint.fromVec(rect), 'TeleportField', true, '@TARGET_CONDITION')
+        )
         this.teleportFields!.push(io)
         return io
     }

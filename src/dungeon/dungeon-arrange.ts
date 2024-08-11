@@ -1,7 +1,16 @@
 import { AreaBuilder, AreaInfo } from '@root/area/area-builder'
 import { assert, assertBool } from 'cc-map-util/util'
 import { AreaPoint, Dir, PosDir } from 'cc-map-util/pos'
-import { Arm, ArmEnd, ArmRuntime, ArmRuntimeEntry, ExclusiveMapBuilder, MapBuilderPool, copyArmRuntime, copyBuilderPool } from '@root/dungeon/dungeon-arm'
+import {
+    Arm,
+    ArmEnd,
+    ArmRuntime,
+    ArmRuntimeEntry,
+    ExclusiveMapBuilder,
+    MapBuilderPool,
+    copyArmRuntime,
+    copyBuilderPool,
+} from '@root/dungeon/dungeon-arm'
 import { randomSeedInt, setRandomSeed, shuffleArray } from '@root/util/misc'
 
 export interface DungeonGenerateConfig<T extends Arm = Arm> {
@@ -67,7 +76,11 @@ export class DungeonArranger {
         return retArm
     }
 
-    private recursiveTryPlaceArmEntry(arm: ArmRuntime, lastEntry: ArmRuntimeEntry, armIndex?: number): ArmRuntime | undefined {
+    private recursiveTryPlaceArmEntry(
+        arm: ArmRuntime,
+        lastEntry: ArmRuntimeEntry,
+        armIndex?: number
+    ): ArmRuntime | undefined {
         assertBool(typeof arm.length === 'number')
         /* if arm is completed */
         if (arm.stack.length == arm.length + 1) {
@@ -121,7 +134,15 @@ export class DungeonArranger {
                 arm.stack = arm.stack.slice(0, len)
                 assertBool(arm.stack.length == len, 'why')
             }
-            const retArm = this.recursiveTryArmBuilder(possibleBuilder, arm, lastEntry, poolIndex, skipPoolCopy, isEnd, armIndex)
+            const retArm = this.recursiveTryArmBuilder(
+                possibleBuilder,
+                arm,
+                lastEntry,
+                poolIndex,
+                skipPoolCopy,
+                isEnd,
+                armIndex
+            )
             if (retArm) {
                 return retArm
             }

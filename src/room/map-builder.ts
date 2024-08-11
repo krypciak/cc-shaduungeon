@@ -44,7 +44,16 @@ export namespace RoomPlaceVars {
         assert(light)
 
         return {
-            map: new CCMap(map.name, map.levels, map.mapWidth, map.mapHeight, map.masterLevel, map.attributes, map.entities, MapLayer.convertArray(map.layer)),
+            map: new CCMap(
+                map.name,
+                map.levels,
+                map.mapWidth,
+                map.mapHeight,
+                map.masterLevel,
+                map.attributes,
+                map.entities,
+                MapLayer.convertArray(map.layer)
+            ),
             background,
             shadow,
             light,
@@ -218,7 +227,10 @@ export abstract class MapBuilder {
         offset.x -= additionalSpace.x
         offset.y -= additionalSpace.y
         this.trimOffset = offset
-        this.size = new MapPoint(Math.ceil(newSize.width - offset.x + additionalSpace.width), Math.ceil(newSize.height - offset.y + additionalSpace.height))
+        this.size = new MapPoint(
+            Math.ceil(newSize.width - offset.x + additionalSpace.width),
+            Math.ceil(newSize.height - offset.y + additionalSpace.height)
+        )
 
         Vec2.mulC(offset, -1)
         for (const room of this.rooms) {

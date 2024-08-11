@@ -49,7 +49,11 @@ export class DungeonConfigMainFactory implements DungeonConfigFactory {
 
         bPool.push(_sb)
         const _db1: MapBuilderArrayGenerate = { arr: [], randomize: true, index: index++ }
-        DirUtil.forEachUniqueDir4((d1, d2, d3, d4) => _db1.arr.push(Object.assign(new DungeonIntersectionMapBuilder(areaInfo, 2, d1, d2, d3, d4), { exclusive: true })))
+        DirUtil.forEachUniqueDir4((d1, d2, d3, d4) =>
+            _db1.arr.push(
+                Object.assign(new DungeonIntersectionMapBuilder(areaInfo, 2, d1, d2, d3, d4), { exclusive: true })
+            )
+        )
         bPool.push(_db1)
 
         const dngGenConfig: DungeonGenerateConfig = {

@@ -21,7 +21,14 @@ export enum Item {
 }
 
 export class ItemHandler {
-    static get(areaInfo: AreaInfo, type: ArmItemType, name: string, pos: EntityPoint, level: number, spawnCondition: string | undefined): MapChest {
+    static get(
+        areaInfo: AreaInfo,
+        type: ArmItemType,
+        name: string,
+        pos: EntityPoint,
+        level: number,
+        spawnCondition: string | undefined
+    ): MapChest {
         let itemId: number
         let chestType: keyof typeof sc.CHEST_TYPE
         switch (type) {

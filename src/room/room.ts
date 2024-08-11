@@ -10,7 +10,12 @@ import { Selection } from 'cc-blitzkrieg/src/selection'
 
 const tilesize: number = 16
 
-export function getPosOnRectSide<T extends Point>(init: new (x: number, y: number) => T, dir: Dir, rect: Rect, prefPos?: T): T {
+export function getPosOnRectSide<T extends Point>(
+    init: new (x: number, y: number) => T,
+    dir: Dir,
+    rect: Rect,
+    prefPos?: T
+): T {
     const pos: T = new init(0, 0)
     switch (dir) {
         case Dir.NORTH:
@@ -36,16 +41,40 @@ export function getPosOnRectSide<T extends Point>(init: new (x: number, y: numbe
 }
 
 export namespace Tpr {
-    export function get(name: string, dir: Dir, pos: EntityPoint, entityType: MapTransporter.Types, backToArm: boolean = false, condition?: string): Tpr {
+    export function get(
+        name: string,
+        dir: Dir,
+        pos: EntityPoint,
+        entityType: MapTransporter.Types,
+        backToArm: boolean = false,
+        condition?: string
+    ): Tpr {
         return { name, dir, pos, entityType, condition, backToArm }
     }
-    export function getReference(name: string, dir: Dir, pos: EntityPoint, mtpr: MapTransporter, backToArm: boolean = false, condition?: string): Tpr {
-        return { name, dir, pos, entityType: mtpr.type as MapTransporter.Types, entity: mtpr, entityCondition: condition, backToArm }
+    export function getReference(
+        name: string,
+        dir: Dir,
+        pos: EntityPoint,
+        mtpr: MapTransporter,
+        backToArm: boolean = false,
+        condition?: string
+    ): Tpr {
+        return {
+            name,
+            dir,
+            pos,
+            entityType: mtpr.type as MapTransporter.Types,
+            entity: mtpr,
+            entityCondition: condition,
+            backToArm,
+        }
     }
 
     export function replaceConditionTarget(tpr: Tpr, targetTpr: Tpr) {
         if (tpr.condition) {
-            tpr.condition = tpr.condition.replace(/@TARGET_MAP/, tpr.destMap!).replace(/@TARGET_CONDITION/, targetTpr.condition!)
+            tpr.condition = tpr.condition
+                .replace(/@TARGET_MAP/, tpr.destMap!)
+                .replace(/@TARGET_CONDITION/, targetTpr.condition!)
         }
     }
     export function checkDest(tpr: Tpr) {
@@ -95,10 +124,22 @@ export class RoomIODoorLike extends RoomIOTpr {
         super(tpr)
         this.tpr = tpr
     }
-    static fromRoom(type: MapDoorLike.Types, room: Room, name: string, dir: Dir, prefPos?: EntityPoint): RoomIODoorLike {
+    static fromRoom(
+        type: MapDoorLike.Types,
+        room: Room,
+        name: string,
+        dir: Dir,
+        prefPos?: EntityPoint
+    ): RoomIODoorLike {
         return new RoomIODoorLike(room.getDoorLikeTpr(type, name, dir, prefPos))
     }
-    static fromReference(name: string, dir: Dir, pos: EntityPoint, doorLike: MapDoorLike, condition: string = ''): RoomIODoorLike {
+    static fromReference(
+        name: string,
+        dir: Dir,
+        pos: EntityPoint,
+        doorLike: MapDoorLike,
+        condition: string = ''
+    ): RoomIODoorLike {
         return new RoomIODoorLike(Tpr.getReference(name, dir, pos, doorLike, false, condition) as TprDoorLike)
     }
 }
@@ -218,7 +259,18 @@ export class Room extends MapRect {
             case 'TeleportGround':
                 throw new Error('not implemented')
             case 'TeleportField':
-                e = MapTeleportField.new(tpr.pos, rpv.masterLevel, tpr.dir, tpr.name, tpr.destMap, tpr.destMarker, 'AR', tpr.name, 'false', tpr.condition)
+                e = MapTeleportField.new(
+                    tpr.pos,
+                    rpv.masterLevel,
+                    tpr.dir,
+                    tpr.name,
+                    tpr.destMap,
+                    tpr.destMarker,
+                    'AR',
+                    tpr.name,
+                    'false',
+                    tpr.condition
+                )
                 break
             default:
                 throw new Error('not implemented')

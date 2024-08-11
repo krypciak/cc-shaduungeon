@@ -29,7 +29,10 @@ export function overrideMapAreaContainer() {
                 if (gamepad) {
                     pos = Vec2.create(this.area.hook.pos)
                 } else {
-                    pos = Vec2.createC(mx - sc.menu.mapCamera.x - this.area.hook.pos.x + 1, my - sc.menu.mapCamera.y - this.area.hook.pos.y + 1)
+                    pos = Vec2.createC(
+                        mx - sc.menu.mapCamera.x - this.area.hook.pos.x + 1,
+                        my - sc.menu.mapCamera.y - this.area.hook.pos.y + 1
+                    )
                 }
                 Vec2.subC(pos, addPxSpace)
 
@@ -37,18 +40,27 @@ export function overrideMapAreaContainer() {
                     return
                 }
 
-                const mapGuis: GuiHookMapRoomList[] = this.area.hook.children[sc.map.getCurrentFloorIndex()].children as GuiHookMapRoomList[]
+                const mapGuis: GuiHookMapRoomList[] = this.area.hook.children[sc.map.getCurrentFloorIndex()]
+                    .children as GuiHookMapRoomList[]
                 for (const hook of mapGuis) {
                     if (!hook.gui.room || !hook.gui.unlocked) {
                         continue
                     }
 
                     if (gamepad) {
-                        this.mapNameGui.setPos(sc.menu.mapCursor.x + 5, sc.menu.mapCursor.y - this.mapNameGui.hook.size.y - 4)
+                        this.mapNameGui.setPos(
+                            sc.menu.mapCursor.x + 5,
+                            sc.menu.mapCursor.y - this.mapNameGui.hook.size.y - 4
+                        )
                     } else {
-                        this.mapNameGui.setPos(mx - sc.menu.mapCamera.x, my - sc.menu.mapCamera.y - this.mapNameGui.hook.size.y - 1)
+                        this.mapNameGui.setPos(
+                            mx - sc.menu.mapCamera.x,
+                            my - sc.menu.mapCamera.y - this.mapNameGui.hook.size.y - 1
+                        )
                     }
-                    const map: sc.AreaLoadable.MapRoomList = hook.gui.floor.maps[hook.gui.room.index!] as sc.AreaLoadable.MapRoomList
+                    const map: sc.AreaLoadable.MapRoomList = hook.gui.floor.maps[
+                        hook.gui.room.index!
+                    ] as sc.AreaLoadable.MapRoomList
                     for (const r of map.rects) {
                         if (!r.areaRect) {
                             r.areaRect = {
@@ -59,7 +71,12 @@ export function overrideMapAreaContainer() {
                             }
                         }
                         const rect = r.areaRect
-                        if (pos.x >= rect.x && pos.x <= rect.x + rect.width && pos.y >= rect.y && pos.y <= rect.y + rect.height) {
+                        if (
+                            pos.x >= rect.x &&
+                            pos.x <= rect.x + rect.width &&
+                            pos.y >= rect.y &&
+                            pos.y <= rect.y + rect.height
+                        ) {
                             if (this.hoverRoom != hook.gui.room) {
                                 this.hoverRoom = hook.gui.room
                                 this.mapNameGui.setText(hook.gui.room.text, wait)
@@ -290,7 +307,12 @@ export function overrideMapAreaContainer() {
                         map.rects.forEach(o => {
                             const rect = o.drawEmptyRect!
                             const shadowOffset = o.wallSides[Dir.NORTH] ? 1 : 0
-                            c.empty.draw(rect.x + 1, rect.y + shadowOffset + 1, rect.width - 3, rect.height - shadowOffset - 3)
+                            c.empty.draw(
+                                rect.x + 1,
+                                rect.y + shadowOffset + 1,
+                                rect.width - 3,
+                                rect.height - shadowOffset - 3
+                            )
                         })
 
                         /*

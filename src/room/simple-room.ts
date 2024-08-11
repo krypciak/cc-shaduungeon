@@ -29,7 +29,13 @@ export class SimpleTunnelRoom extends Room {
         super('simpletunnelroom', MapRect.fromTwoPoints(pos, size), [true, true, true, true], true)
 
         const tunnelSize: MapPoint = new MapPoint(4, 4)
-        this.primaryEntarence = new RoomIOTunnelClosed(this, entDir, tunnelSize, this.middlePoint(MapPoint).to(EntityPoint), true)
+        this.primaryEntarence = new RoomIOTunnelClosed(
+            this,
+            entDir,
+            tunnelSize,
+            this.middlePoint(MapPoint).to(EntityPoint),
+            true
+        )
         /* RoomIODoorLike.fromRoom('Door', this, 'simple-ent', entDir) */
         this.primaryExit = RoomIODoorLike.fromRoom('Door', this, 'simple-exit', exitDir)
         this.ios.push(this.primaryEntarence, this.primaryExit)
@@ -46,8 +52,20 @@ export class SimpleDoubleTunnelRoom extends Room {
         super('simpledoubletunnelroom', MapRect.fromTwoPoints(pos, size), [true, true, true, true], true)
 
         const tunnelSize: MapPoint = new MapPoint(4, 4)
-        this.primaryEntarence = new RoomIOTunnelClosed(this, entDir, tunnelSize, this.middlePoint(MapPoint).to(EntityPoint), true)
-        this.primaryExit = new RoomIOTunnelClosed(this, exitDir, tunnelSize, this.middlePoint(MapPoint).to(EntityPoint), true)
+        this.primaryEntarence = new RoomIOTunnelClosed(
+            this,
+            entDir,
+            tunnelSize,
+            this.middlePoint(MapPoint).to(EntityPoint),
+            true
+        )
+        this.primaryExit = new RoomIOTunnelClosed(
+            this,
+            exitDir,
+            tunnelSize,
+            this.middlePoint(MapPoint).to(EntityPoint),
+            true
+        )
         this.ios.push(this.primaryEntarence, this.primaryExit)
     }
 }
@@ -61,8 +79,21 @@ export class SimpleOpenTunnelRoom extends Room {
         }
         super('simpleopentunnelroom', MapRect.fromTwoPoints(pos, size), [true, true, true, true], true)
 
-        this.primaryEntarence = new RoomIOTunnelOpen(this, entDir, new MapPoint(4, 8), DirUtil.flip(entDir), this.middlePoint(MapPoint).to(EntityPoint), true)
-        this.primaryExit = new RoomIOTunnelClosed(this, exitDir, new MapPoint(4, 4), this.middlePoint(MapPoint).to(EntityPoint), true)
+        this.primaryEntarence = new RoomIOTunnelOpen(
+            this,
+            entDir,
+            new MapPoint(4, 8),
+            DirUtil.flip(entDir),
+            this.middlePoint(MapPoint).to(EntityPoint),
+            true
+        )
+        this.primaryExit = new RoomIOTunnelClosed(
+            this,
+            exitDir,
+            new MapPoint(4, 4),
+            this.middlePoint(MapPoint).to(EntityPoint),
+            true
+        )
         this.ios.push(this.primaryEntarence, this.primaryExit)
     }
 }
@@ -81,10 +112,22 @@ export class SimpleMultipleExitTunnelRoom extends Room {
 
         this.teleportFields = []
         const tunnelSize: MapPoint = new MapPoint(4, 4)
-        this.primaryEntarence = new RoomIOTunnelClosed(this, entDir, tunnelSize, this.middlePoint(MapPoint).to(EntityPoint), true)
+        this.primaryEntarence = new RoomIOTunnelClosed(
+            this,
+            entDir,
+            tunnelSize,
+            this.middlePoint(MapPoint).to(EntityPoint),
+            true
+        )
 
         for (let i = 0; i < exitsDirs.length; i++) {
-            const exit = new RoomIOTunnelClosed(this, exitsDirs[i], tunnelSize, this.middlePoint(MapPoint).to(EntityPoint), true)
+            const exit = new RoomIOTunnelClosed(
+                this,
+                exitsDirs[i],
+                tunnelSize,
+                this.middlePoint(MapPoint).to(EntityPoint),
+                true
+            )
             this.exits.push(exit)
             this.addTeleportField(exit, i)
         }
@@ -96,7 +139,16 @@ export class SimpleMultipleExitTunnelRoom extends Room {
         const rect: EntityRect = Rect.new(MapRect, exit.tunnel.getSide(DirUtil.flip(dir), 0)).to(EntityRect)
         rect.x += rect.width / 2 - 12
         rect.y += rect.height / 2 - 12
-        const io = new RoomIOTpr(Tpr.get('simple-end-of-arm' + index, dir, EntityPoint.fromVec(rect), 'TeleportField', true, 'maps.@TARGET_MAP'))
+        const io = new RoomIOTpr(
+            Tpr.get(
+                'simple-end-of-arm' + index,
+                dir,
+                EntityPoint.fromVec(rect),
+                'TeleportField',
+                true,
+                'maps.@TARGET_MAP'
+            )
+        )
         this.teleportFields!.push(io)
         return io
     }
@@ -117,7 +169,13 @@ export class SimpleTunnelEndRoom extends Room {
         super('simpletunnelroom', MapRect.fromTwoPoints(pos, size), [true, true, true, true], true)
 
         const tunnelSize: MapPoint = new MapPoint(4, 4)
-        this.primaryEntarence = new RoomIOTunnelClosed(this, entDir, tunnelSize, this.middlePoint(MapPoint).to(EntityPoint), true)
+        this.primaryEntarence = new RoomIOTunnelClosed(
+            this,
+            entDir,
+            tunnelSize,
+            this.middlePoint(MapPoint).to(EntityPoint),
+            true
+        )
         this.ios.push(this.primaryEntarence)
     }
 

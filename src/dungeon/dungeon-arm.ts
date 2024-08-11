@@ -65,7 +65,10 @@ export function copyArmRuntime(arm: ArmRuntime): ArmRuntime {
     return newArm
 }
 
-export function forEveryArmEntry(arm: ArmRuntime, func: (entry: ArmRuntimeEntry, arm: ArmRuntime, index: number) => void) {
+export function forEveryArmEntry(
+    arm: ArmRuntime,
+    func: (entry: ArmRuntimeEntry, arm: ArmRuntime, index: number) => void
+) {
     const entries: ArmRuntimeEntry[] = []
     if (arm.stack) {
         arm.stack.forEach((e, i) => func(e, arm, i))
@@ -78,7 +81,10 @@ export function forEveryArmEntry(arm: ArmRuntime, func: (entry: ArmRuntimeEntry,
     return entries
 }
 
-export function flatOutArmTopDown(arm: ArmRuntime, allowCache: boolean = true): { entry: ArmRuntimeEntry; arm: ArmRuntime }[] {
+export function flatOutArmTopDown(
+    arm: ArmRuntime,
+    allowCache: boolean = true
+): { entry: ArmRuntimeEntry; arm: ArmRuntime }[] {
     if (allowCache && arm.flatRuntimeCache) {
         return arm.flatRuntimeCache
     }

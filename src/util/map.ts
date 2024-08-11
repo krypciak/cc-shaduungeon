@@ -25,7 +25,13 @@ export class CCMap implements sc.MapModel.Map {
         return this as sc.MapModel.Map
     }
 
-    static getEmpty(size: MapPoint, levelCount: number, theme: RoomTheme, mapName: string, areaInfo: AreaInfo): RoomPlaceVars {
+    static getEmpty(
+        size: MapPoint,
+        levelCount: number,
+        theme: RoomTheme,
+        mapName: string,
+        areaInfo: AreaInfo
+    ): RoomPlaceVars {
         const { x: width, y: height } = size
         const layers: MapLayer[] = []
         const levels: { height: number }[] = []
@@ -38,7 +44,15 @@ export class CCMap implements sc.MapModel.Map {
         for (let level = 0; level < levelCount; level++) {
             levels.push({ height: level * tilesize * 2 })
 
-            const backgroundLayer = new MapLayer(width, height, 'NEW_BACKGROUND', 'Background', theme.config.tileset, level, -10)
+            const backgroundLayer = new MapLayer(
+                width,
+                height,
+                'NEW_BACKGROUND',
+                'Background',
+                theme.config.tileset,
+                level,
+                -10
+            )
             backgroundLayer.fill(level == 0 ? theme.config.blackTile : 0)
             if (level == 0) {
                 background = backgroundLayer.data
@@ -46,30 +60,71 @@ export class CCMap implements sc.MapModel.Map {
             layers.push(backgroundLayer)
 
             if (level == 0 && theme.config.addShadows) {
-                const shadowLayer = new MapLayer(width, height, 'NEW_SHADOW', 'Background', theme.config.shadowTileset!, level, -10)
+                const shadowLayer = new MapLayer(
+                    width,
+                    height,
+                    'NEW_SHADOW',
+                    'Background',
+                    theme.config.shadowTileset!,
+                    level,
+                    -10
+                )
                 shadowLayer.fill(0)
                 shadow = shadowLayer.data
                 layers.push(shadowLayer)
             }
-            const collisionLayer = new MapLayer(width, height, 'NEW_COLLISION', 'Collision', 'media/map/collisiontiles-16x16.png', level, -10)
+            const collisionLayer = new MapLayer(
+                width,
+                height,
+                'NEW_COLLISION',
+                'Collision',
+                'media/map/collisiontiles-16x16.png',
+                level,
+                -10
+            )
             collisionLayer.fill(Coll.Wall)
             colls.push(collisionLayer.data)
             layers.push(collisionLayer)
 
-            const navigationLayer = new MapLayer(width, height, 'NEW_NAVIGATION', 'Navigation', 'media/map/pathmap-tiles.png', level, -10)
+            const navigationLayer = new MapLayer(
+                width,
+                height,
+                'NEW_NAVIGATION',
+                'Navigation',
+                'media/map/pathmap-tiles.png',
+                level,
+                -10
+            )
             navigationLayer.fill(0)
             navs.push(navigationLayer.data)
             layers.push(navigationLayer)
         }
 
-        const lightLayer = new MapLayer(width, height, 'NEW_LIGHT', 'Light', 'media/map/lightmap-tiles.png', 'last', -10)
+        const lightLayer = new MapLayer(
+            width,
+            height,
+            'NEW_LIGHT',
+            'Light',
+            'media/map/lightmap-tiles.png',
+            'last',
+            -10
+        )
         lightLayer.fill(0)
         const light: number[][] = lightLayer.data
         layers.push(lightLayer)
 
         assert(background)
 
-        const map: CCMap = new CCMap(mapName, levels, width, height, 0, theme.getMapAttributes(areaInfo.name), [], layers)
+        const map: CCMap = new CCMap(
+            mapName,
+            levels,
+            width,
+            height,
+            0,
+            theme.getMapAttributes(areaInfo.name),
+            [],
+            layers
+        )
         return {
             map,
             background,

@@ -16,7 +16,15 @@ export class RoomIOTunnel implements RoomIO {
 }
 export class RoomIOTunnelOpen extends RoomIOTunnel {
     _open = true
-    constructor(parentRoom: Room, dir: Dir, size: MapPoint, exitDir: Dir, setPos: EntityPoint, preffedPos: boolean, keyCount?: number) {
+    constructor(
+        parentRoom: Room,
+        dir: Dir,
+        size: MapPoint,
+        exitDir: Dir,
+        setPos: EntityPoint,
+        preffedPos: boolean,
+        keyCount?: number
+    ) {
         super(new TunnelRoom(parentRoom, dir, size, exitDir, setPos, preffedPos, keyCount))
     }
     getTpr(): Tpr {
@@ -25,7 +33,14 @@ export class RoomIOTunnelOpen extends RoomIOTunnel {
 }
 export class RoomIOTunnelClosed extends RoomIOTunnel {
     _closed = true
-    constructor(parentRoom: Room, dir: Dir, size: MapPoint, setPos: EntityPoint, preffedPos: boolean, keyCount?: number) {
+    constructor(
+        parentRoom: Room,
+        dir: Dir,
+        size: MapPoint,
+        setPos: EntityPoint,
+        preffedPos: boolean,
+        keyCount?: number
+    ) {
         super(new TunnelRoom(parentRoom, dir, size, null, setPos, preffedPos, keyCount))
     }
     getTpr(): Tpr {
@@ -142,7 +157,14 @@ export class TunnelRoom extends Room {
                     keyPos = randomSeedInt(2, keyArrLen - 1)
                 } while (keyPos == lastRealKeyPos)
 
-                const keyDestArr: MapDestructible[] = MapDestructible.keyPillarChain(keyArrPos, rpv.masterLevel, this.dir, `${this.name}_keyChain`, keyArrLen, keyPos)
+                const keyDestArr: MapDestructible[] = MapDestructible.keyPillarChain(
+                    keyArrPos,
+                    rpv.masterLevel,
+                    this.dir,
+                    `${this.name}_keyChain`,
+                    keyArrLen,
+                    keyPos
+                )
                 rpv.entities.push(...keyDestArr)
                 lastRealKeyPos = keyPos
             }
@@ -151,7 +173,12 @@ export class TunnelRoom extends Room {
             Point.moveInDirection(keyPanelPos, DirUtil.flip(this.dir), 64)
             keyPanelPos.x -= 8
             keyPanelPos.y -= 8
-            const keyPanelE: MapKeyPanel = MapKeyPanel.new(keyPanelPos, rpv.masterLevel, `${this.name}_keyPanel`, 'REGULAR')
+            const keyPanelE: MapKeyPanel = MapKeyPanel.new(
+                keyPanelPos,
+                rpv.masterLevel,
+                `${this.name}_keyPanel`,
+                'REGULAR'
+            )
             rpv.entities.push(keyPanelE)
         }
     }

@@ -1,6 +1,13 @@
 import { AreaInfo } from '@root/area/area-builder'
 import { MapBuilder } from '@root/room/map-builder'
-import { SimpleDoubleTunnelRoom, SimpleMultipleExitTunnelRoom, SimpleOpenTunnelRoom, SimpleRoom, SimpleTunnelEndRoom, SimpleTunnelRoom } from '@root/room/simple-room'
+import {
+    SimpleDoubleTunnelRoom,
+    SimpleMultipleExitTunnelRoom,
+    SimpleOpenTunnelRoom,
+    SimpleRoom,
+    SimpleTunnelEndRoom,
+    SimpleTunnelRoom,
+} from '@root/room/simple-room'
 import { Dir, DirUtil, EntityPoint, MapPoint } from 'cc-map-util/pos'
 import { Room, RoomIOTpr } from '@root/room/room'
 import { assertBool } from 'cc-map-util/util'
@@ -80,7 +87,12 @@ export class SimpleSingleTunnelMapBuilder extends MapBuilder {
         public exitDir: Dir
     ) {
         super(3, areaInfo, RoomTheme.default)
-        this.simpleRoom = this.entarenceRoom = new SimpleTunnelRoom(new MapPoint(0, 0), new MapPoint(16, 16), entDir, exitDir)
+        this.simpleRoom = this.entarenceRoom = new SimpleTunnelRoom(
+            new MapPoint(0, 0),
+            new MapPoint(16, 16),
+            entDir,
+            exitDir
+        )
         this.simpleRoom.pushAllRooms(this.rooms)
         this.mapIOs.push({ io: this.simpleRoom.primaryExit, room: this.simpleRoom })
         this.setOnWallPositions()
@@ -113,7 +125,12 @@ export class SimpleDoubleTunnelMapBuilder extends MapBuilder {
         public exitDir: Dir
     ) {
         super(3, areaInfo, RoomTheme.default)
-        this.simpleRoom = this.entarenceRoom = new SimpleDoubleTunnelRoom(new MapPoint(0, 0), new MapPoint(16, 16), entDir, exitDir)
+        this.simpleRoom = this.entarenceRoom = new SimpleDoubleTunnelRoom(
+            new MapPoint(0, 0),
+            new MapPoint(16, 16),
+            entDir,
+            exitDir
+        )
         this.simpleRoom.pushAllRooms(this.rooms)
         this.mapIOs.push({ io: this.simpleRoom.primaryExit, room: this.simpleRoom })
         this.setOnWallPositions()
@@ -142,8 +159,14 @@ export class SimpleDoubleRoomMapBuilder extends MapBuilder {
         this.simpleRoom = new SimpleOpenTunnelRoom(new MapPoint(0, 0), new MapPoint(16, 16), entDir, exitDir)
 
         const entarenceRoomSize: MapPoint = new MapPoint(12, 12)
-        const pos: MapPoint = this.simpleRoom.primaryEntarence.tunnel.getRoomPosThatConnectsToTheMiddle(entarenceRoomSize)
-        this.entarenceRoom = new Room('simple', MapRect.fromTwoPoints(pos, entarenceRoomSize), [true, true, true, true], true)
+        const pos: MapPoint =
+            this.simpleRoom.primaryEntarence.tunnel.getRoomPosThatConnectsToTheMiddle(entarenceRoomSize)
+        this.entarenceRoom = new Room(
+            'simple',
+            MapRect.fromTwoPoints(pos, entarenceRoomSize),
+            [true, true, true, true],
+            true
+        )
         this.simpleRoom.pushAllRooms(this.rooms)
         this.mapIOs.push({ io: this.simpleRoom.primaryExit, room: this.simpleRoom })
     }
@@ -202,7 +225,12 @@ export class SimpleMultipleExitMapBuilder extends MapBuilder {
         const lastUndefinedIndex = exits1.lastIndexOf(undefined)
         const exits: Dir[] = exits1.slice(0, lastUndefinedIndex > 0 ? lastUndefinedIndex : exits1.length) as Dir[]
         this.exitCount = exits.length
-        this.entarenceRoom = this.simpleRoom = new SimpleMultipleExitTunnelRoom(new MapPoint(0, 0), new MapPoint(24, 24), entDir, ...exits)
+        this.entarenceRoom = this.simpleRoom = new SimpleMultipleExitTunnelRoom(
+            new MapPoint(0, 0),
+            new MapPoint(24, 24),
+            entDir,
+            ...exits
+        )
         this.simpleRoom.pushAllRooms(this.rooms)
         this.simpleRoom.exits.forEach(io => this.mapIOs.push({ io, room: this.simpleRoom }))
         this.setOnWallPositions()
@@ -222,7 +250,10 @@ export class SimpleMultipleExitMapBuilder extends MapBuilder {
 
     preplace(arm: ArmRuntime): void {
         if (arm.parentArm) {
-            const io: RoomIOTpr = this.simpleRoom.addTeleportField(this.simpleRoom.primaryEntarence, this.simpleRoom.teleportFields!.length)
+            const io: RoomIOTpr = this.simpleRoom.addTeleportField(
+                this.simpleRoom.primaryEntarence,
+                this.simpleRoom.teleportFields!.length
+            )
             this.simpleRoom.ios.push(io)
         }
         super.preplace(arm)
@@ -241,7 +272,12 @@ export class SimpleSingleTunnelEndMapBuilder extends MapBuilder {
         public exitDir: Dir
     ) {
         super(3, areaInfo, RoomTheme.default)
-        this.simpleRoom = this.entarenceRoom = new SimpleTunnelEndRoom(new MapPoint(0, 0), new MapPoint(16, 16), entDir, exitDir)
+        this.simpleRoom = this.entarenceRoom = new SimpleTunnelEndRoom(
+            new MapPoint(0, 0),
+            new MapPoint(16, 16),
+            entDir,
+            exitDir
+        )
         this.simpleRoom.pushAllRooms(this.rooms)
     }
 

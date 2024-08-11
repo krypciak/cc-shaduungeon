@@ -46,7 +46,9 @@ export class DungeonConfigSimpleFactory implements DungeonConfigFactory {
                 : () => {
                       throw new Error()
                   })((...arr: Dir[]) => {
-            const b = Object.assign(new SimpleMultipleExitMapBuilder(this.areaInfo, arr[0], arr[1], arr[2], arr[3]), { exclusive })
+            const b = Object.assign(new SimpleMultipleExitMapBuilder(this.areaInfo, arr[0], arr[1], arr[2], arr[3]), {
+                exclusive,
+            })
             for (let i = 0; i < multi; i++) {
                 _db.arr.push(b)
             }
@@ -107,9 +109,21 @@ export class DungeonConfigSimpleFactory implements DungeonConfigFactory {
         /* fixed :) */
         const _sb1: MapBuilderArrayGenerate = {
             arr: [
-                Object.assign(Object.assign(new SimpleSingleTunnelEndMapBuilder(this.areaInfo, Dir.SOUTH, Dir.NORTH), { exclusive: true })),
-                Object.assign(Object.assign(new SimpleSingleTunnelEndMapBuilder(this.areaInfo, Dir.SOUTH, Dir.WEST), { exclusive: true })),
-                Object.assign(Object.assign(new SimpleSingleTunnelEndMapBuilder(this.areaInfo, Dir.EAST, Dir.SOUTH), { exclusive: true })),
+                Object.assign(
+                    Object.assign(new SimpleSingleTunnelEndMapBuilder(this.areaInfo, Dir.SOUTH, Dir.NORTH), {
+                        exclusive: true,
+                    })
+                ),
+                Object.assign(
+                    Object.assign(new SimpleSingleTunnelEndMapBuilder(this.areaInfo, Dir.SOUTH, Dir.WEST), {
+                        exclusive: true,
+                    })
+                ),
+                Object.assign(
+                    Object.assign(new SimpleSingleTunnelEndMapBuilder(this.areaInfo, Dir.EAST, Dir.SOUTH), {
+                        exclusive: true,
+                    })
+                ),
             ],
             randomize: false,
             index: this.bPool.length,
@@ -118,8 +132,16 @@ export class DungeonConfigSimpleFactory implements DungeonConfigFactory {
 
         const _sb2: MapBuilderArrayGenerate = {
             arr: [
-                Object.assign(Object.assign(new SimpleSingleTunnelEndMapBuilder(this.areaInfo, Dir.WEST, Dir.NORTH), { exclusive: true })),
-                Object.assign(Object.assign(new SimpleSingleTunnelEndMapBuilder(this.areaInfo, Dir.SOUTH, Dir.NORTH), { exclusive: true })),
+                Object.assign(
+                    Object.assign(new SimpleSingleTunnelEndMapBuilder(this.areaInfo, Dir.WEST, Dir.NORTH), {
+                        exclusive: true,
+                    })
+                ),
+                Object.assign(
+                    Object.assign(new SimpleSingleTunnelEndMapBuilder(this.areaInfo, Dir.SOUTH, Dir.NORTH), {
+                        exclusive: true,
+                    })
+                ),
             ],
             randomize: false,
             index: this.bPool.length,
@@ -127,21 +149,35 @@ export class DungeonConfigSimpleFactory implements DungeonConfigFactory {
         this.bPool.push(_sb2)
 
         const _sb3: MapBuilderArrayGenerate = {
-            arr: [Object.assign(Object.assign(new SimpleSingleTunnelEndMapBuilder(this.areaInfo, Dir.EAST, Dir.NORTH), { exclusive: true }))],
+            arr: [
+                Object.assign(
+                    Object.assign(new SimpleSingleTunnelEndMapBuilder(this.areaInfo, Dir.EAST, Dir.NORTH), {
+                        exclusive: true,
+                    })
+                ),
+            ],
             randomize: false,
             index: this.bPool.length,
         }
         this.bPool.push(_sb3)
 
         const _db1: MapBuilderArrayGenerate = {
-            arr: [Object.assign(new SimpleMultipleExitMapBuilder(this.areaInfo, Dir.SOUTH, Dir.NORTH, Dir.EAST), { exclusive: true })],
+            arr: [
+                Object.assign(new SimpleMultipleExitMapBuilder(this.areaInfo, Dir.SOUTH, Dir.NORTH, Dir.EAST), {
+                    exclusive: true,
+                }),
+            ],
             randomize: false,
             index: this.bPool.length,
         }
         this.bPool.push(_db1)
 
         const _db2: MapBuilderArrayGenerate = {
-            arr: [Object.assign(new SimpleMultipleExitMapBuilder(this.areaInfo, Dir.SOUTH, Dir.WEST), { exclusive: true })],
+            arr: [
+                Object.assign(new SimpleMultipleExitMapBuilder(this.areaInfo, Dir.SOUTH, Dir.WEST), {
+                    exclusive: true,
+                }),
+            ],
             randomize: false,
             index: this.bPool.length,
         }
