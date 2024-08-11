@@ -9,6 +9,7 @@ interface DungeonSaveConfig {
     areaDbEntries: Record<string, sc.MapModel.Area>
     sels: Record<keyof typeof blitzkrieg.sels, string>
 }
+const fs: typeof import('fs') = (0, eval)("require('fs')")
 
 export class DungeonPaths {
     static baseName: string = 'dnggen'
@@ -104,18 +105,18 @@ export class DungeonPaths {
         const path = this.areaFile
         this.config.paths[this.areaFileGame] = path
         this.config.areaDbEntries[builder.areaInfo.name] = builder.dbEntry
-        blitzkrieg.FsUtil.writeFileSync(path, builder.builtArea)
+        fs.writeFileSync(path, JSON.stringify(builder.builtArea))
     }
 
     saveConfig() {
-        blitzkrieg.FsUtil.writeFileSync(this.configFile, this.config)
+        fs.writeFileSync(this.configFile, JSON.stringify(this.config))
     }
 
     loadConfig(): boolean {
         if (!blitzkrieg.FsUtil.doesFileExist(this.configFile)) {
             return false
         }
-        this.config = JSON.parse(blitzkrieg.FsUtil.readFileSync(this.configFile))
+        this.config = JSON.parse(fs.readFileSync(this.configFile, 'utf8'))
 
         return true
     }
@@ -142,7 +143,7 @@ export class DungeonPaths {
     registerSelections(load: boolean = false) {
         for (const selEntry of Object.entries(this.config.sels)) {
             const [poolName, path] = selEntry as [keyof typeof blitzkrieg.sels, string]
-            const pool: SelectionManager = blitzkrieg.sels[poolName] as SelectionManager
+            const pool = blitzkrieg.sels[poolName] as SelectionManager<any>
             while (pool.jsonFiles.includes(path)) {
                 const indexToDel: number = pool.jsonFiles.indexOf(path)
                 Object.keys(pool.selMap).forEach(k => {
@@ -166,7 +167,7 @@ export class DungeonPaths {
         if (index === undefined) {
             throw new Error('pool name doesnt exist: ' + poolName)
         }
-        const pool: SelectionManager = blitzkrieg.sels[poolName] as SelectionManager
+        const pool = blitzkrieg.sels[poolName] as SelectionManager<any>
         pool.setMapEntry(sel.mapName, new blitzkrieg.SelectionMapEntry([sel], index))
     }
 }
