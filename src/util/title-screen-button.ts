@@ -1,4 +1,4 @@
-import { startDnggenGame } from "./game-start"
+import { startDnggenGame } from './game-start'
 
 /* in prestart */
 export {}

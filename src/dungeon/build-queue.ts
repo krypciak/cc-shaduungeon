@@ -1,3 +1,4 @@
+import { assert, merge } from '../util/util'
 import { MapId as Id } from './builder'
 
 import type * as _ from 'ultimate-crosscode-typedefs'
@@ -8,72 +9,120 @@ export interface BuildQueueAccesor<T> {
     get: BuildQueue<T>['get']
 }
 
-export type NextQueueEntryGenerator<T> = (mapId: Id, branch: number, accesor: BuildQueueAccesor<T>) => QueueEntry<T> | null
+export type NextQueueEntryGenerator<T> = (
+    mapId: Id,
+    branch: number,
+    accesor: BuildQueueAccesor<T>
+) => QueueEntry<T> | null
 
 export type QueueEntry<T> = {
     data: T
     id: Id
     finishedEntry?: boolean
-    finishedWhole?: boolean
+    dataNoMerge?: boolean
 
     branch: number
     branchCount: number
-    getNextQueueEntry: NextQueueEntryGenerator<T>
-}
+} & (
+    | { getNextQueueEntry: NextQueueEntryGenerator<T>; finishedWhole?: false }
+    | {
+          finishedWhole: true
+      }
+)
 
 export type BuildQueueResult<T> = Record<Id, T>
 
 export class BuildQueue<T> {
-    mapIdToQueueIndex: Record<Id, number> = {}
     queue: QueueEntry<T>[] = []
 
-    begin(getNextQueueEntry: NextQueueEntryGenerator<T>): BuildQueueResult<T> {
+    begin(getNextQueueEntry: NextQueueEntryGenerator<T>): BuildQueueResult<T> | null {
         this.queue.push(getNextQueueEntry(0, 0, this)!)
         this.postStep()
 
         while (!this.queue.last().finishedWhole) {
-            this.step()
+            if (!this.step()) return null
         }
 
         const res: BuildQueueResult<T> = {}
 
         for (const entry of this.queue) {
             if (!entry.finishedEntry) continue
-            // TODO: merge
+
             res[entry.id] = entry.data
         }
 
         return res
     }
 
-    step() {
+    step(): boolean {
         const lastE = this.queue.last()
         if (lastE.branch == lastE.branchCount) {
             this.queue.pop()
             const lastE = this.queue.last()
+            if (!lastE) return false
             lastE.branch++
-            return
+            return true
         }
 
         let id = lastE.id
         if (lastE.finishedEntry) id++
+
+        assert(!lastE.finishedWhole)
         const newE = lastE.getNextQueueEntry(id, lastE.branch, this)
         if (newE === null) {
             lastE.branch++
-            return
+            return true
         }
         this.queue.push(newE)
 
         this.postStep()
+        return true
     }
 
     postStep() {
         const lastIndex = this.queue.length - 1
         const newE = this.queue[lastIndex]
-        this.mapIdToQueueIndex[newE.id] = lastIndex
+
+        if (newE.finishedEntry && !newE.dataNoMerge) {
+            newE.data = this.mergeData(newE)
+        }
+    }
+
+    private findLastEntry(id: Id): QueueEntry<T> {
+        for (let i = this.queue.length - 1; i >= 0; i--) {
+            const entry = this.queue[i]
+            if (entry.id == id) return entry 
+        }
+        throw new Error('how? entry not found')
     }
 
     get(id: Id): T {
-        return this.queue[this.mapIdToQueueIndex[id]].data
+        const latestEntry = this.findLastEntry(id)
+        if (latestEntry.finishedEntry) return latestEntry.data
+
+        const data = this.mergeData(latestEntry)
+        return data
+    }
+
+    private mergeData(latestEntry: QueueEntry<T>): T {
+        const limit = this.queue.length - 1
+        const data: T = {} as any
+        let i
+        for (i = limit; i >= 0; i--) {
+            const entry = this.queue[i]
+            if (entry.id != latestEntry.id) {
+                break
+            }
+            if (entry.dataNoMerge) continue
+        }
+
+        i++
+        for (; i < limit + 1; i++) {
+            const entry = this.queue[i]
+            if (entry.id != latestEntry.id) throw new Error('id mismatch')
+            merge(data, entry.data)
+        }
+
+        return data
     }
 }

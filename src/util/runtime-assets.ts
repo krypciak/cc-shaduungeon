@@ -1,4 +1,4 @@
-import DngGen from "../plugin"
+import DngGen from '../plugin'
 
 export class RuntimeResources {
     private static assets: Record<string, string> = {}

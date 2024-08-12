@@ -8,3 +8,18 @@ new DngGen({
     baseDirectory: 'assets/mods/cc-shaduungeon',
     findAllAssets: true as any,
 } as unknown as Mod1)
+
+// import { Test_DungeonQueue } from './dungeon/build-queue.spec'
+// const a = new Test_DungeonQueue()
+// a.dataMergeSomeFail()
+// a.maze(
+//     [
+//         // prettier-ignore
+//         '#########',
+//         '#       #',
+//         '### ## ##',
+//         '#*#  #  #',
+//         '#########',
+//     ],
+//     null
+// )

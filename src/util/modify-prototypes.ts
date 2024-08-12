@@ -8,6 +8,11 @@ declare global {
         flat(): T extends Array<any> ? T : T[]
         flatMap<U>(callback: (value: T, index: number, array: T[]) => U | U[], thisArg?: this | undefined): U[]
     }
+    interface ReadonlyArray<T> {
+        last(): T
+        flat(): T extends Array<any> ? T : T[]
+        flatMap<U>(callback: (value: T, index: number, array: T[]) => U | U[], thisArg?: this | undefined): U[]
+    }
 }
 
 if (!Object.fromEntries) {
