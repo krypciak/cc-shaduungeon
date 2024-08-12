@@ -1,3 +1,5 @@
+import { Vec2 } from './vec2'
+
 export function assert(v: any, msg?: string): asserts v {
     if (!v) {
         throw new Error(`Assertion error${msg ? `: ${msg}}` : ''}`)
@@ -28,4 +30,25 @@ export function merge<T, U>(original: T, extended: U): T & U {
         }
     }
     return orig
+}
+
+export namespace Array2d {
+    export function empty(size: Vec2, fill: number = 0): number[][] {
+        return Array.from(new Array(size.y), () => new Array(size.x).fill(fill))
+    }
+    export function pasteInto<T>(arr1: T[][], arr2: T[][], x1: number, y1: number) {
+        for (let y = y1; y < y1 + arr2.length; y++) {
+            for (let x = x1; x < x1 + arr2[y - y1].length; x++) {
+                arr1[y][x] = arr2[y - y1][x - x1]
+            }
+        }
+    }
+    export function isEmpty<T>(arr: T[][]) {
+        for (let y = 0; y < arr.length; y++) {
+            for (let x = 0; x < arr[y].length; x++) {
+                if (arr[y][x] != 0) return false
+            }
+        }
+        return true
+    }
 }
