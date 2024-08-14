@@ -1,33 +1,41 @@
 import { assert } from './util'
 import { Vec2 } from './vec2'
 
-export enum Dir {
-    NORTH = 0,
-    EAST = 1,
-    SOUTH = 2,
-    WEST = 3,
-}
+export const Dir = {
+    NORTH: 0,
+    EAST: 1,
+    SOUTH: 2,
+    WEST: 3,
+} as const
+export type Dir = (typeof Dir)[keyof typeof Dir]
 export type DirStr = 'NORTH' | 'EAST' | 'SOUTH' | 'WEST'
+const dirReverse = {
+    0: 'NORTH',
+    1: 'EAST',
+    2: 'SOUTH',
+    3: 'WEST',
+} as const
 
-export enum Dir3d {
-    NORTH = 0,
-    EAST = 1,
-    SOUTH = 2,
-    WEST = 3,
-    UP = 4,
-    DOWN = 5,
-}
+export const Dir3d = {
+    NORTH: 0,
+    EAST: 1,
+    SOUTH: 2,
+    WEST: 3,
+    UP: 4,
+    DOWN: 5,
+} as const
+export type Dir3d = (typeof Dir3d)[keyof typeof Dir3d]
 export type Dir3dStr = 'NORTH' | 'EAST' | 'SOUTH' | 'WEST' | 'UP' | 'DOWN'
 
-export namespace Dir {
+export namespace DirU {
     export function rotate(dir: Dir, count: number): Dir {
-        return (dir + count) % 4
+        return ((dir + count) % 4) as Dir
     }
     export function flip(dir: Dir): Dir {
-        return Dir.rotate(dir, 2)
+        return DirU.rotate(dir, 2)
     }
 
-    export function isVertical(dir: Dir): dir is Dir.NORTH | Dir.SOUTH {
+    export function isVertical(dir: Dir): dir is typeof Dir.NORTH | typeof Dir.SOUTH {
         return dir == Dir.NORTH || dir == Dir.SOUTH
     }
 
@@ -35,11 +43,17 @@ export namespace Dir {
         return Dir[dir]
     }
     export function toString(dir: Dir): DirStr {
-        return Dir[dir] as DirStr
+        return dirReverse[dir]
     }
     export function fromDir3d(dir: Dir3d): Dir {
         assert(dir >= Dir3d.UP, 'Dir3d to Dir conversion error')
         return dir as unknown as Dir
+    }
+    export const allExpect = {
+        [Dir.NORTH]: [Dir.EAST, Dir.SOUTH, Dir.WEST],
+        [Dir.EAST]: [Dir.NORTH, Dir.SOUTH, Dir.WEST],
+        [Dir.SOUTH]: [Dir.NORTH, Dir.EAST, Dir.WEST],
+        [Dir.WEST]: [Dir.NORTH, Dir.EAST, Dir.SOUTH],
     }
 }
 
@@ -52,6 +66,13 @@ export interface Rect extends Vec2 {
     height: number
 }
 export namespace Rect {
+    export function isEqual(r1: Rect, r2: Rect): boolean {
+        return r1.x == r2.x && r1.y == r2.y && r1.width == r2.width && r1.height == r2.height
+    }
+    export function toString(r: Rect): string {
+        return `{ x: ${r.x}, y: ${r.y}, width: ${r.width}, height: ${r.height} }`
+
+    }
     export function fromTwoVecSize(v1: Vec2, v2: Vec2): Rect {
         return {
             ...v1,
@@ -69,7 +90,7 @@ export namespace Rect {
         return rect.x + rect.width
     }
     export function y2(rect: Rect): number {
-        return rect.x + rect.width
+        return rect.y + rect.height
     }
     export function x2y2(rect: Rect): Vec2 {
         return { x: Rect.x2(rect), y: Rect.y2(rect) }
@@ -85,6 +106,17 @@ export namespace Rect {
             height,
         }
     }
+    export function normalize(r: Rect): Rect {
+        if (r.width < 0) {
+            r.x += r.width
+            r.width *= -1
+        }
+        if (r.height < 0) {
+            r.y += r.height
+            r.height *= -1
+        }
+        return r
+    }
     export function toTwoVecX2Y2(rect: Rect): [Vec2, Vec2] {
         return [{ x: rect.x, y: rect.y }, Rect.x2y2(rect)]
     }
@@ -92,6 +124,18 @@ export namespace Rect {
         const { x: r1x2, y: r1y2 } = Rect.x2y2(r1)
         const { x: r2x2, y: r2y2 } = Rect.x2y2(r2)
         return r1.x < r2x2 && r1x2 > r2.x && r1.y < r2y2 && r1y2 > r2.y
+    }
+    export function doesArrOverlap(rectToCheck: Rect, rects: Rect[]): boolean {
+        for (const rect of rects) {
+            if (Rect.doOverlap(rectToCheck, rect)) return true
+        }
+        return false
+    }
+    export function doesArrOverlapArr(rects1: Rect[], rects2: Rect[]): boolean {
+        for (const rect of rects1) {
+            if (Rect.doesArrOverlap(rect, rects2)) return true
+        }
+        return false
     }
     /** Returns the middle point of the `rect` */
     export function middle(rect: Rect): Vec2 {
@@ -109,24 +153,28 @@ export namespace Rect {
             height: rect.height + num * 2,
         }
     }
-    export function corner(rect: Rect, h: Dir.EAST | Dir.WEST, v: Dir.NORTH | Dir.SOUTH): Vec2 {
+    export function corner(
+        rect: Rect,
+        h: typeof Dir.EAST | typeof Dir.WEST,
+        v: typeof Dir.NORTH | typeof Dir.SOUTH
+    ): Vec2 {
         return {
             x: h == Dir.EAST ? Rect.x2(rect) : rect.x,
             y: v == Dir.SOUTH ? Rect.y2(rect) : rect.y,
         }
     }
-    export function getSide(rect: Rect, dir: Dir): Rect {
-        if (Dir.isVertical(dir)) {
+    export function side(rect: Rect, dir: Dir): Rect {
+        if (DirU.isVertical(dir)) {
             return Rect.fromTwoVecX2Y2(Rect.corner(rect, Dir.WEST, dir), Rect.corner(rect, Dir.EAST, dir))
         } else {
             return Rect.fromTwoVecX2Y2(Rect.corner(rect, dir, Dir.NORTH), Rect.corner(rect, dir, Dir.SOUTH))
         }
     }
-    export function setPosToSide(rect: Rect, vec: Vec2, dir: Dir) {
-        if (dir == Dir.NORTH) return (vec.y = rect.y)
-        if (dir == Dir.EAST) return (vec.x = Rect.x2(rect))
-        if (dir == Dir.SOUTH) return (vec.y = Rect.y2(rect))
-        vec.x = rect.x
+    export function sideVec(rect: Rect, vec: Vec2, dir: Dir): Vec2 {
+        if (dir == Dir.NORTH) return { x: vec.x, y: rect.y }
+        if (dir == Dir.EAST) return { x: Rect.x2(rect), y: vec.y }
+        if (dir == Dir.SOUTH) return { x: vec.x, y: Rect.y2(rect) }
+        return { x: vec.x, y: vec.y }
     }
     export function closestSide(rect: Rect, vec: Vec2): { distance: number; dir: Dir; vec: Vec2 } {
         let smallest: { distance: number; dir: Dir; vec: Vec2 } = {
@@ -135,8 +183,8 @@ export namespace Rect {
             vec: { x: 0, y: 0 },
         }
         for (let dir = Dir.NORTH; dir < 4; dir++) {
-            const v: Vec2 = Rect.getSide(rect, dir)
-            if (Dir.isVertical(dir)) {
+            const v: Vec2 = Rect.side(rect, dir)
+            if (DirU.isVertical(dir)) {
                 v.x = vec.x
             } else {
                 v.y = vec.y
@@ -154,5 +202,31 @@ export namespace Rect {
     }
     export function isVecIn(rect: Rect, vec: Vec2): boolean {
         return vec.x >= rect.x && vec.x < rect.x + rect.width && vec.y >= rect.y && vec.y < rect.y + rect.height
+    }
+    export function isVecInArr(rects: Rect[], vec: Vec2): boolean {
+        for (const rect of rects) {
+            if (Rect.isVecIn(rect, vec)) return true
+        }
+        return false
+    }
+    export function boundsOfArr(rects: Rect[]): Rect {
+        let x = 10e100
+        let y = 10e100
+        let x2 = -10e100
+        let y2 = -10e100
+
+        for (const rect of rects) {
+            if (rect.x < x) x = rect.x
+            if (rect.y < y) y = rect.y
+            const { x: nx2, y: ny2 } = Rect.x2y2(rect)
+            if (nx2 > x2) x2 = nx2
+            if (ny2 > y2) y2 = ny2
+        }
+        return {
+            x,
+            y,
+            width: x2 - x,
+            height: y2 - y,
+        }
     }
 }

@@ -1,10 +1,10 @@
-import * as _ from 'ultimate-crosscode-typedefs'
 import { registerOpts } from './options'
 import './setup'
 import { Mod1 } from 'cc-blitzkrieg/src/types'
 import ccmod from '../ccmod.json'
 import { RuntimeResources } from './util/runtime-assets'
 import { injectGameStarting } from './util/game-start'
+import * as _ from 'ultimate-crosscode-typedefs'
 
 declare global {
     let dnggen: DngGen

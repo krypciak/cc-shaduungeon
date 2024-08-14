@@ -1,7 +1,5 @@
 import { expect, Test, TestCase, TestSuite } from 'testyts'
 
-import type * as _ from '../setup-test'
-
 @TestSuite()
 export class PrototypeTest {
     @Test()

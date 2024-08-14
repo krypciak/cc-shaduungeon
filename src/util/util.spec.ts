@@ -1,6 +1,5 @@
 import { expect, Test, TestCase, TestSuite } from 'testyts'
 
-import type * as _ from '../setup-test'
 import { merge } from './util'
 
 @TestSuite()

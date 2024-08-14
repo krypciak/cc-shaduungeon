@@ -1,6 +1,5 @@
 import { expect, Test, TestCase, TestSuite } from 'testyts'
 
-import type * as _ from '../setup-test'
 import { BuildQueue, NextQueueEntryGenerator, QueueEntry } from '../dungeon/build-queue'
 import { assert } from '../util/util'
 
@@ -9,8 +8,8 @@ export class Test_DungeonQueue {
     @Test()
     branchless() {
         type Data = { countLeft: number }
-        const getNextQueueEntry: NextQueueEntryGenerator<Data> = function (): QueueEntry<Data> {
-            const getNextQueueEntry: NextQueueEntryGenerator<Data> = function (id, _branch, accesor): QueueEntry<Data> {
+        const nextQueueEntryGenerator: NextQueueEntryGenerator<Data> = function (): QueueEntry<Data> {
+            const nextQueueEntryGenerator: NextQueueEntryGenerator<Data> = function (id, _branch, accesor): QueueEntry<Data> {
                 const last = accesor.get(id - 1)
                 return {
                     data: { countLeft: last.countLeft - 1 },
@@ -20,7 +19,7 @@ export class Test_DungeonQueue {
 
                     branch: 0,
                     branchCount: 1,
-                    getNextQueueEntry,
+                    nextQueueEntryGenerator: nextQueueEntryGenerator,
                 }
             }
             return {
@@ -30,11 +29,11 @@ export class Test_DungeonQueue {
 
                 branch: 0,
                 branchCount: 1,
-                getNextQueueEntry,
+                nextQueueEntryGenerator: nextQueueEntryGenerator,
             }
         }
         const queue = new BuildQueue<Data>()
-        const res = queue.begin(getNextQueueEntry)
+        const res = queue.begin(nextQueueEntryGenerator)
         expect.toBeTruthy(res)
         assert(res)
         expect.toBeEqual(Object.keys(res).length, 3, 'Queue length')
@@ -44,8 +43,8 @@ export class Test_DungeonQueue {
     @Test()
     branchSomeFail() {
         type Data = { countLeft: number }
-        const getNextQueueEntry: NextQueueEntryGenerator<Data> = function (): QueueEntry<Data> {
-            const getNextQueueEntry: NextQueueEntryGenerator<Data> = function (
+        const nextQueueEntryGenerator: NextQueueEntryGenerator<Data> = function (): QueueEntry<Data> {
+            const nextQueueEntryGenerator: NextQueueEntryGenerator<Data> = function (
                 id,
                 branch,
                 accesor
@@ -65,7 +64,7 @@ export class Test_DungeonQueue {
 
                     branch: 0,
                     branchCount,
-                    getNextQueueEntry,
+                    nextQueueEntryGenerator,
                 }
             }
             return {
@@ -75,11 +74,11 @@ export class Test_DungeonQueue {
 
                 branch: 0,
                 branchCount: 1,
-                getNextQueueEntry,
+                nextQueueEntryGenerator: nextQueueEntryGenerator,
             }
         }
         const queue = new BuildQueue<Data>()
-        const res = queue.begin(getNextQueueEntry)
+        const res = queue.begin(nextQueueEntryGenerator)
         expect.toBeTruthy(res)
         assert(res)
         expect.toBeEqual(Object.keys(res).length, 3, 'Queue length')
@@ -144,7 +143,7 @@ export class Test_DungeonQueue {
 
                 branch: 0,
                 branchCount: 1,
-                getNextQueueEntry: intersection,
+                nextQueueEntryGenerator: intersection,
             }
         }
 
@@ -168,7 +167,7 @@ export class Test_DungeonQueue {
 
                 branch: 0,
                 branchCount: possiblePaths.length,
-                getNextQueueEntry: step,
+                nextQueueEntryGenerator: step,
             }
         }
 
@@ -180,7 +179,7 @@ export class Test_DungeonQueue {
 
                 branch: 0,
                 branchCount: 1,
-                getNextQueueEntry: intersection,
+                nextQueueEntryGenerator: intersection,
             }
         }
         const queue = new BuildQueue<Data>()
@@ -225,7 +224,7 @@ export class Test_DungeonQueue {
 
                 branch: 0,
                 branchCount: 1,
-                getNextQueueEntry: entry1,
+                nextQueueEntryGenerator: entry1,
             }
         }
         const entry1: NextQueueEntryGenerator<Data> = function (id): QueueEntry<Data> {
@@ -235,7 +234,7 @@ export class Test_DungeonQueue {
 
                 branch: 0,
                 branchCount: 1,
-                getNextQueueEntry: entry2,
+                nextQueueEntryGenerator: entry2,
             }
         }
         const entry2: NextQueueEntryGenerator<Data> = function (id, _branch, accesor): QueueEntry<Data> {
@@ -249,7 +248,7 @@ export class Test_DungeonQueue {
                 branch: 0,
                 branchCount: 1,
                 finishedWhole: loopsLeft < 0,
-                getNextQueueEntry: entry0,
+                nextQueueEntryGenerator: entry0,
             }
         }
         const queue = new BuildQueue<Data>()
@@ -276,7 +275,7 @@ export class Test_DungeonQueue {
 
                 branch: 0,
                 branchCount: 1,
-                getNextQueueEntry: entry1,
+                nextQueueEntryGenerator: entry1,
             }
         }
         const entry1: NextQueueEntryGenerator<Data> = function (id): QueueEntry<Data> {
@@ -286,7 +285,7 @@ export class Test_DungeonQueue {
 
                 branch: 0,
                 branchCount: 3,
-                getNextQueueEntry: entry2,
+                nextQueueEntryGenerator: entry2,
             }
         }
         const entry2: NextQueueEntryGenerator<Data> = function (id, branch, accesor): QueueEntry<Data> | null {
@@ -299,7 +298,7 @@ export class Test_DungeonQueue {
 
                 branch: 0,
                 branchCount: 1,
-                getNextQueueEntry: entry3,
+                nextQueueEntryGenerator: entry3,
             }
         }
         let firstTime = true

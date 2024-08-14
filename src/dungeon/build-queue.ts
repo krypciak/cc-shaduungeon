@@ -1,8 +1,6 @@
 import { assert, merge } from '../util/util'
-import { MapId as Id } from './builder'
 
-import type * as _ from 'ultimate-crosscode-typedefs'
-
+export type Id = number
 export interface BuildQueueAccesor<T> {
     queue: Readonly<BuildQueue<T>['queue']>
 
@@ -24,10 +22,11 @@ export type QueueEntry<T> = {
     branch: number
     branchCount: number
 } & (
-    | { getNextQueueEntry: NextQueueEntryGenerator<T>; finishedWhole?: false }
-    | {
-          finishedWhole: true
-      }
+    | { finishedWhole: true }
+    | ({ finishedWhole?: boolean } & (
+          | { nextQueueEntryGenerator: NextQueueEntryGenerator<T> }
+          | { getNextQueueEntryGenerator: () => NextQueueEntryGenerator<T> }
+      ))
 )
 
 export type BuildQueueResult<T> = Record<Id, T>
@@ -35,8 +34,8 @@ export type BuildQueueResult<T> = Record<Id, T>
 export class BuildQueue<T> {
     queue: QueueEntry<T>[] = []
 
-    begin(getNextQueueEntry: NextQueueEntryGenerator<T>): BuildQueueResult<T> | null {
-        this.queue.push(getNextQueueEntry(0, 0, this)!)
+    begin(nextQueueEntryGenerator: NextQueueEntryGenerator<T>): BuildQueueResult<T> | null {
+        this.queue.push(nextQueueEntryGenerator(0, 0, this)!)
         this.postStep()
 
         while (!this.queue.last().finishedWhole) {
@@ -68,7 +67,8 @@ export class BuildQueue<T> {
         if (lastE.finishedEntry) id++
 
         assert(!lastE.finishedWhole)
-        const newE = lastE.getNextQueueEntry(id, lastE.branch, this)
+        assert('nextQueueEntryGenerator' in lastE)
+        const newE = lastE.nextQueueEntryGenerator(id, lastE.branch, this)
         if (newE === null) {
             lastE.branch++
             return true
@@ -86,12 +86,19 @@ export class BuildQueue<T> {
         if (newE.finishedEntry && !newE.dataNoMerge) {
             newE.data = this.mergeData(newE)
         }
+        if (!newE.finishedWhole && 'getNextQueueEntryGenerator' in newE) {
+            const func = newE.getNextQueueEntryGenerator
+            Object.assign(newE, {
+                getNextQueueEntryGenerator: undefined,
+                nextQueueEntryGenerator: func(),
+            })
+        }
     }
 
     private findLastEntry(id: Id): QueueEntry<T> {
         for (let i = this.queue.length - 1; i >= 0; i--) {
             const entry = this.queue[i]
-            if (entry.id == id) return entry 
+            if (entry.id == id) return entry
         }
         throw new Error('how? entry not found')
     }

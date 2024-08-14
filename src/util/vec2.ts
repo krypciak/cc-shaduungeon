@@ -8,30 +8,8 @@ export interface Vec2 {
 }
 
 export namespace Vec2 {
-    export function create(otherVec?: Vec2) {
-        const res = {} as Vec2
-        res.x = (otherVec && otherVec.x) || 0
-        res.y = (otherVec && otherVec.y) || 0
-        return res
-    }
-
-    // export function createC(x?: number, y?: number) {
-    //     const res = <Vec2>{}
-    //     res.x = x || 0
-    //     res.y = y || 0
-    //     return res
-    // }
-
-    export function assign(v1: Vec2, v2: Vec2) {
-        v1.x = v2.x || 0
-        v1.y = v2.y || 0
-        return v1
-    }
-
-    export function assignC(v: Vec2, x?: number, y?: number) {
-        v.x = x || 0
-        v.y = y || 0
-        return v
+    export function copy(v: Vec2): Vec2 {
+        return { x: v.x, y: v.y }
     }
 
     export function add(v1: Vec2, v2: Vec2, copy?: boolean) {
@@ -125,7 +103,7 @@ export namespace Vec2 {
         } else if (length < min) {
             return Vec2.mulC(v, min / length, undefined, copy)
         } else {
-            return copy || false ? Vec2.create(v) : v
+            return copy || false ? Vec2.copy(v) : v
         }
     }
 
@@ -177,7 +155,7 @@ export namespace Vec2 {
         return res
     }
 
-    export function equal(v1: Vec2, v2: Vec2) {
+    export function isEqual(v1: Vec2, v2: Vec2) {
         return v1.x === v2.x && v1.y === v2.y
     }
 
@@ -201,6 +179,9 @@ export namespace Vec2 {
     }
 
     /* new functions */
+    export function toString(v: Vec2): string {
+        return `{ x: ${v.x}, y: ${v.y} }`
+    }
     export function moveInDirection(pos: Vec2, dir: Dir, amount: number) {
         if (dir == Dir.NORTH) return (pos.y -= amount)
         if (dir == Dir.EAST) return (pos.x += amount)

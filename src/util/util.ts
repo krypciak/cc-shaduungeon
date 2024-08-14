@@ -2,7 +2,7 @@ import { Vec2 } from './vec2'
 
 export function assert(v: any, msg?: string): asserts v {
     if (!v) {
-        throw new Error(`Assertion error${msg ? `: ${msg}}` : ''}`)
+        throw new Error(`Assertion error${msg ? `: ${msg}` : ''}`)
     }
 }
 
@@ -33,7 +33,7 @@ export function merge<T, U>(original: T, extended: U): T & U {
 }
 
 export namespace Array2d {
-    export function empty(size: Vec2, fill: number = 0): number[][] {
+    export function empty<T>(size: Vec2, fill: T): T[][] {
         return Array.from(new Array(size.y), () => new Array(size.x).fill(fill))
     }
     export function pasteInto<T>(arr1: T[][], arr2: T[][], x1: number, y1: number) {
@@ -52,3 +52,30 @@ export namespace Array2d {
         return true
     }
 }
+
+export function shuffleArray<T>(arr: T[] | readonly T[]): T[] {
+    return arr
+        .map(value => ({ value, sort: random() }))
+        .sort((a, b) => a.sort - b.sort)
+        .map(({ value }) => value)
+}
+
+declare global {
+    interface Math {
+        seedrandomSeed(seed: string): void
+        randomSeed(): number
+    }
+}
+
+export function setRandomSeed(seed: string) {
+    Math.seedrandomSeed(seed)
+}
+export function random(): number {
+    return Math.randomSeed()
+}
+
+export function randomInt(min: number, max: number): number {
+    return (random() * (max - min) + min) >>> 0
+}
+
+// export type PickPartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
