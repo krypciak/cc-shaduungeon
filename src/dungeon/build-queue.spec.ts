@@ -9,7 +9,11 @@ export class Test_DungeonQueue {
     branchless() {
         type Data = { countLeft: number }
         const nextQueueEntryGenerator: NextQueueEntryGenerator<Data> = function (): QueueEntry<Data> {
-            const nextQueueEntryGenerator: NextQueueEntryGenerator<Data> = function (id, _branch, accesor): QueueEntry<Data> {
+            const nextQueueEntryGenerator: NextQueueEntryGenerator<Data> = function (
+                id,
+                _branch,
+                accesor
+            ): QueueEntry<Data> {
                 const last = accesor.get(id - 1)
                 return {
                     data: { countLeft: last.countLeft - 1 },
@@ -260,7 +264,7 @@ export class Test_DungeonQueue {
 
         for (const { arr, obj } of Object.values(res)) {
             expect.toBeEqual(Object.keys(obj).length, 3, 'obj length')
-            expect.arraysToBeEqual(arr, [0,1,2])
+            expect.arraysToBeEqual(arr, [0, 1, 2])
         }
     }
 

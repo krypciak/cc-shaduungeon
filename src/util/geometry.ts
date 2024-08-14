@@ -71,7 +71,6 @@ export namespace Rect {
     }
     export function toString(r: Rect): string {
         return `{ x: ${r.x}, y: ${r.y}, width: ${r.width}, height: ${r.height} }`
-
     }
     export function fromTwoVecSize(v1: Vec2, v2: Vec2): Rect {
         return {

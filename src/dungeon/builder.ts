@@ -1,9 +1,9 @@
 import { Rect } from '../util/geometry'
-import { BuildQueue, Id } from './build-queue'
+import { BuildQueue, BuildQueueAccesor, Id } from './build-queue'
 import { Vec2 } from '../util/vec2'
 import { Array2d, setRandomSeed } from '../util/util'
 import { MapArrange, MapArrangeData, offsetMapArrange } from '../rooms/map-arrange'
-import { RoomChooser, roomChooserSimpleSeedRandomSize } from './room-choosers/simple'
+import { RoomChooser, roomChooserTunnelSimpleSeedRandomSize } from './room-choosers/simple'
 
 export type RoomBlueprint = {}
 
@@ -12,16 +12,27 @@ export type BlueprintRoot = Record<Id, RoomBlueprint>
 export class DungeonBuilder {
     build(seed: string) {
         const queue = new BuildQueue<MapArrangeData>()
-        const roomChooser: RoomChooser = roomChooserSimpleSeedRandomSize()
+        const roomChooser: RoomChooser = roomChooserTunnelSimpleSeedRandomSize(100, { x: 2, y: 2 })
         setRandomSeed(seed)
-        queue.begin(roomChooser(-1, queue))
+        const res = queue.begin(roomChooser(-1, queue))
+        if (res) {
+        }
+        // console.dir(res, { depth: null })
         console.log(drawQueue(queue))
     }
 }
-export function drawQueue(queue: BuildQueue<MapArrangeData>): string {
-    const maps = queue.queue.filter(a => a.finishedEntry).map(a => a.data) as MapArrange[]
+export function drawQueue(
+    queue: BuildQueueAccesor<MapArrangeData>,
+    nonFinished: boolean = false,
+    mapsAdd: MapArrange[] = []
+): string {
+    const maps = queue.queue
+        .filter(a => nonFinished || a.finishedEntry)
+        .map(a => a.data)
+        .concat(mapsAdd) as MapArrange[]
     if (maps.length == 0) return 'drawQueue: no maps'
-    const bounds: Rect = Rect.boundsOfArr(maps.flatMap(a => a.rects))
+    const rects = maps.flatMap(a => a.rects)
+    const bounds: Rect = Rect.boundsOfArr(rects)
     const offset = Vec2.mulC(bounds, -1)
     for (const map of maps) offsetMapArrange(map, offset)
 
@@ -38,4 +49,14 @@ export function drawQueue(queue: BuildQueue<MapArrangeData>): string {
     }
 
     return strmap.map(arr => arr.join('')).join('\n')
+}
+export function printQueue(
+    queue: BuildQueueAccesor<MapArrangeData>,
+    nonFinished: boolean = false,
+    mapsAdd: MapArrange[] = [],
+    add: string = ''
+) {
+    const res = drawQueue(queue, nonFinished, mapsAdd)
+    const len = res.split('\n')[0].length
+    console.log('='.repeat(len) + ' ' + add + '\n' + res + '\n' + '='.repeat(len))
 }

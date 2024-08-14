@@ -18,7 +18,7 @@ export interface MapArrange {
 }
 
 export function baseMapArrange() {
-    return { rects: [], restTprs: [] }
+    return { rects: [] as Rect[], restTprs: [] as TprArrange3d[] }
 }
 
 export function offsetMapArrange(map: MapArrange, vec: Vec2) {

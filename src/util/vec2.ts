@@ -188,4 +188,7 @@ export namespace Vec2 {
         if (dir == Dir.SOUTH) return (pos.y += amount)
         pos.x -= amount
     }
+    export function flipSides(v: Vec2, doFlip: boolean): Vec2 {
+        return doFlip ? { x: v.y, y: v.x } : Vec2.copy(v)
+    }
 }
