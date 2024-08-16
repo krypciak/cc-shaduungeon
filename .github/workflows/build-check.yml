@@ -3,8 +3,6 @@ name: Build check
 on:
     workflow_dispatch:
     push:
-        branches:
-            - dev
 
 jobs:
     build:
@@ -13,16 +11,20 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - name: Install Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 20
-
             - uses: pnpm/action-setup@v3
               name: Install pnpm
               with:
                   version: 8
                   run_install: false
 
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: 'pnpm'
+                  cache-dependency-path: 'pnpm-lock.yaml'
+          
             - name: Compile
               run: pnpm install; pnpm run start
+
+            - name: Test
+              run: pnpm test
