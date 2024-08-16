@@ -1,14 +1,12 @@
-import { AreaBuilder } from '../area/builder'
-import { NextQueueEntryGenerator, QueueEntry } from '../dungeon/build-queue'
-import { RoomChooser } from '../dungeon/room-choosers/configurable'
-import { Dir, DirU, Rect } from '../util/geometry'
-import { shuffleArray } from '../util/util'
-import { Vec2 } from '../util/vec2'
-import { TprArrange, MapArrangeData, MapArrange, TprArrange3d } from './map-arrange'
-import { RoomArrange, getCenteredRect } from './room'
+import { NextQueueEntryGenerator, QueueEntry } from '../../build-queue/build-queue'
+import { Dir, DirU, Rect } from '../../util/geometry'
+import { shuffleArray } from '../../util/util'
+import { TprArrange, MapArrangeData, MapArrange, RoomArrange, TprArrange3d, doesMapArrangeFit } from '../map-arrange'
+import { MapPicker } from '../map-picker/configurable'
+import { Vec2 } from '../../util/vec2'
 
-export function simpleMapRoomArrange({
-    roomChooser,
+export function simpleMapArrange({
+    mapPicker,
     exitTpr,
     size,
     randomizeDirTryOrder,
@@ -18,7 +16,7 @@ export function simpleMapRoomArrange({
     nodeId,
     nodeProgress,
 }: {
-    roomChooser: RoomChooser
+    mapPicker: MapPicker
     exitTpr: TprArrange
     size: Vec2
     randomizeDirTryOrder?: boolean
@@ -46,13 +44,13 @@ export function simpleMapRoomArrange({
         }
         let room: RoomArrange
         {
-            const rect = getCenteredRect(size, tpr)
+            const rect = Rect.centeredRect(size, tpr)
             room = { ...rect }
 
             map.rects.push(room)
         }
 
-        if (!AreaBuilder.doesMapFit(accesor, map, id)) return null
+        if (!doesMapArrangeFit(accesor, map, id)) return null
 
         let dirChoices = DirU.allExpect[tpr.dir]
         if (randomizeDirTryOrder) dirChoices = shuffleArray(dirChoices) as any
@@ -83,7 +81,7 @@ export function simpleMapRoomArrange({
 
                     branch: 0,
                     branchCount: 1,
-                    getNextQueueEntryGenerator: () => roomChooser(id, accesor),
+                    getNextQueueEntryGenerator: () => mapPicker(id, accesor),
                 }
             },
         }
@@ -91,15 +89,15 @@ export function simpleMapRoomArrange({
             Object.assign(ret, {
                 nextQueueEntryGenerator: undefined,
                 finishedWhole,
-                getNextQueueEntryGenerator: () => roomChooser(id, accesor),
+                getNextQueueEntryGenerator: () => mapPicker(id, accesor),
             })
         }
         return ret
     }
 }
 
-export function simpleMapRoomTunnelArrange({
-    roomChooser,
+export function simpleMapTunnelArrange({
+    mapPicker,
     exitTpr,
     roomSize,
     tunnelSize,
@@ -110,7 +108,7 @@ export function simpleMapRoomTunnelArrange({
     nodeId,
     nodeProgress,
 }: {
-    roomChooser: RoomChooser
+    mapPicker: MapPicker
     exitTpr: TprArrange
     roomSize: Vec2
     tunnelSize: Vec2
@@ -140,13 +138,13 @@ export function simpleMapRoomTunnelArrange({
 
         let tunnelEntrance: RoomArrange
         {
-            const rect = getCenteredRect(tunnelSize, tpr)
+            const rect = Rect.centeredRect(tunnelSize, tpr)
             tunnelEntrance = { ...rect }
             map.rects.push(tunnelEntrance)
         }
         let room: RoomArrange
         {
-            const rect = getCenteredRect(roomSize, {
+            const rect = Rect.centeredRect(roomSize, {
                 ...Rect.middle(Rect.side(tunnelEntrance, exitTpr.dir)),
                 dir: tpr.dir,
             })
@@ -154,7 +152,7 @@ export function simpleMapRoomTunnelArrange({
             map.rects.push(room)
         }
 
-        if (!AreaBuilder.doesMapFit(accesor, map, id)) return null
+        if (!doesMapArrangeFit(accesor, map, id)) return null
 
         let dirChoices = DirU.allExpect[tpr.dir]
         if (randomizeDirTryOrder) dirChoices = shuffleArray(dirChoices) as any
@@ -176,14 +174,14 @@ export function simpleMapRoomTunnelArrange({
 
                 let tunnelExit: RoomArrange
                 {
-                    const rect = getCenteredRect(tunnelSize, {
+                    const rect = Rect.centeredRect(tunnelSize, {
                         ...Rect.middle(Rect.side(room, dir)),
                         dir: DirU.flip(dir),
                     })
                     tunnelExit = { ...rect }
                     map.rects.push(tunnelExit)
                 }
-                if (!AreaBuilder.doesMapFit(accesor, map, id)) return null
+                if (!doesMapArrangeFit(accesor, map, id)) return null
 
                 {
                     const exitTpr: TprArrange = {
@@ -201,7 +199,7 @@ export function simpleMapRoomTunnelArrange({
 
                     branch: 0,
                     branchCount: 1,
-                    getNextQueueEntryGenerator: () => roomChooser(id, accesor),
+                    getNextQueueEntryGenerator: () => mapPicker(id, accesor),
                 }
             },
         }
@@ -209,7 +207,7 @@ export function simpleMapRoomTunnelArrange({
             Object.assign(ret, {
                 nextQueueEntryGenerator: undefined,
                 finishedWhole,
-                getNextQueueEntryGenerator: () => roomChooser(id, accesor),
+                getNextQueueEntryGenerator: () => mapPicker(id, accesor),
             })
         }
 
@@ -217,8 +215,8 @@ export function simpleMapRoomTunnelArrange({
     }
 }
 
-export function simpleMapRoomBranchTunnelArrange({
-    roomChooser,
+export function simpleMapBranchTunnelArrange({
+    mapPicker,
     exitTpr,
     roomSize,
     tunnelSize,
@@ -226,7 +224,7 @@ export function simpleMapRoomBranchTunnelArrange({
     randomizeDirTryOrder,
     nodeId,
 }: {
-    roomChooser: RoomChooser
+    mapPicker: MapPicker
     exitTpr: TprArrange
     roomSize: Vec2
     tunnelSize: Vec2
@@ -245,13 +243,13 @@ export function simpleMapRoomBranchTunnelArrange({
 
         let tunnelEntrance: RoomArrange
         {
-            const rect = getCenteredRect(tunnelSize, tpr)
+            const rect = Rect.centeredRect(tunnelSize, tpr)
             tunnelEntrance = { ...rect }
             map.rects.push(tunnelEntrance)
         }
         let room: RoomArrange
         {
-            const rect = getCenteredRect(roomSize, {
+            const rect = Rect.centeredRect(roomSize, {
                 ...Rect.middle(Rect.side(tunnelEntrance, exitTpr.dir)),
                 dir: tpr.dir,
             })
@@ -259,7 +257,7 @@ export function simpleMapRoomBranchTunnelArrange({
             map.rects.push(room)
         }
 
-        if (!AreaBuilder.doesMapFit(accesor, map, id)) return null
+        if (!doesMapArrangeFit(accesor, map, id)) return null
 
         const dirR1 = DirU.rotate(tpr.dir, 1)
         const dirR2 = DirU.rotate(tpr.dir, 2)
@@ -291,21 +289,21 @@ export function simpleMapRoomBranchTunnelArrange({
 
                         branch: 0,
                         branchCount: 1,
-                        getNextQueueEntryGenerator: () => roomChooser(id, accesor, prevId, currentBranch),
+                        getNextQueueEntryGenerator: () => mapPicker(id, accesor, prevId, currentBranch),
                     }
                 }
                 const dir = dirs[currentBranch]
 
                 let tunnelExit: RoomArrange
                 {
-                    const rect = getCenteredRect(tunnelSize, {
+                    const rect = Rect.centeredRect(tunnelSize, {
                         ...Rect.middle(Rect.side(room, dir)),
                         dir: DirU.flip(dir),
                     })
                     tunnelExit = { ...rect }
                     map.rects.push(tunnelExit)
                 }
-                if (!AreaBuilder.doesMapFit(accesor, map, id)) return null
+                if (!doesMapArrangeFit(accesor, map, id)) return null
 
                 const newId = id == prevId ? prevId + 1 : prevId
                 {
@@ -324,7 +322,7 @@ export function simpleMapRoomBranchTunnelArrange({
 
                     branch: 0,
                     branchCount: 1,
-                    getNextQueueEntryGenerator: () => roomChooser(id, accesor, newId, currentBranch),
+                    getNextQueueEntryGenerator: () => mapPicker(id, accesor, newId, currentBranch),
                 }
             }
 

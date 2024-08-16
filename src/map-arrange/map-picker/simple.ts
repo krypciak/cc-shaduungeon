@@ -1,21 +1,21 @@
 import { Dir } from '../../util/geometry'
-import { Id, BuildQueueAccesor, NextQueueEntryGenerator } from '../build-queue'
 import { randomInt } from '../../util/util'
-import { printQueue } from '../queue-drawer'
 import { TprArrange, MapArrange, MapArrangeData } from '../../map-arrange/map-arrange'
-import { simpleMapRoomArrange, simpleMapRoomTunnelArrange, simpleMapRoomBranchTunnelArrange } from '../../map-arrange/simple'
-import { RoomChooser } from './configurable'
+import { Id, BuildQueueAccesor, NextQueueEntryGenerator } from '../../build-queue/build-queue'
+import { printMapArrangeQueue } from '../drawer'
+import { simpleMapArrange, simpleMapTunnelArrange, simpleMapBranchTunnelArrange } from '../maps/simple'
+import { MapPicker } from './configurable'
 
-export function roomChooserSimpleSeedRandomSize(count: number) {
-    const roomChooser: RoomChooser = (id, accesor) => {
+export function mapPickerSimpleSeedRandomSize(count: number) {
+    const mapPicker: MapPicker = (id, accesor) => {
         const lastTpr: TprArrange =
             id == -1
                 ? { dir: Dir.NORTH, x: 0, y: 0, destId: 0 }
                 : ((accesor.get(id) as MapArrange).restTprs[0] as TprArrange)
         const rand = randomInt(1, 5) * 2
         const size = { x: rand, y: rand }
-        const roomGen = simpleMapRoomArrange({
-            roomChooser,
+        const roomGen = simpleMapArrange({
+            mapPicker,
             exitTpr: lastTpr,
             size,
             randomizeDirTryOrder: true,
@@ -23,19 +23,19 @@ export function roomChooserSimpleSeedRandomSize(count: number) {
         })
         return roomGen
     }
-    return roomChooser
+    return mapPicker
 }
 
-export function roomChooserSimpleTunnelSeedRandomSize(count: number, tunnelSize = { x: 2, y: 4 }) {
-    const roomChooser: RoomChooser = (id, accesor) => {
+export function mapPickerSimpleTunnelSeedRandomSize(count: number, tunnelSize = { x: 2, y: 4 }) {
+    const mapPicker: MapPicker = (id, accesor) => {
         const lastTpr: TprArrange =
             id == -1
                 ? { dir: Dir.NORTH, x: 0, y: 0, destId: 0 }
                 : ((accesor.get(id) as MapArrange).restTprs[0] as TprArrange)
         const rand = randomInt(3, 5) * 2
         const roomSize = { x: rand, y: rand }
-        const roomGen = simpleMapRoomTunnelArrange({
-            roomChooser,
+        const roomGen = simpleMapTunnelArrange({
+            mapPicker,
             exitTpr: lastTpr,
             roomSize,
             tunnelSize,
@@ -44,10 +44,10 @@ export function roomChooserSimpleTunnelSeedRandomSize(count: number, tunnelSize 
         })
         return roomGen
     }
-    return roomChooser
+    return mapPicker
 }
 
-export function roomChooserSimpleTunnelBranch(branchCount: 1 | 2 | 3) {
+export function mapPickerSimpleTunnelBranch(branchCount: 1 | 2 | 3) {
     function findLastBranch(id: Id, accesor: BuildQueueAccesor<MapArrangeData>): MapArrangeData | undefined {
         for (let i = id - 1; i >= 0; i--) {
             const map = accesor.get(i)
@@ -56,7 +56,7 @@ export function roomChooserSimpleTunnelBranch(branchCount: 1 | 2 | 3) {
     }
 
     const tunnelSize = { x: 1, y: 1 }
-    const roomChooser: RoomChooser = (id, accesor, newId = id + 1): NextQueueEntryGenerator<MapArrangeData> => {
+    const mapPicker: MapPicker = (id, accesor, newId = id + 1): NextQueueEntryGenerator<MapArrangeData> => {
         const last = id == -1 ? undefined : (accesor.get(id) as MapArrange)
 
         if (last?.branchDone) {
@@ -67,7 +67,7 @@ export function roomChooserSimpleTunnelBranch(branchCount: 1 | 2 | 3) {
 
             return lastBranch.createNextBranch!
         }
-        printQueue(accesor, true)
+        printMapArrangeQueue(accesor, true)
 
         const lastTpr = last
             ? (last.restTprs.find(t => t.destId == newId)! as TprArrange)
@@ -78,8 +78,8 @@ export function roomChooserSimpleTunnelBranch(branchCount: 1 | 2 | 3) {
         const branchRoomsCount = accesor.queue.filter(a => a.data.restTprs?.length ?? 0 > 2).length
 
         if (id % 6 == 0 && branchRoomsCount < 2) {
-            return simpleMapRoomBranchTunnelArrange({
-                roomChooser,
+            return simpleMapBranchTunnelArrange({
+                mapPicker,
                 exitTpr: lastTpr,
                 roomSize: { x: 5, y: 5 },
                 tunnelSize,
@@ -92,8 +92,8 @@ export function roomChooserSimpleTunnelBranch(branchCount: 1 | 2 | 3) {
 
             const branchDone = id % 3 == 0
 
-            return simpleMapRoomTunnelArrange({
-                roomChooser,
+            return simpleMapTunnelArrange({
+                mapPicker,
                 exitTpr: lastTpr,
                 roomSize,
                 tunnelSize,
@@ -102,5 +102,5 @@ export function roomChooserSimpleTunnelBranch(branchCount: 1 | 2 | 3) {
             })
         }
     }
-    return roomChooser
+    return mapPicker
 }

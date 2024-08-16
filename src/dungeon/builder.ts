@@ -1,8 +1,8 @@
-import { BuildQueue, Id } from './build-queue'
-import { setRandomSeed } from '../util/util'
-import { RoomChooser, roomChooserConfigurable } from './room-choosers/configurable'
-import { drawQueue } from './queue-drawer'
+import { Id, BuildQueue } from '../build-queue/build-queue'
+import { drawMapArrangeQueue } from '../map-arrange/drawer'
 import { MapArrangeData } from '../map-arrange/map-arrange'
+import { MapPicker, mapPickerConfigurable } from '../map-arrange/map-picker/configurable'
+import { setRandomSeed } from '../util/util'
 
 export type RoomBlueprint = {}
 
@@ -17,7 +17,7 @@ export class DungeonBuilder {
         const tunnelSizeBranch = { x: 1, y: 1 }
         const randomizeDirTryOrder = true
 
-        function tunnel(count: number, followedBy?: RoomChooser.ConfigNode): RoomChooser.ConfigNode {
+        function tunnel(count: number, followedBy?: MapPicker.ConfigNode): MapPicker.ConfigNode {
             return {
                 type: 'SimpleTunnel',
                 roomSize: roomSizeReg,
@@ -32,7 +32,7 @@ export class DungeonBuilder {
             branchTunnelCount: () => number,
             finalTunnelCount: () => number,
             branchCount: () => 1 | 2 | 3
-        ): RoomChooser.ConfigNode {
+        ): MapPicker.ConfigNode {
             if (deep == 0) {
                 return tunnel(finalTunnelCount())
             }
@@ -53,7 +53,7 @@ export class DungeonBuilder {
             }
         }
 
-        const roomChooser: RoomChooser = roomChooserConfigurable({
+        const mapPicker: MapPicker = mapPickerConfigurable({
             root: {
                 type: 'Simple',
                 size: roomSizeReg,
@@ -70,9 +70,9 @@ export class DungeonBuilder {
         })
 
         setRandomSeed(seed)
-        const res = queue.begin(roomChooser(-1, queue))
+        const res = queue.begin(mapPicker(-1, queue))
         console.log(!!res)
         // console.dir(queue.queue, { depth: null })
-        console.log(drawQueue(queue, false, undefined, false, true))
+        console.log(drawMapArrangeQueue(queue, false, undefined, false, true))
     }
 }

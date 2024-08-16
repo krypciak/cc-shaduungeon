@@ -1,13 +1,13 @@
 import { Rect } from '../util/geometry'
 import { Array2d } from '../util/util'
-import { BuildQueueAccesor } from './build-queue'
 import { Vec2 } from '../util/vec2'
 import { MapArrangeData, MapArrange, offsetMapArrange } from '../map-arrange/map-arrange'
+import { BuildQueueAccesor } from '../build-queue/build-queue'
 import 'colorts/lib/string'
 
 const colorMap = ['red', 'green', 'yellow', 'blue', 'magenta', 'cyan'] as const
 
-export function drawQueue(
+export function drawMapArrangeQueue(
     queue: BuildQueueAccesor<MapArrangeData>,
     nonFinished: boolean = false,
     mapsAdd: MapArrangeData[] = [],
@@ -71,7 +71,7 @@ export function drawQueue(
 
 let lastPrint: number = 0
 
-export function printQueue(
+export function printMapArrangeQueue(
     queue: BuildQueueAccesor<MapArrangeData>,
     nonFinished: boolean = false,
     mapsAdd: MapArrange[] = [],
@@ -82,7 +82,7 @@ export function printQueue(
     if (!(lastPrint < Date.now() - 1000 / 10)) return
 
     lastPrint = Date.now()
-    const res = drawQueue(queue, nonFinished, mapsAdd, keepInTheSamePlace, color)
+    const res = drawMapArrangeQueue(queue, nonFinished, mapsAdd, keepInTheSamePlace, color)
     const len = res.split('\n')[0].length
     console.clear()
     console.log(add + ' ' + '='.repeat(Math.max(1, len - add.length - 1)) + ' ' + '\n' + res + '\n' + '='.repeat(len))

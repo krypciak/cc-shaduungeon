@@ -1,10 +1,10 @@
 import { expect, Test, TestCase, TestSuite } from 'testyts'
 
-import { BuildQueue, NextQueueEntryGenerator, QueueEntry } from '../dungeon/build-queue'
 import { assert } from '../util/util'
+import { NextQueueEntryGenerator, QueueEntry, BuildQueue } from './build-queue'
 
-@TestSuite()
-export class Test_DungeonQueue {
+@TestSuite('Build queue')
+export class Test_BuildQueue {
     @Test()
     branchless() {
         type Data = { countLeft: number }

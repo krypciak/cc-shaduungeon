@@ -1,12 +1,12 @@
 import { expect, Test, TestCase, TestSuite } from 'testyts/build/testyCore'
 import { setRandomSeed, sha256 } from '../../util/util'
-import { BuildQueue } from '../build-queue'
-import { drawQueue } from '../queue-drawer'
-import { RoomChooser, roomChooserConfigurable } from './configurable'
-import { MapArrangeData } from '../../map-arrange/map-arrange'
+import { MapPicker, mapPickerConfigurable } from './configurable'
+import { BuildQueue } from '../../build-queue/build-queue'
+import { drawMapArrangeQueue } from '../drawer'
+import { MapArrangeData } from '../map-arrange'
 
-@TestSuite()
-export class Test_RoomChooserConfigurable {
+@TestSuite('Configurable Map Picker')
+export class Test_ConfigurableMapPicker {
     @Test()
     @TestCase('seed: hello', 'hello', 'ad89a7a5132d192e3b9d2b2408879f6af95b212208639e76162ad4983bf98b1d')
     build(seed: string, expected: string) {
@@ -17,7 +17,7 @@ export class Test_RoomChooserConfigurable {
         const tunnelSizeBranch = { x: 1, y: 1 }
         const randomizeDirTryOrder = true
 
-        function tunnel(count: number, followedBy?: RoomChooser.ConfigNode): RoomChooser.ConfigNode {
+        function tunnel(count: number, followedBy?: MapPicker.ConfigNode): MapPicker.ConfigNode {
             return {
                 type: 'SimpleTunnel',
                 roomSize: roomSizeReg,
@@ -32,7 +32,7 @@ export class Test_RoomChooserConfigurable {
             branchTunnelCount: () => number,
             finalTunnelCount: () => number,
             branchCount: () => 1 | 2 | 3
-        ): RoomChooser.ConfigNode {
+        ): MapPicker.ConfigNode {
             if (deep == 0) {
                 return tunnel(finalTunnelCount())
             }
@@ -53,7 +53,7 @@ export class Test_RoomChooserConfigurable {
             }
         }
 
-        const roomChooser: RoomChooser = roomChooserConfigurable({
+        const mapPicker: MapPicker = mapPickerConfigurable({
             root: {
                 type: 'Simple',
                 size: roomSizeReg,
@@ -70,8 +70,8 @@ export class Test_RoomChooserConfigurable {
         })
 
         setRandomSeed(seed)
-        queue.begin(roomChooser(-1, queue))
-        const res = drawQueue(queue)
+        queue.begin(mapPicker(-1, queue))
+        const res = drawMapArrangeQueue(queue)
         const sha = sha256(res)
         expect.toBeEqual(sha, expected)
     }

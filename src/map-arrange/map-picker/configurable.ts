@@ -1,11 +1,11 @@
+import { Id, BuildQueueAccesor, NextQueueEntryGenerator } from '../../build-queue/build-queue'
 import { MapArrangeData, TprArrange, MapArrange } from '../../map-arrange/map-arrange'
-import { simpleMapRoomArrange, simpleMapRoomTunnelArrange, simpleMapRoomBranchTunnelArrange } from '../../map-arrange/simple'
 import { Dir } from '../../util/geometry'
+import { simpleMapArrange, simpleMapTunnelArrange, simpleMapBranchTunnelArrange } from '../maps/simple'
 import { assert } from '../../util/util'
-import { Id, BuildQueueAccesor, NextQueueEntryGenerator } from '../build-queue'
 
 declare global {
-    export namespace RoomChooserNodeConfigs {
+    export namespace MapPickerNodeConfigs {
         export interface All {}
 
         export interface All {
@@ -15,7 +15,7 @@ declare global {
             count: number
             size: Vec2
             randomizeDirTryOrder?: boolean
-            followedBy?: RoomChooser.ConfigNode
+            followedBy?: MapPicker.ConfigNode
         }
 
         export interface All {
@@ -26,7 +26,7 @@ declare global {
             roomSize: Vec2
             tunnelSize: Vec2
             randomizeDirTryOrder?: boolean
-            followedBy?: RoomChooser.ConfigNode
+            followedBy?: MapPicker.ConfigNode
         }
 
         export interface All {
@@ -36,36 +36,36 @@ declare global {
             roomSize: Vec2
             tunnelSize: Vec2
             branches:
-                | [RoomChooser.ConfigNode]
-                | [RoomChooser.ConfigNode, RoomChooser.ConfigNode]
-                | [RoomChooser.ConfigNode, RoomChooser.ConfigNode, RoomChooser.ConfigNode]
+                | [MapPicker.ConfigNode]
+                | [MapPicker.ConfigNode, MapPicker.ConfigNode]
+                | [MapPicker.ConfigNode, MapPicker.ConfigNode, MapPicker.ConfigNode]
             randomizeDirTryOrder?: boolean
         }
     }
 }
 
-export type RoomChooser = (
+export type MapPicker = (
     id: Id,
     accesor: BuildQueueAccesor<MapArrangeData>,
     newId?: Id,
     nextBranch?: number
 ) => NextQueueEntryGenerator<MapArrangeData>
 
-export namespace RoomChooser {
+export namespace MapPicker {
     export interface NodeCommon<T extends ConfigTypes> {
         type: T
     }
 
     type ExtractValues<T> = T[keyof T]
     export type ConfigNode = ExtractValues<{
-        [key in keyof RoomChooserNodeConfigs.All]: RoomChooserNodeConfigs.All[key] & NodeCommon<key>
+        [key in keyof MapPickerNodeConfigs.All]: MapPickerNodeConfigs.All[key] & NodeCommon<key>
     }>
 
     export type ConfigTypes = ConfigNode['type']
     export type NodeBuilder<T extends ConfigTypes> = (
-        data: RoomChooserNodeConfigs.All[T],
+        data: MapPickerNodeConfigs.All[T],
         buildtimeData: {
-            roomChooser: RoomChooser
+            mapPicker: MapPicker
             exitTpr: TprArrange
             branchDone?: boolean
             finishedWhole?: boolean
@@ -87,10 +87,10 @@ export namespace RoomChooser {
     }
 }
 
-const nodeConfigs: RoomChooser.NodeBuilderRecord = {} as any
-export function registerRoomChooserNodeConfig<T extends RoomChooser.ConfigTypes>(
+const nodeConfigs: MapPicker.NodeBuilderRecord = {} as any
+export function registerRoomChooserNodeConfig<T extends MapPicker.ConfigTypes>(
     type: T,
-    builder: RoomChooser.NodeBuilderRecord[T]
+    builder: MapPicker.NodeBuilderRecord[T]
 ) {
     assert(!nodeConfigs[type])
     nodeConfigs[type] = builder
@@ -101,34 +101,34 @@ function registerStuff() {
     if (registered) return
     registered = true
     registerRoomChooserNodeConfig('Simple', (data, buildtimeData) => {
-        return simpleMapRoomArrange({ ...data, ...buildtimeData })
+        return simpleMapArrange({ ...data, ...buildtimeData })
     })
     registerRoomChooserNodeConfig('SimpleTunnel', (data, buildtimeData) => {
-        return simpleMapRoomTunnelArrange({ ...data, ...buildtimeData })
+        return simpleMapTunnelArrange({ ...data, ...buildtimeData })
     })
     registerRoomChooserNodeConfig('SimpleBranch', (data, buildtimeData) => {
-        return simpleMapRoomBranchTunnelArrange({ ...data, ...buildtimeData, branchCount: data.branches.length })
+        return simpleMapBranchTunnelArrange({ ...data, ...buildtimeData, branchCount: data.branches.length })
     })
 }
 
-export function roomChooserConfigurable(_config: RoomChooser.Config): RoomChooser {
+export function mapPickerConfigurable(_config: MapPicker.Config): MapPicker {
     registerStuff()
 
-    const config = _config as RoomChooser.ConfigBuildtime
-    const idToNodeMap: Record<number, RoomChooser.ConfigNodeBuildtime> = {}
+    const config = _config as MapPicker.ConfigBuildtime
+    const idToNodeMap: Record<number, MapPicker.ConfigNodeBuildtime> = {}
     let lastNodeId: number
     {
         let nodeId = 0
-        function setNodeIdsRecursive(node: RoomChooser.ConfigNodeBuildtime) {
+        function setNodeIdsRecursive(node: MapPicker.ConfigNodeBuildtime) {
             node.nodeId = nodeId
             idToNodeMap[nodeId] = node
             nodeId++
             if ('followedBy' in node && node.followedBy) {
-                setNodeIdsRecursive(node.followedBy as RoomChooser.ConfigNodeBuildtime)
+                setNodeIdsRecursive(node.followedBy as MapPicker.ConfigNodeBuildtime)
             }
             if ('branches' in node && node.branches) {
                 for (const branch of node.branches) {
-                    setNodeIdsRecursive(branch as RoomChooser.ConfigNodeBuildtime)
+                    setNodeIdsRecursive(branch as MapPicker.ConfigNodeBuildtime)
                 }
             }
         }
@@ -143,12 +143,12 @@ export function roomChooserConfigurable(_config: RoomChooser.Config): RoomChoose
         }
     }
 
-    const roomChooser = (
+    const mapPicker = (
         id: Id,
         accesor: BuildQueueAccesor<MapArrangeData>,
         newId = id + 1,
         nextBranch?: number,
-        nextConfig?: RoomChooser.ConfigNodeBuildtime
+        nextConfig?: MapPicker.ConfigNodeBuildtime
     ): NextQueueEntryGenerator<MapArrangeData> => {
         const last = id == -1 ? undefined : (accesor.get(id) as MapArrange)
         // {
@@ -181,9 +181,9 @@ export function roomChooserConfigurable(_config: RoomChooser.Config): RoomChoose
             assert(config.count > 0, 'config.count cannot be 0')
             if (config.count == nodeProgress) {
                 assert(config.followedBy)
-                const nextConfig = config.followedBy as RoomChooser.ConfigNodeBuildtime
+                const nextConfig = config.followedBy as MapPicker.ConfigNodeBuildtime
 
-                return roomChooser(id, accesor, newId, undefined, nextConfig)
+                return mapPicker(id, accesor, newId, undefined, nextConfig)
             } else {
                 const branchDone = !config.followedBy && config.count - 1 <= nodeProgress
                 const finishedWhole = branchDone && nodeId == lastNodeId
@@ -192,7 +192,7 @@ export function roomChooserConfigurable(_config: RoomChooser.Config): RoomChoose
                 const generator = nodeConfigs[config.type]
                 return generator(config as any, {
                     exitTpr: lastTpr,
-                    roomChooser,
+                    mapPicker,
                     branchDone,
                     nodeId,
                     nodeProgress: nodeProgress + 1,
@@ -204,15 +204,14 @@ export function roomChooserConfigurable(_config: RoomChooser.Config): RoomChoose
         if ('branches' in config) {
             if (nextBranch !== undefined) {
                 assert(last?.createNextBranch)
-                const nextConfig = config.branches[nextBranch] as RoomChooser.ConfigNodeBuildtime
-                return roomChooser(id, accesor, newId, undefined, nextConfig)
+                const nextConfig = config.branches[nextBranch] as MapPicker.ConfigNodeBuildtime
+                return mapPicker(id, accesor, newId, undefined, nextConfig)
             }
             const generator = nodeConfigs[config.type]
-            return generator(config as any, { exitTpr: lastTpr, roomChooser, nodeId: nodeId })
+            return generator(config as any, { exitTpr: lastTpr, mapPicker, nodeId: nodeId })
         }
 
         assert(false)
     }
-    return roomChooser
+    return mapPicker
 }
-

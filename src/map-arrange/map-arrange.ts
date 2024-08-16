@@ -1,5 +1,5 @@
-import { Id, NextQueueEntryGenerator } from '../dungeon/build-queue'
-import { Dir, Dir3d, Rect } from '../util/geometry'
+import { BuildQueueAccesor, Id, NextQueueEntryGenerator } from '../build-queue/build-queue'
+import { Dir, Dir3d, DirU, Rect, Vec2Dir } from '../util/geometry'
 import { Vec2 } from '../util/vec2'
 
 export interface TprArrange3d extends Vec2 {
@@ -32,3 +32,17 @@ export function offsetMapArrange(map: MapArrange, vec: Vec2) {
 }
 
 export type MapArrangeData = Partial<MapArrange>
+
+export interface RoomArrange extends Rect {}
+
+export function doesMapArrangeFit(
+    accesor: BuildQueueAccesor<MapArrangeData>,
+    mapToFit: Pick<MapArrange, 'rects'>,
+    id: Id
+): boolean {
+    for (let i = id - 1; i >= 0; i--) {
+        const map = accesor.get(i)
+        if (Rect.doesArrOverlapArr(map.rects!, mapToFit.rects)) return false
+    }
+    return true
+}

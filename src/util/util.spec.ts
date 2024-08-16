@@ -2,7 +2,7 @@ import { expect, Test, TestCase, TestSuite } from 'testyts'
 
 import { merge } from './util'
 
-@TestSuite()
+@TestSuite('Util')
 export class Test_Util {
     @Test()
     @TestCase('object merge', { a: 0 }, { b: 1 }, (obj: any) => obj['a'] == 0 && obj['b'] == 1)

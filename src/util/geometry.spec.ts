@@ -3,7 +3,7 @@ import { expect, Test, TestCase, TestSuite } from 'testyts'
 import { Dir, Rect } from './geometry'
 import { Vec2 } from './vec2'
 
-@TestSuite()
+@TestSuite('Geometry')
 export class Test_Geometry {
     @Test()
     @TestCase('fromTwoVecX2Y2 1', { x: 1, y: 2 }, { x: 3, y: 3 }, { x: 1, y: 2, width: 2, height: 1 })

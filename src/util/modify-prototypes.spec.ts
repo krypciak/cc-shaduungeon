@@ -1,6 +1,6 @@
 import { expect, Test, TestCase, TestSuite } from 'testyts'
 
-@TestSuite()
+@TestSuite('Prototypes')
 export class PrototypeTest {
     @Test()
     @TestCase('0 deep array', [0, 1, 2], (a: number) => a + 1, 6)
