@@ -83,3 +83,16 @@ export function sha256(str: string): string {
     return crypto.createHash('sha256').update(str).digest('hex')
 }
 // export type PickPartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+
+let langUid = 30000
+export function allLangs(text: string): ig.LangLabel.Data {
+    return {
+        en_US: text,
+        de_DE: text,
+        ja_JP: text,
+        zh_CN: text,
+        ko_KR: text,
+        zh_TW: text,
+        langUid: langUid++,
+    }
+}

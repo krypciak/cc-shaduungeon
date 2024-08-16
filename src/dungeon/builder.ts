@@ -1,8 +1,8 @@
 import { BuildQueue, Id } from './build-queue'
 import { setRandomSeed } from '../util/util'
-import { MapArrangeData } from '../rooms/map-arrange'
 import { RoomChooser, roomChooserConfigurable } from './room-choosers/configurable'
 import { drawQueue } from './queue-drawer'
+import { MapArrangeData } from '../map-arrange/map-arrange'
 
 export type RoomBlueprint = {}
 

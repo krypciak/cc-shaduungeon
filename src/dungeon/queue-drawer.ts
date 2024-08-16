@@ -1,8 +1,8 @@
-import { MapArrangeData, MapArrange, offsetMapArrange } from '../rooms/map-arrange'
 import { Rect } from '../util/geometry'
 import { Array2d } from '../util/util'
 import { BuildQueueAccesor } from './build-queue'
 import { Vec2 } from '../util/vec2'
+import { MapArrangeData, MapArrange, offsetMapArrange } from '../map-arrange/map-arrange'
 import 'colorts/lib/string'
 
 const colorMap = ['red', 'green', 'yellow', 'blue', 'magenta', 'cyan'] as const

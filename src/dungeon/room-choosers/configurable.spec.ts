@@ -1,9 +1,9 @@
 import { expect, Test, TestCase, TestSuite } from 'testyts/build/testyCore'
-import { MapArrangeData } from '../../rooms/map-arrange'
 import { setRandomSeed, sha256 } from '../../util/util'
 import { BuildQueue } from '../build-queue'
 import { drawQueue } from '../queue-drawer'
 import { RoomChooser, roomChooserConfigurable } from './configurable'
+import { MapArrangeData } from '../../map-arrange/map-arrange'
 
 @TestSuite()
 export class Test_RoomChooserConfigurable {

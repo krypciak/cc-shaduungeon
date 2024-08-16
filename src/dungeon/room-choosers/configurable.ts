@@ -1,8 +1,8 @@
-import { MapArrange, MapArrangeData, TprArrange } from '../../rooms/map-arrange'
-import { simpleMapRoomArrange, simpleMapRoomBranchTunnelArrange, simpleMapRoomTunnelArrange } from '../../rooms/simple'
+import { MapArrangeData, TprArrange, MapArrange } from '../../map-arrange/map-arrange'
+import { simpleMapRoomArrange, simpleMapRoomTunnelArrange, simpleMapRoomBranchTunnelArrange } from '../../map-arrange/simple'
 import { Dir } from '../../util/geometry'
 import { assert } from '../../util/util'
-import { BuildQueueAccesor, Id, NextQueueEntryGenerator } from '../build-queue'
+import { Id, BuildQueueAccesor, NextQueueEntryGenerator } from '../build-queue'
 
 declare global {
     export namespace RoomChooserNodeConfigs {

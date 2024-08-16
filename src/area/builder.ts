@@ -1,8 +1,8 @@
 import { BuildQueueAccesor, Id } from '../dungeon/build-queue'
-import { MapArrange, MapArrangeData } from '../rooms/map-arrange'
+import { MapArrangeData, MapArrange } from '../map-arrange/map-arrange'
 import { Rect } from '../util/geometry'
 
-export class AreaArranger {
+export class AreaBuilder {
     static doesMapFit(
         accesor: BuildQueueAccesor<MapArrangeData>,
         mapToFit: Pick<MapArrange, 'rects'>,

@@ -1,9 +1,9 @@
-import { TprArrange, MapArrange, MapArrangeData } from '../../rooms/map-arrange'
-import { simpleMapRoomArrange, simpleMapRoomBranchTunnelArrange, simpleMapRoomTunnelArrange } from '../../rooms/simple'
 import { Dir } from '../../util/geometry'
 import { Id, BuildQueueAccesor, NextQueueEntryGenerator } from '../build-queue'
 import { randomInt } from '../../util/util'
 import { printQueue } from '../queue-drawer'
+import { TprArrange, MapArrange, MapArrangeData } from '../../map-arrange/map-arrange'
+import { simpleMapRoomArrange, simpleMapRoomTunnelArrange, simpleMapRoomBranchTunnelArrange } from '../../map-arrange/simple'
 import { RoomChooser } from './configurable'
 
 export function roomChooserSimpleSeedRandomSize(count: number) {

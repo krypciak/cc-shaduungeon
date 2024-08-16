@@ -1,4 +1,4 @@
-import { AreaArranger } from '../area/arranger'
+import { AreaBuilder } from '../area/builder'
 import { NextQueueEntryGenerator, QueueEntry } from '../dungeon/build-queue'
 import { RoomChooser } from '../dungeon/room-choosers/configurable'
 import { Dir, DirU, Rect } from '../util/geometry'
@@ -52,7 +52,7 @@ export function simpleMapRoomArrange({
             map.rects.push(room)
         }
 
-        if (!AreaArranger.doesMapFit(accesor, map, id)) return null
+        if (!AreaBuilder.doesMapFit(accesor, map, id)) return null
 
         let dirChoices = DirU.allExpect[tpr.dir]
         if (randomizeDirTryOrder) dirChoices = shuffleArray(dirChoices) as any
@@ -154,7 +154,7 @@ export function simpleMapRoomTunnelArrange({
             map.rects.push(room)
         }
 
-        if (!AreaArranger.doesMapFit(accesor, map, id)) return null
+        if (!AreaBuilder.doesMapFit(accesor, map, id)) return null
 
         let dirChoices = DirU.allExpect[tpr.dir]
         if (randomizeDirTryOrder) dirChoices = shuffleArray(dirChoices) as any
@@ -183,7 +183,7 @@ export function simpleMapRoomTunnelArrange({
                     tunnelExit = { ...rect }
                     map.rects.push(tunnelExit)
                 }
-                if (!AreaArranger.doesMapFit(accesor, map, id)) return null
+                if (!AreaBuilder.doesMapFit(accesor, map, id)) return null
 
                 {
                     const exitTpr: TprArrange = {
@@ -259,7 +259,7 @@ export function simpleMapRoomBranchTunnelArrange({
             map.rects.push(room)
         }
 
-        if (!AreaArranger.doesMapFit(accesor, map, id)) return null
+        if (!AreaBuilder.doesMapFit(accesor, map, id)) return null
 
         const dirR1 = DirU.rotate(tpr.dir, 1)
         const dirR2 = DirU.rotate(tpr.dir, 2)
@@ -305,7 +305,7 @@ export function simpleMapRoomBranchTunnelArrange({
                     tunnelExit = { ...rect }
                     map.rects.push(tunnelExit)
                 }
-                if (!AreaArranger.doesMapFit(accesor, map, id)) return null
+                if (!AreaBuilder.doesMapFit(accesor, map, id)) return null
 
                 const newId = id == prevId ? prevId + 1 : prevId
                 {
