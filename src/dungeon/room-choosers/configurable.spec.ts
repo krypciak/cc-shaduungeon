@@ -1,16 +1,16 @@
-import { BuildQueue, Id } from './build-queue'
-import { setRandomSeed } from '../util/util'
-import { MapArrangeData } from '../rooms/map-arrange'
-import { RoomChooser, roomChooserConfigurable } from './room-choosers/configurable'
-import { drawQueue } from './queue-drawer'
+import { expect, Test, TestCase, TestSuite } from 'testyts/build/testyCore'
+import { MapArrangeData } from '../../rooms/map-arrange'
+import { setRandomSeed, sha256 } from '../../util/util'
+import { BuildQueue } from '../build-queue'
+import { drawQueue } from '../queue-drawer'
+import { RoomChooser, roomChooserConfigurable } from './configurable'
 
-export type RoomBlueprint = {}
-
-export type BlueprintRoot = Record<Id, RoomBlueprint>
-
-export class DungeonBuilder {
-    build(seed: string) {
-        const queue = new BuildQueue<MapArrangeData>(true)
+@TestSuite()
+export class Test_RoomChooserConfigurable {
+    @Test()
+    @TestCase('seed: hello', 'hello', 'ad89a7a5132d192e3b9d2b2408879f6af95b212208639e76162ad4983bf98b1d')
+    build(seed: string, expected: string) {
+        const queue = new BuildQueue<MapArrangeData>()
         const roomSizeReg = { x: 3, y: 3 }
         const tunnelSizeReg = { x: 1, y: 1 }
         const roomSizeBranch = { x: 5, y: 5 }
@@ -62,17 +62,17 @@ export class DungeonBuilder {
 
                 followedBy: branch(
                     3,
-                    () => [1, 2].random(),
-                    () => [1, 2, 3, 4].random(),
-                    () => [2, 3].random() as any
+                    () => 1,
+                    () => 2,
+                    () => 2
                 ),
             },
         })
 
         setRandomSeed(seed)
-        const res = queue.begin(roomChooser(-1, queue))
-        console.log(!!res)
-        // console.dir(queue.queue, { depth: null })
-        console.log(drawQueue(queue, false, undefined, false, true))
+        queue.begin(roomChooser(-1, queue))
+        const res = drawQueue(queue)
+        const sha = sha256(res)
+        expect.toBeEqual(sha, expected)
     }
 }

@@ -78,4 +78,8 @@ export function randomInt(min: number, max: number): number {
     return (random() * (max - min) + min) >>> 0
 }
 
+import * as crypto from 'crypto'
+export function sha256(str: string): string {
+    return crypto.createHash('sha256').update(str).digest('hex')
+}
 // export type PickPartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>

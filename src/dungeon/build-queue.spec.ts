@@ -15,6 +15,7 @@ export class Test_DungeonQueue {
                 accesor
             ): QueueEntry<Data> {
                 const last = accesor.get(id - 1)
+                expect.toBeLess(id, 10, 'Infinite loop?')
                 return {
                     data: { countLeft: last.countLeft - 1 },
                     id: id,
@@ -54,6 +55,8 @@ export class Test_DungeonQueue {
                 accesor
             ): QueueEntry<Data> | null {
                 const last = accesor.get(id - 1)
+
+                expect.toBeLess(id, 10, 'Infinite loop?')
 
                 if (id == 2 && branch == 0) return null
 
@@ -175,7 +178,8 @@ export class Test_DungeonQueue {
             }
         }
 
-        const firstStep: NextQueueEntryGenerator<Data> = function (): QueueEntry<Data> {
+        const firstStep: NextQueueEntryGenerator<Data> = function (id): QueueEntry<Data> {
+            expect.toBeLess(id, 30, 'Infinite loop?')
             return {
                 data: { type: 'STEP', pos: { x: 1, y: 1 } },
                 id: 0,

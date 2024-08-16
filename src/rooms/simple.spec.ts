@@ -1,12 +1,11 @@
 import { TestSuite, Test, expect, TestCase } from 'testyts/build/testyCore'
 import { BuildQueue } from '../dungeon/build-queue'
-import { drawQueue } from '../dungeon/builder'
-import { RoomChooser } from '../dungeon/room-choosers/simple'
 import { Dir } from '../util/geometry'
-import { assert, setRandomSeed } from '../util/util'
+import { assert, setRandomSeed, sha256 } from '../util/util'
 import { MapArrangeData, TprArrange, MapArrange } from './map-arrange'
 import { simpleMapRoomArrange, simpleMapRoomTunnelArrange } from './simple'
-import * as crypto from 'crypto'
+import { drawQueue } from '../dungeon/queue-drawer'
+import { RoomChooser } from '../dungeon/room-choosers/configurable'
 
 @TestSuite()
 export class Test_DungeonBuilder {
@@ -15,8 +14,16 @@ export class Test_DungeonBuilder {
         const queue = new BuildQueue<MapArrangeData>()
         const roomChooser: RoomChooser = (id, accesor) => {
             const lastTpr: TprArrange =
-                id == -1 ? { dir: Dir.NORTH, x: 0, y: 0 } : ((accesor.get(id) as MapArrange).restTprs[0] as TprArrange)
-            const roomGen = simpleMapRoomArrange(roomChooser, lastTpr, { x: 2, y: 2 }, false, id >= 5)
+                id == -1
+                    ? { x: 0, y: 0, dir: Dir.NORTH, destId: 0 }
+                    : ((accesor.get(id) as MapArrange).restTprs[0] as TprArrange)
+            const roomGen = simpleMapRoomArrange({
+                roomChooser,
+                exitTpr: lastTpr,
+                size: { x: 2, y: 2 },
+                randomizeDirTryOrder: false,
+                finishedWhole: id >= 5,
+            })
             return roomGen
         }
         queue.begin(roomChooser(-1, queue))
@@ -31,8 +38,16 @@ export class Test_DungeonBuilder {
         const queue = new BuildQueue<MapArrangeData>()
         const roomChooser: RoomChooser = (id, accesor) => {
             const lastTpr: TprArrange =
-                id == -1 ? { dir: Dir.NORTH, x: 0, y: 0 } : ((accesor.get(id) as MapArrange).restTprs[0] as TprArrange)
-            const roomGen = simpleMapRoomArrange(roomChooser, lastTpr, { x: 2, y: 2 }, true, id >= 5)
+                id == -1
+                    ? { x: 0, y: 0, dir: Dir.NORTH, destId: 0 }
+                    : ((accesor.get(id) as MapArrange).restTprs[0] as TprArrange)
+            const roomGen = simpleMapRoomArrange({
+                roomChooser,
+                exitTpr: lastTpr,
+                size: { x: 2, y: 2 },
+                randomizeDirTryOrder: true,
+                finishedWhole: id >= 5,
+            })
             return roomGen
         }
         setRandomSeed(seed)
@@ -46,23 +61,23 @@ export class Test_DungeonBuilder {
         const queue = new BuildQueue<MapArrangeData>()
         const roomChooser: RoomChooser = (id, _accesor) => {
             if (id == -1)
-                return simpleMapRoomArrange(
+                return simpleMapRoomArrange({
                     roomChooser,
-                    { x: 0, y: 0, dir: Dir.NORTH },
-                    { x: 2, y: 2 },
-                    false,
-                    false,
-                    Dir.EAST
-                )
+                    exitTpr: { x: 0, y: 0, dir: Dir.NORTH, destId: 0 },
+                    size: { x: 2, y: 2 },
+                    randomizeDirTryOrder: false,
+                    finishedWhole: false,
+                    forceExit: Dir.EAST,
+                })
             if (id == 0)
-                return simpleMapRoomArrange(
+                return simpleMapRoomArrange({
                     roomChooser,
-                    { x: 0, y: 0, dir: Dir.NORTH },
-                    { x: 2, y: 2 },
-                    false,
-                    true,
-                    Dir.EAST
-                )
+                    exitTpr: { x: 0, y: 0, dir: Dir.NORTH, destId: 0 },
+                    size: { x: 2, y: 2 },
+                    randomizeDirTryOrder: false,
+                    finishedWhole: true,
+                    forceExit: Dir.EAST,
+                })
             assert(false)
         }
         const res = queue.begin(roomChooser(-1, queue))
@@ -75,21 +90,23 @@ export class Test_DungeonBuilder {
         const queue = new BuildQueue<MapArrangeData>()
         const roomChooser: RoomChooser = (id, accesor) => {
             const lastTpr: TprArrange =
-                id == -1 ? { dir: Dir.NORTH, x: 0, y: 0 } : ((accesor.get(id) as MapArrange).restTprs[0] as TprArrange)
-            const roomGen = simpleMapRoomTunnelArrange(
+                id == -1
+                    ? { dir: Dir.NORTH, x: 0, y: 0, destId: 0 }
+                    : ((accesor.get(id) as MapArrange).restTprs[0] as TprArrange)
+            const roomGen = simpleMapRoomTunnelArrange({
                 roomChooser,
-                lastTpr,
-                { x: 5, y: 3 },
-                { x: 1, y: 2 },
-                true,
-                id >= 5
-            )
+                exitTpr: lastTpr,
+                roomSize: { x: 5, y: 3 },
+                tunnelSize: { x: 1, y: 2 },
+                randomizeDirTryOrder: true,
+                finishedWhole: id >= 5,
+            })
             return roomGen
         }
         setRandomSeed(seed)
         queue.begin(roomChooser(-1, queue))
         const res = drawQueue(queue)
-        const hash = crypto.createHash('sha256').update(res).digest('hex')
+        const hash = sha256(res)
         expect.toBeEqual(hash, expected)
     }
 }

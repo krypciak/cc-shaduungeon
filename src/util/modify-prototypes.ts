@@ -15,34 +15,34 @@ declare global {
     }
 }
 
-if (!Object.fromEntries) {
-    Object.fromEntries = function <T, K extends string | number | symbol>(entries: [K, T][]): Record<K, T> {
-        return entries.reduce(
-            (acc: Record<K, T>, e: [K, T]) => {
-                acc[e[0]] = e[1]
-                return acc
-            },
-            {} as Record<K, T>
-        )
-    }
+Object.fromEntries ??= function <T, K extends string | number | symbol>(entries: [K, T][]): Record<K, T> {
+    return entries.reduce(
+        (acc: Record<K, T>, e: [K, T]) => {
+            acc[e[0]] = e[1]
+            return acc
+        },
+        {} as Record<K, T>
+    )
 }
 
-if (!Array.prototype.flat) {
-    Array.prototype.flat = function <T>(this: T[][]): T[] {
-        return this.reduce((acc, val) => acc.concat(val), [])
-    }
+Array.prototype.flat ??= function <T>(this: T[][]): T[] {
+    return this.reduce((acc, val) => acc.concat(val), [])
 }
 
-if (!Array.prototype.flatMap) {
-    Array.prototype.flatMap = function (callback) {
-        return this.map(callback).flat()
-    }
+Array.prototype.flatMap ??= function (callback) {
+    return this.map(callback).flat()
 }
 
-if (!Array.prototype.last) {
-    Array.prototype.last = function () {
-        return this[this.length - 1]
-    }
+Array.prototype.last ??= function () {
+    return this[this.length - 1]
+}
+
+Number.prototype.round ??= function (prec) {
+    prec = Math.pow(10, prec || 0)
+    return Math.round((this as any) * prec) / prec
+}
+Array.prototype.random ??= function () {
+    return this[Math.floor(Math.random() * this.length)]
 }
 
 export const ObjectKeysT: <K extends string | number | symbol, V>(object: Record<K, V>) => K[] = Object.keys as any
