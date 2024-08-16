@@ -1,12 +1,8 @@
-import { Id, BuildQueue } from '../build-queue/build-queue'
+import { BuildQueue } from '../build-queue/build-queue'
 import { drawMapArrangeQueue } from '../map-arrange/drawer'
 import { MapArrangeData } from '../map-arrange/map-arrange'
 import { MapPicker, mapPickerConfigurable } from '../map-arrange/map-picker/configurable'
 import { setRandomSeed } from '../util/util'
-
-export type RoomBlueprint = {}
-
-export type BlueprintRoot = Record<Id, RoomBlueprint>
 
 export class DungeonBuilder {
     build(seed: string) {

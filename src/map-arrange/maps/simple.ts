@@ -2,9 +2,26 @@ import { NextQueueEntryGenerator, QueueEntry } from '../../build-queue/build-que
 import { Dir, DirU, Rect } from '../../util/geometry'
 import { shuffleArray } from '../../util/util'
 import { TprArrange, MapArrangeData, MapArrange, RoomArrange, TprArrange3d, doesMapArrangeFit } from '../map-arrange'
-import { MapPicker } from '../map-picker/configurable'
+import { MapPicker, registerMapPickerNodeConfig } from '../map-picker/configurable'
 import { Vec2 } from '../../util/vec2'
 
+declare global {
+    export namespace MapPickerNodeConfigs {
+        export interface All {
+            Simple: Simple
+        }
+        export interface Simple {
+            count: number
+            size: Vec2
+            randomizeDirTryOrder?: boolean
+            followedBy?: MapPicker.ConfigNode
+        }
+    }
+}
+
+registerMapPickerNodeConfig('Simple', (data, buildtimeData) => {
+    return simpleMapArrange({ ...data, ...buildtimeData })
+})
 export function simpleMapArrange({
     mapPicker,
     exitTpr,
@@ -96,6 +113,23 @@ export function simpleMapArrange({
     }
 }
 
+declare global {
+    export namespace MapPickerNodeConfigs {
+        export interface All {
+            SimpleTunnel: SimpleTunnel
+        }
+        export interface SimpleTunnel {
+            count: number
+            roomSize: Vec2
+            tunnelSize: Vec2
+            randomizeDirTryOrder?: boolean
+            followedBy?: MapPicker.ConfigNode
+        }
+    }
+}
+registerMapPickerNodeConfig('SimpleTunnel', (data, buildtimeData) => {
+    return simpleMapTunnelArrange({ ...data, ...buildtimeData })
+})
 export function simpleMapTunnelArrange({
     mapPicker,
     exitTpr,
@@ -215,6 +249,25 @@ export function simpleMapTunnelArrange({
     }
 }
 
+declare global {
+    export namespace MapPickerNodeConfigs {
+        export interface All {
+            SimpleBranch: SimpleBranch
+        }
+        export interface SimpleBranch {
+            roomSize: Vec2
+            tunnelSize: Vec2
+            branches:
+                | [MapPicker.ConfigNode]
+                | [MapPicker.ConfigNode, MapPicker.ConfigNode]
+                | [MapPicker.ConfigNode, MapPicker.ConfigNode, MapPicker.ConfigNode]
+            randomizeDirTryOrder?: boolean
+        }
+    }
+}
+registerMapPickerNodeConfig('SimpleBranch', (data, buildtimeData) => {
+    return simpleMapBranchTunnelArrange({ ...data, ...buildtimeData, branchCount: data.branches.length })
+})
 export function simpleMapBranchTunnelArrange({
     mapPicker,
     exitTpr,

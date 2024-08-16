@@ -1,46 +1,11 @@
 import { Id, BuildQueueAccesor, NextQueueEntryGenerator } from '../../build-queue/build-queue'
 import { MapArrangeData, TprArrange, MapArrange } from '../../map-arrange/map-arrange'
 import { Dir } from '../../util/geometry'
-import { simpleMapArrange, simpleMapTunnelArrange, simpleMapBranchTunnelArrange } from '../maps/simple'
 import { assert } from '../../util/util'
 
 declare global {
     export namespace MapPickerNodeConfigs {
         export interface All {}
-
-        export interface All {
-            Simple: Simple
-        }
-        export interface Simple {
-            count: number
-            size: Vec2
-            randomizeDirTryOrder?: boolean
-            followedBy?: MapPicker.ConfigNode
-        }
-
-        export interface All {
-            SimpleTunnel: SimpleTunnel
-        }
-        export interface SimpleTunnel {
-            count: number
-            roomSize: Vec2
-            tunnelSize: Vec2
-            randomizeDirTryOrder?: boolean
-            followedBy?: MapPicker.ConfigNode
-        }
-
-        export interface All {
-            SimpleBranch: SimpleBranch
-        }
-        export interface SimpleBranch {
-            roomSize: Vec2
-            tunnelSize: Vec2
-            branches:
-                | [MapPicker.ConfigNode]
-                | [MapPicker.ConfigNode, MapPicker.ConfigNode]
-                | [MapPicker.ConfigNode, MapPicker.ConfigNode, MapPicker.ConfigNode]
-            randomizeDirTryOrder?: boolean
-        }
     }
 }
 
@@ -88,7 +53,7 @@ export namespace MapPicker {
 }
 
 const nodeConfigs: MapPicker.NodeBuilderRecord = {} as any
-export function registerRoomChooserNodeConfig<T extends MapPicker.ConfigTypes>(
+export function registerMapPickerNodeConfig<T extends MapPicker.ConfigTypes>(
     type: T,
     builder: MapPicker.NodeBuilderRecord[T]
 ) {
@@ -96,24 +61,7 @@ export function registerRoomChooserNodeConfig<T extends MapPicker.ConfigTypes>(
     nodeConfigs[type] = builder
 }
 
-let registered = false
-function registerStuff() {
-    if (registered) return
-    registered = true
-    registerRoomChooserNodeConfig('Simple', (data, buildtimeData) => {
-        return simpleMapArrange({ ...data, ...buildtimeData })
-    })
-    registerRoomChooserNodeConfig('SimpleTunnel', (data, buildtimeData) => {
-        return simpleMapTunnelArrange({ ...data, ...buildtimeData })
-    })
-    registerRoomChooserNodeConfig('SimpleBranch', (data, buildtimeData) => {
-        return simpleMapBranchTunnelArrange({ ...data, ...buildtimeData, branchCount: data.branches.length })
-    })
-}
-
 export function mapPickerConfigurable(_config: MapPicker.Config): MapPicker {
-    registerStuff()
-
     const config = _config as MapPicker.ConfigBuildtime
     const idToNodeMap: Record<number, MapPicker.ConfigNodeBuildtime> = {}
     let lastNodeId: number
