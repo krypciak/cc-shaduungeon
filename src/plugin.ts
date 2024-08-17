@@ -40,6 +40,7 @@ export default class DngGen {
         registerOpts()
         import('./util/title-screen-button')
         injectGameStarting()
+        import('./area/custom-area-container')
     }
 
     async poststart() {

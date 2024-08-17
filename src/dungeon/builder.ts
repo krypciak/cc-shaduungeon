@@ -1,11 +1,11 @@
 import { BuildQueue } from '../build-queue/build-queue'
 import { drawMapArrangeQueue } from '../map-arrange/drawer'
-import { MapArrangeData } from '../map-arrange/map-arrange'
+import { MapArrange, MapArrangeData } from '../map-arrange/map-arrange'
 import { MapPicker, mapPickerConfigurable } from '../map-arrange/map-picker/configurable'
 import { setRandomSeed } from '../util/util'
 
 export class DungeonBuilder {
-    build(seed: string) {
+    build(seed: string): MapArrange[] {
         const queue = new BuildQueue<MapArrangeData>(true)
         const roomSizeReg = { x: 3, y: 3 }
         const tunnelSizeReg = { x: 1, y: 1 }
@@ -57,18 +57,19 @@ export class DungeonBuilder {
                 randomizeDirTryOrder,
 
                 followedBy: branch(
-                    3,
-                    () => [1, 2].random(),
-                    () => [1, 2, 3, 4].random(),
-                    () => [2, 3].random() as any
+                    2,
+                    () => 2,
+                    () => 2,
+                    () => 2
                 ),
             },
         })
 
         setRandomSeed(seed)
-        const res = queue.begin(mapPicker(-1, queue))
-        console.log(!!res)
+        const res = queue.begin(mapPicker(-1, queue)) as MapArrange[]
         // console.dir(queue.queue, { depth: null })
         console.log(drawMapArrangeQueue(queue, false, undefined, false, true))
+        if (!res) throw new Error('res null')
+        return res
     }
 }

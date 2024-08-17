@@ -1,3 +1,4 @@
+import { DungeonBuilder } from '../dungeon/builder'
 import { godmode } from './godmode'
 
 let justStarted = false
@@ -11,6 +12,9 @@ export async function startDnggenGame(titleGuiInstance?: sc.TitleScreenButtonGui
     justStarted = true
     ig.game.start(sc.START_MODE.NEW_GAME_PLUS, 0)
     ig.game.setPaused(false)
+
+    const builder = new DungeonBuilder()
+    const res = builder.build('helo')
 
     godmode()
 }

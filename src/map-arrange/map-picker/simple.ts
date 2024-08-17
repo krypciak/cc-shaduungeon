@@ -3,7 +3,9 @@ import { randomInt } from '../../util/util'
 import { TprArrange, MapArrange, MapArrangeData } from '../../map-arrange/map-arrange'
 import { Id, BuildQueueAccesor, NextQueueEntryGenerator } from '../../build-queue/build-queue'
 import { printMapArrangeQueue } from '../drawer'
-import { simpleMapArrange, simpleMapTunnelArrange, simpleMapBranchTunnelArrange } from '../maps/simple'
+import { simpleMapArrange } from '../../maps/simple'
+import { simpleMapBranchTunnelArrange } from '../../maps/simple-branch'
+import { simpleMapTunnelArrange } from '../../maps/simple-tunnel'
 import { MapPicker } from './configurable'
 
 export function mapPickerSimpleSeedRandomSize(count: number) {

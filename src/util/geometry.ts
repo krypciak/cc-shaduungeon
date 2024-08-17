@@ -66,6 +66,9 @@ export interface Rect extends Vec2 {
     height: number
 }
 export namespace Rect {
+    export function copy(r: Rect): Rect {
+        return { x: r.x, y: r.y, width: r.width, height: r.height }
+    }
     export function isEqual(r1: Rect, r2: Rect): boolean {
         return r1.x == r2.x && r1.y == r2.y && r1.width == r2.width && r1.height == r2.height
     }

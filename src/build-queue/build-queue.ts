@@ -32,8 +32,6 @@ export type QueueEntry<T> = {
       ))
 )
 
-export type BuildQueueResult<T> = Record<Id, T>
-
 export class BuildQueue<T> {
     queue: QueueEntry<T>[] = []
     globalPopCount: number = 0
@@ -45,7 +43,7 @@ export class BuildQueue<T> {
 
     constructor(public aggressiveChopping: boolean = false) {}
 
-    begin(nextQueueEntryGenerator: NextQueueEntryGenerator<T>): BuildQueueResult<T> | null {
+    begin(nextQueueEntryGenerator: NextQueueEntryGenerator<T>): T[] | null {
         this.queue.push(nextQueueEntryGenerator(0, 0, this)!)
         this.postStep()
 
@@ -53,15 +51,15 @@ export class BuildQueue<T> {
             if (!this.step()) return null
         }
 
-        const res: BuildQueueResult<T> = {}
+        const rec: Record<Id, T> = {}
 
         for (const entry of this.queue) {
             if (!entry.finishedEntry) continue
 
-            res[entry.id] = entry.data
+            rec[entry.id] = entry.data
         }
 
-        return res
+        return Object.values(rec)
     }
 
     step(): boolean {

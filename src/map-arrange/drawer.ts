@@ -1,7 +1,7 @@
 import { Rect } from '../util/geometry'
 import { Array2d } from '../util/util'
 import { Vec2 } from '../util/vec2'
-import { MapArrangeData, MapArrange, offsetMapArrange } from '../map-arrange/map-arrange'
+import { MapArrangeData, MapArrange, offsetMapArrange, copyMapArrange } from '../map-arrange/map-arrange'
 import { BuildQueueAccesor } from '../build-queue/build-queue'
 import 'colorts/lib/string'
 
@@ -14,26 +14,21 @@ export function drawMapArrangeQueue(
     keepInTheSamePlace?: boolean,
     color?: boolean
 ): string {
-    let maps = queue.queue
+    const maps = queue.queue
         .filter(a => nonFinished || a.finishedEntry)
         .map(a => a.data)
         .concat(mapsAdd)
         .filter(a => a.rects && a.rects.length > 0 && a.id !== undefined)
+        .map(copyMapArrange)
+   
     if (maps.length == 0) return 'drawQueue: no maps'
     const rects = maps.flatMap(a => a.rects!)
     const bounds: Rect = Rect.boundsOfArr(rects)
     const offset = Vec2.mulC(bounds, -1)
 
-    const copiedMaps: MapArrange[] = maps.map(a => ({
-        rects: [...a.rects!.map(r => ({ ...r }))],
-        entranceTprs: [...(a.entranceTprs ?? []).map(t => ({ ...t }))],
-        id: a.id!,
-        restTprs: [...(a.restTprs ?? []).map(t => ({ ...t }))],
-    }))
+    for (const map of maps) offsetMapArrange(map, offset)
 
-    for (const map of copiedMaps) offsetMapArrange(map, offset)
-
-    const map0 = copiedMaps.find(a => a.id == 0)
+    const map0 = maps.find(a => a.id == 0)
     if (keepInTheSamePlace && map0) {
         const r1 = map0.rects[0]
 
@@ -46,11 +41,11 @@ export function drawMapArrangeQueue(
         bounds.height += ydiff
 
         const offset: Vec2 = { x: xdiff, y: ydiff }
-        for (const map of copiedMaps) offsetMapArrange(map, offset)
+        for (const map of maps) offsetMapArrange(map, offset)
     }
 
     const strmap: string[][] = Array2d.empty({ x: bounds.width, y: bounds.height }, ' ')
-    for (const map of copiedMaps) {
+    for (const map of maps) {
         for (const rect of map.rects) {
             let char = (map.id % 10).toString()
             if (color) {

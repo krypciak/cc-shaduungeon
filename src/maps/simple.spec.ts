@@ -1,11 +1,12 @@
 import { TestSuite, Test, expect, TestCase } from 'testyts/build/testyCore'
-import { BuildQueue } from '../../build-queue/build-queue'
-import { Dir } from '../../util/geometry'
-import { assert, setRandomSeed, sha256 } from '../../util/util'
-import { drawMapArrangeQueue } from '../drawer'
-import { MapArrangeData, TprArrange, MapArrange } from '../map-arrange'
-import { MapPicker } from '../map-picker/configurable'
-import { simpleMapArrange, simpleMapTunnelArrange } from './simple'
+import { assert, setRandomSeed, sha256 } from '../util/util'
+import { BuildQueue } from '../build-queue/build-queue'
+import { drawMapArrangeQueue } from '../map-arrange/drawer'
+import { MapArrangeData, TprArrange, MapArrange } from '../map-arrange/map-arrange'
+import { MapPicker } from '../map-arrange/map-picker/configurable'
+import { Dir } from '../util/geometry'
+import { simpleMapArrange } from './simple'
+import { simpleMapTunnelArrange } from './simple-tunnel'
 
 @TestSuite('Simple Map Picker')
 export class Test_SimpleMapPicker {

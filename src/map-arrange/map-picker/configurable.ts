@@ -135,7 +135,6 @@ export function mapPickerConfigurable(_config: MapPicker.Config): MapPicker {
             } else {
                 const branchDone = !config.followedBy && config.count - 1 <= nodeProgress
                 const finishedWhole = branchDone && nodeId == lastNodeId
-                if (finishedWhole) debugger
 
                 const generator = nodeConfigs[config.type]
                 return generator(config as any, {
