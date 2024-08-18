@@ -96,10 +96,10 @@ export namespace Rect {
         return rect
     }
     export function div(rect: Rect, div: number): Rect {
-        rect.x *= div
-        rect.y *= div
-        rect.width *= div
-        rect.height *= div
+        rect.x /= div
+        rect.y /= div
+        rect.width /= div
+        rect.height /= div
         return rect
     }
     export function x2(rect: Rect): number {

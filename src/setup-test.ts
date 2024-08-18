@@ -9,6 +9,7 @@ Math.seedrandomSeed = (seed: string) => {
 import { Mod1 } from 'cc-blitzkrieg/src/types'
 import DngGen from './plugin'
 
+
 new DngGen({
     baseDirectory: 'assets/mods/cc-shaduungeon',
     findAllAssets: true as any,

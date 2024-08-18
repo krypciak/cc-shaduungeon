@@ -14,7 +14,7 @@ export async function startDnggenGame(titleGuiInstance?: sc.TitleScreenButtonGui
     ig.game.setPaused(false)
 
     const builder = new DungeonBuilder()
-    const res = builder.build('helo')
+    builder.build('helo')
 
     godmode()
 }
@@ -26,7 +26,7 @@ export function injectGameStarting() {
         },
         transitionEnded() {
             if (justStarted) {
-                ig.game.teleport('dnggen/limbo')
+                // ig.game.teleport('dnggen/limbo')
                 // ig.game.teleport(DungeonBuilder.initialMap.path, new ig.TeleportPosition(DungeonBuilder.initialMap.entarenceMarker), 'NEW')
                 justStarted = false
             } else {

@@ -72,7 +72,9 @@ export function simpleMapTunnelArrange({
         let tunnelEntrance: RoomArrange
         {
             const rect = Rect.centeredRect(tunnelSize, tpr)
-            tunnelEntrance = { ...rect }
+            const walls: Record<Dir, boolean> = [true, true, true, true]
+            walls[exitTpr.dir] = false
+            tunnelEntrance = { ...rect, walls }
             map.rects.push(tunnelEntrance)
         }
         let room: RoomArrange
@@ -81,7 +83,7 @@ export function simpleMapTunnelArrange({
                 ...Rect.middle(Rect.side(tunnelEntrance, exitTpr.dir)),
                 dir: tpr.dir,
             })
-            room = { ...rect }
+            room = { ...rect, walls: [true, true, true, true] }
             map.rects.push(room)
         }
 
@@ -102,7 +104,7 @@ export function simpleMapTunnelArrange({
             finishedEntry: branchDone,
 
             nextQueueEntryGenerator: (_, branch, accesor) => {
-                const map = { rects: [] as Rect[], restTprs: [] as TprArrange3d[] }
+                const map = { rects: [] as RoomArrange[], restTprs: [] as TprArrange3d[] }
                 const dir = dirChoices[branch]
 
                 let tunnelExit: RoomArrange
@@ -111,7 +113,9 @@ export function simpleMapTunnelArrange({
                         ...Rect.middle(Rect.side(room, dir)),
                         dir: DirU.flip(dir),
                     })
-                    tunnelExit = { ...rect }
+                    const walls: Record<Dir, boolean> = [true, true, true, true]
+                    walls[dir] = false
+                    tunnelExit = { ...rect, walls }
                     map.rects.push(tunnelExit)
                 }
                 if (!doesMapArrangeFit(accesor, map, id)) return null

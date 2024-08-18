@@ -10,6 +10,8 @@ export class RuntimeResources {
     }
 
     static reload() {
+        if (!('window' in global)) return
+
         if (DngGen.mod.isCCL3) {
             for (const asset of this.everAdded) {
                 ccmod.resources.assetOverridesTable.delete(asset)

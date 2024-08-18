@@ -17,7 +17,7 @@ export type MapThemeConfig = {
     lightStep?: number
 } & (
     | {
-          addShadows?: boolean
+          addShadows?: false
       }
     | {
           addShadows: true

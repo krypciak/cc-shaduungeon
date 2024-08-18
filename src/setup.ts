@@ -1,3 +1,5 @@
+import { initLibraries } from './library-providers'
+initLibraries()
 import './util/modify-prototypes'
 
 import './map-arrange/map-picker/configurable'

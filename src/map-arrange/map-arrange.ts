@@ -15,7 +15,7 @@ export interface TprArrange extends TprArrange3d {
 export interface MapArrange {
     type: MapPicker.ConfigTypes
     id: Id
-    rects: Rect[]
+    rects: RoomArrange[]
     floor?: number /* 0 by default */
 
     entranceTprs: TprArrange3d[]
@@ -32,7 +32,7 @@ export function copyMapArrange(map: MapArrangeData): MapArrange {
     return {
         type: map.type!,
         id: map.id!,
-        rects: (map.rects ?? [])?.map(Rect.copy),
+        rects: (map.rects ?? [])?.map(a => ({ ...a })),
         floor: map.floor,
 
         entranceTprs: (map.entranceTprs ?? []).map(a => ({ ...a })),
@@ -54,11 +54,13 @@ export function offsetMapArrange(map: MapArrange, vec: Vec2) {
 
 export type MapArrangeData = Partial<MapArrange>
 
-export interface RoomArrange extends Rect {}
+export interface RoomArrange extends Rect {
+    walls: Record<Dir, boolean>
+}
 
 export function doesMapArrangeFit(
     accesor: BuildQueueAccesor<MapArrangeData>,
-    mapToFit: Pick<MapArrange, 'rects' | 'floor'>,
+    mapToFit: { rects: Rect[] } & Pick<MapArrange, 'floor'>,
     id: Id
 ): boolean {
     for (let i = id - 1; i >= 0; i--) {

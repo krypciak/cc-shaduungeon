@@ -5,18 +5,7 @@ import ccmod from '../ccmod.json'
 import { RuntimeResources } from './util/runtime-assets'
 import { injectGameStarting } from './util/game-start'
 import * as _ from 'ultimate-crosscode-typedefs'
-
-declare global {
-    let dnggen: DngGen
-    interface Window {
-        dnggen: DngGen
-    }
-    namespace NodeJS {
-        interface Global {
-            dnggen: DngGen
-        }
-    }
-}
+import { DungeonPaths } from './dungeon/paths'
 
 export default class DngGen {
     static dir: string
@@ -28,12 +17,6 @@ export default class DngGen {
         DngGen.mod = mod
         DngGen.mod.isCCL3 = mod.findAllAssets ? true : false
         DngGen.mod.isCCModPacked = mod.baseDirectory.endsWith('.ccmod/')
-
-        if ('window' in global) {
-            window.dnggen = this
-        } else {
-            global.dnggen = this
-        }
     }
 
     async prestart() {
@@ -41,6 +24,7 @@ export default class DngGen {
         import('./util/title-screen-button')
         injectGameStarting()
         import('./area/custom-area-container')
+        DungeonPaths.registerAutoLoadDungeon()
     }
 
     async poststart() {

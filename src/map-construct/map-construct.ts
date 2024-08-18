@@ -2,15 +2,22 @@ import { copyMapArrange, MapArrange } from '../map-arrange/map-arrange'
 import { MapPicker } from '../map-arrange/map-picker/configurable'
 import { Id } from '../build-queue/build-queue'
 import { assert } from '../util/util'
+import { Item } from '../util/items'
 
 export interface MapConstruct extends MapArrange {
     constructed: sc.MapModel.Map
+    title: string
 }
 
 export interface AreaInfo {
     id: string
     title: string
     description: string
+    pos: Vec2
+    boosterItem: Item
+    keyItem: Item
+    masterKeyItem: Item
+    type: sc.MapModel.Area['areaType']
 }
 
 export type MapConstructFunc = (
