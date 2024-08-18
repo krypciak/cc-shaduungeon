@@ -8,8 +8,16 @@ export interface Vec2 {
 }
 
 export namespace Vec2 {
-    export function copy(v: Vec2): Vec2 {
-        return { x: v.x, y: v.y }
+    export function assign(v1: Vec2, v2: Vec2) {
+        v1.x = v2.x || 0
+        v1.y = v2.y || 0
+        return v1
+    }
+
+    export function assignC(v: Vec2, x?: number, y?: number) {
+        v.x = x || 0
+        v.y = y || 0
+        return v
     }
 
     export function add(v1: Vec2, v2: Vec2, copy?: boolean) {
@@ -178,17 +186,61 @@ export namespace Vec2 {
         return res
     }
 
-    /* new functions */
     export function toString(v: Vec2): string {
         return `{ x: ${v.x}, y: ${v.y} }`
     }
+
     export function moveInDirection(pos: Vec2, dir: Dir, amount: number) {
         if (dir == Dir.NORTH) return (pos.y -= amount)
         if (dir == Dir.EAST) return (pos.x += amount)
         if (dir == Dir.SOUTH) return (pos.y += amount)
         pos.x -= amount
     }
+
     export function flipSides(v: Vec2, doFlip: boolean): Vec2 {
         return doFlip ? { x: v.y, y: v.x } : Vec2.copy(v)
+    }
+
+    export function copy(v: Vec2): Vec2 {
+        return { x: v.x, y: v.y }
+    }
+
+    export function floor(v: Vec2): Vec2 {
+        v.x = v.x.floor()
+        v.y = v.y.floor()
+        return v
+    }
+
+    export function ceil(v: Vec2): Vec2 {
+        v.x = v.x.ceil()
+        v.y = v.y.ceil()
+        return v
+    }
+
+    export function round(v: Vec2, prec: number = 0): Vec2 {
+        v.x = v.x.round(prec)
+        v.y = v.y.round(prec)
+        return v
+    }
+
+    export function min(v1: Vec2, v2: Vec2) {
+        v1.x = Math.min(v1.x, v2.x)
+        v1.y = Math.min(v1.y, v2.y)
+        return v1
+    }
+    export function minC(v: Vec2, x: number, y: number) {
+        v.x = Math.min(v.x, x)
+        v.y = Math.min(v.y, y)
+        return v
+    }
+    export function max(v1: Vec2, v2: Vec2) {
+        v1.x = Math.max(v1.x, v2.x)
+        v1.y = Math.max(v1.y, v2.y)
+        return v1
+    }
+    export function maxC(v: Vec2, x: number, y: number) {
+        v.x = Math.max(v.x, x)
+        v.y = Math.max(v.y, y)
+        return v
     }
 }
