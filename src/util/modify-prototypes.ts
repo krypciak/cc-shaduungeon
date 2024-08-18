@@ -36,13 +36,19 @@ Array.prototype.flatMap ??= function (callback) {
 Array.prototype.last ??= function () {
     return this[this.length - 1]
 }
+Array.prototype.random ??= function () {
+    return this[Math.floor(Math.random() * this.length)]
+}
 
 Number.prototype.round ??= function (prec) {
     prec = Math.pow(10, prec || 0)
-    return Math.round((this as any) * prec) / prec
+    return Math.round((this as number) * prec) / prec
 }
-Array.prototype.random ??= function () {
-    return this[Math.floor(Math.random() * this.length)]
+Number.prototype.floor ??= function () {
+    return Math.floor(this as number)
+}
+Number.prototype.ceil ??= function () {
+    return Math.ceil(this as number)
 }
 
 export const ObjectKeysT: <K extends string | number | symbol, V>(object: Record<K, V>) => K[] = Object.keys as any

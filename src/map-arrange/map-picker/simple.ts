@@ -69,7 +69,7 @@ export function mapPickerSimpleTunnelBranch(branchCount: 1 | 2 | 3) {
 
             return lastBranch.createNextBranch!
         }
-        printMapArrangeQueue(accesor, true)
+        printMapArrangeQueue(accesor, 1, true)
 
         const lastTpr = last
             ? (last.restTprs.find(t => t.destId == newId)! as TprArrange)

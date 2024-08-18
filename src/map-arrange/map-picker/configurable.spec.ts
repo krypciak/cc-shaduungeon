@@ -71,7 +71,7 @@ export class Test_ConfigurableMapPicker {
 
         setRandomSeed(seed)
         queue.begin(mapPicker(-1, queue))
-        const res = drawMapArrangeQueue(queue)
+        const res = drawMapArrangeQueue(queue, 1)
         const sha = sha256(res)
         expect.toBeEqual(sha, expected)
     }

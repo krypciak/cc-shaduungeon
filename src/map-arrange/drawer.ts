@@ -9,6 +9,7 @@ const colorMap = ['red', 'green', 'yellow', 'blue', 'magenta', 'cyan'] as const
 
 export function drawMapArrangeQueue(
     queue: BuildQueueAccesor<MapArrangeData>,
+    scale: number,
     nonFinished: boolean = false,
     mapsAdd: MapArrangeData[] = [],
     keepInTheSamePlace?: boolean,
@@ -20,7 +21,7 @@ export function drawMapArrangeQueue(
         .concat(mapsAdd)
         .filter(a => a.rects && a.rects.length > 0 && a.id !== undefined)
         .map(copyMapArrange)
-   
+
     if (maps.length == 0) return 'drawQueue: no maps'
     const rects = maps.flatMap(a => a.rects!)
     const bounds: Rect = Rect.boundsOfArr(rects)
@@ -44,7 +45,10 @@ export function drawMapArrangeQueue(
         for (const map of maps) offsetMapArrange(map, offset)
     }
 
-    const strmap: string[][] = Array2d.empty({ x: bounds.width, y: bounds.height }, ' ')
+    const strmap: string[][] = Array2d.empty(
+        { x: (bounds.width / scale).floor(), y: (bounds.height / scale).floor() },
+        ' '
+    )
     for (const map of maps) {
         for (const rect of map.rects) {
             let char = (map.id % 10).toString()
@@ -54,7 +58,12 @@ export function drawMapArrangeQueue(
             }
 
             try {
-                Array2d.pasteInto(strmap, Array2d.empty({ x: rect.width, y: rect.height }, char), rect.x, rect.y)
+                Array2d.pasteInto(
+                    strmap,
+                    Array2d.empty({ x: (rect.width / scale).floor(), y: (rect.height / scale).floor() }, char),
+                    (rect.x / scale).floor(),
+                    (rect.y / scale).floor()
+                )
             } catch (e) {
                 console.error(`error while trying to parse rect ${Rect.toString(rect)} of map ${map.id}`, e)
             }
@@ -68,6 +77,7 @@ let lastPrint: number = 0
 
 export function printMapArrangeQueue(
     queue: BuildQueueAccesor<MapArrangeData>,
+    scale: number,
     nonFinished: boolean = false,
     mapsAdd: MapArrange[] = [],
     keepInTheSamePlace?: boolean,
@@ -77,7 +87,7 @@ export function printMapArrangeQueue(
     if (!(lastPrint < Date.now() - 1000 / 10)) return
 
     lastPrint = Date.now()
-    const res = drawMapArrangeQueue(queue, nonFinished, mapsAdd, keepInTheSamePlace, color)
+    const res = drawMapArrangeQueue(queue, scale, nonFinished, mapsAdd, keepInTheSamePlace, color)
     const len = res.split('\n')[0].length
     console.clear()
     console.log(add + ' ' + '='.repeat(Math.max(1, len - add.length - 1)) + ' ' + '\n' + res + '\n' + '='.repeat(len))

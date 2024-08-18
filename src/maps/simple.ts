@@ -1,9 +1,18 @@
 import { Vec2 } from '../util/vec2'
 import { NextQueueEntryGenerator, QueueEntry } from '../build-queue/build-queue'
-import { TprArrange, MapArrangeData, MapArrange, RoomArrange, doesMapArrangeFit } from '../map-arrange/map-arrange'
+import {
+    TprArrange,
+    MapArrangeData,
+    MapArrange,
+    RoomArrange,
+    doesMapArrangeFit,
+    offsetMapArrange,
+} from '../map-arrange/map-arrange'
 import { MapPicker, registerMapPickerNodeConfig } from '../map-arrange/map-picker/configurable'
 import { Dir, DirU, Rect } from '../util/geometry'
 import { shuffleArray } from '../util/util'
+import { registerMapConstructor } from '../map-construct/map-construct'
+import { MapTheme } from '../map-construct/theme'
 
 declare global {
     export namespace MapPickerNodeConfigs {
@@ -51,7 +60,7 @@ export function simpleMapArrange({
             destId: id - 1,
         }
         const map: MapArrange = {
-            type: 'SimpleBranch',
+            type: 'Simple',
             rects: [],
             restTprs: [],
             id,
@@ -113,3 +122,39 @@ export function simpleMapArrange({
         return ret
     }
 }
+
+registerMapConstructor('Simple', (map, areaInfo, pathResolver, _mapsArranged, _mapsConstructed) => {
+    const bounds = Rect.boundsOfArr(map.rects)
+    const offset = Vec2.mulC(bounds, -1)
+    offsetMapArrange(map, offset)
+
+    const theme = MapTheme.default
+
+    const c: sc.MapModel.Map = {
+        name: pathResolver(map.id),
+        mapWidth: bounds.width,
+        mapHeight: bounds.height,
+        levels: [{ height: 0 }],
+        masterLevel: 0,
+        attributes: theme.getMapAttributes(areaInfo.id),
+        screen: { x: 0, y: 0 },
+        entities: [],
+        layer: [],
+    }
+
+    for (const tpr of [...map.entranceTprs, ...map.restTprs]) {
+        const entity = {
+            type: 'DOOR',
+            x: tpr.x,
+            y: tpr.y,
+            level: 0,
+            settings: {},
+        }
+        c.entities.push(entity)
+    }
+
+    return {
+        ...map,
+        constructed: c,
+    }
+})

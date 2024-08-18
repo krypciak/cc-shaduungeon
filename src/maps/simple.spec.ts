@@ -28,7 +28,7 @@ export class Test_SimpleMapPicker {
             return roomGen
         }
         queue.begin(mapPicker(-1, queue))
-        const res = drawMapArrangeQueue(queue)
+        const res = drawMapArrangeQueue(queue, 1)
         const expected = `55\n55\n44\n44\n33\n33\n22\n22\n11\n11\n00\n00`
         expect.toBeEqual(res, expected)
     }
@@ -53,7 +53,7 @@ export class Test_SimpleMapPicker {
         }
         setRandomSeed(seed)
         queue.begin(mapPicker(-1, queue))
-        const res = drawMapArrangeQueue(queue)
+        const res = drawMapArrangeQueue(queue, 1)
         expect.toBeEqual(res, expected)
     }
 
@@ -106,7 +106,7 @@ export class Test_SimpleMapPicker {
         }
         setRandomSeed(seed)
         queue.begin(mapPicker(-1, queue))
-        const res = drawMapArrangeQueue(queue)
+        const res = drawMapArrangeQueue(queue, 1)
         const hash = sha256(res)
         expect.toBeEqual(hash, expected)
     }
