@@ -88,6 +88,20 @@ export namespace Rect {
             { x: rect.width, y: rect.height },
         ]
     }
+    export function mul(rect: Rect, mul: number): Rect {
+        rect.x *= mul
+        rect.y *= mul
+        rect.width *= mul
+        rect.height *= mul
+        return rect
+    }
+    export function div(rect: Rect, div: number): Rect {
+        rect.x *= div
+        rect.y *= div
+        rect.width *= div
+        rect.height *= div
+        return rect
+    }
     export function x2(rect: Rect): number {
         return rect.x + rect.width
     }
@@ -148,12 +162,11 @@ export namespace Rect {
     }
     /** Extends the `rect` by `num` on all sides */
     export function extend(rect: Rect, num: number): Rect {
-        return {
-            x: rect.x - num,
-            y: rect.y - num,
-            width: rect.width + num * 2,
-            height: rect.height + num * 2,
-        }
+        rect.x -= num
+        rect.y -= num
+        rect.width += num * 2
+        rect.height += num * 2
+        return rect
     }
     export function corner(
         rect: Rect,
