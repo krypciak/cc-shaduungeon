@@ -1,14 +1,16 @@
-import { copyMapArrange, MapArrange, RoomArrange } from '../map-arrange/map-arrange'
+import { copyMapArrange, MapArrange, offsetMapArrange } from '../map-arrange/map-arrange'
 import { MapPicker } from '../map-arrange/map-picker/configurable'
 import { Id } from '../build-queue/build-queue'
 import { assert } from '../util/util'
 import { Item } from '../util/items'
-import { Rect } from '../util/geometry'
+import { Dir, Rect } from '../util/geometry'
+import { MapConstructionLayers } from './layer'
+import { getEmptyLayers } from './layer'
+import { MapTheme } from './theme'
 
 export interface MapConstruct extends MapArrange {
     constructed: sc.MapModel.Map
-    rectsAbsolute: RoomArrange[]
-    bounds: Rect
+    rectsAbsolute: Rect[]
     title: string
 }
 
@@ -48,4 +50,46 @@ export function constructMapsFromMapsArrange(maps: MapArrange[], areaInfo: AreaI
     }
 
     return mapsConstruct
+}
+
+export interface MapInConstruction extends sc.MapModel.Map {
+    layers: MapConstructionLayers
+}
+
+export function baseMapConstruct(
+    map: MapArrange,
+    mapName: string,
+    areaId: string,
+    theme: MapTheme
+): { mic: MapInConstruction; rectsAbsolute: Rect[] } {
+    const rectsAbsolute = map.rects.map(Rect.copy)
+
+    const boundsEntity = Rect.boundsOfArr(map.rects)
+
+    Rect.extend(boundsEntity, 7 * 16, { [Dir.NORTH]: true })
+    Rect.extend(boundsEntity, 1 * 16, [false, true, true, true])
+    const offset = Vec2.mulC(boundsEntity, -1)
+
+    offsetMapArrange(map, offset)
+
+    const bounds = Rect.div(Rect.copy(boundsEntity), 16)
+
+    const mapSize: Vec2 = Rect.toTwoVecSize(bounds)[1]
+
+    const mic: MapInConstruction = {
+        name: mapName,
+        mapWidth: mapSize.x,
+        mapHeight: mapSize.y,
+        masterLevel: 0,
+        attributes: theme.getMapAttributes(areaId),
+        screen: { x: 0, y: 0 },
+        entities: [],
+
+        ...getEmptyLayers(mapSize, 3, theme.config),
+    }
+    return { mic, rectsAbsolute }
+}
+
+export function getTprName(isEntrance: boolean, index: number): string {
+    return `${isEntrance ? 'entrance' : 'rest'}_${index}`
 }

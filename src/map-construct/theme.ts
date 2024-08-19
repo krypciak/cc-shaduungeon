@@ -53,7 +53,7 @@ export class MapTheme {
         }
     }
 
-    static themes: Record<string, MapTheme> = {
+    static themes = {
         'rhombus-dng': new MapTheme({
             bgm: 'puzzle',
             mapSounds: '',
@@ -130,12 +130,12 @@ export class MapTheme {
             wallDown: [0, 0, 147],
             wallLeft: [135, 0, 0],
         }),
-    }
+    } as const satisfies Record<string, MapTheme>
     static default: MapTheme = MapTheme.themes['rhombus-dng']
 
     static fromArea(areaName: string): MapTheme {
         if (areaName in MapTheme.themes) {
-            return MapTheme.themes[areaName]
+            return MapTheme.themes[areaName as keyof typeof MapTheme.themes]
         } else {
             return MapTheme.default
         }

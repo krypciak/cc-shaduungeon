@@ -161,11 +161,24 @@ export namespace Rect {
         }
     }
     /** Extends the `rect` by `num` on all sides */
-    export function extend(rect: Rect, num: number): Rect {
-        rect.x -= num
-        rect.y -= num
-        rect.width += num * 2
-        rect.height += num * 2
+    export function extend(rect: Rect, num: number, dirs?: PartialRecord<Dir, boolean>): Rect {
+        if (!dirs) {
+            rect.x -= num
+            rect.y -= num
+            rect.width += num * 2
+            rect.height += num * 2
+            return rect
+        }
+        if (dirs[Dir.WEST]) {
+            rect.x -= num
+            rect.width += num
+        }
+        if (dirs[Dir.NORTH]) {
+            rect.y -= num
+            rect.height += num
+        }
+        if (dirs[Dir.SOUTH]) rect.height += num
+        if (dirs[Dir.EAST]) rect.width += num
         return rect
     }
     export function corner(
