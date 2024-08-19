@@ -1,6 +1,6 @@
-import { MapThemeConfig } from "../map-construct/theme"
-import { Coll } from "../util/map"
-import { Array2d } from "../util/util"
+import { MapThemeConfig } from '../map-construct/theme'
+import { Coll } from '../util/map'
+import { Array2d } from '../util/util'
 
 export interface MapConstructionLayers {
     background: number[][][]

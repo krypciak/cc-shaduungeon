@@ -1,4 +1,4 @@
-import { copyMapArrange, MapArrange, offsetMapArrange } from '../map-arrange/map-arrange'
+import { copyMapArrange, MapArrange, offsetMapArrange, RoomArrange } from '../map-arrange/map-arrange'
 import { MapPicker } from '../map-arrange/map-picker/configurable'
 import { Id } from '../build-queue/build-queue'
 import { assert } from '../util/util'
@@ -12,6 +12,11 @@ export interface MapConstruct extends MapArrange {
     constructed: sc.MapModel.Map
     rectsAbsolute: Rect[]
     title: string
+    rects: RoomConsturct[]
+}
+
+export interface RoomConsturct extends RoomArrange {
+    wallsFull: boolean
 }
 
 export interface AreaInfo {
@@ -60,14 +65,18 @@ export function baseMapConstruct(
     map: MapArrange,
     mapName: string,
     areaId: string,
-    theme: MapTheme
+    theme: MapTheme,
+    extend: Record<Dir, number>
 ): { mic: MapInConstruction; rectsAbsolute: Rect[] } {
     const rectsAbsolute = map.rects.map(Rect.copy)
 
     const boundsEntity = Rect.boundsOfArr(map.rects)
 
-    Rect.extend(boundsEntity, 7 * 16, { [Dir.NORTH]: true })
-    Rect.extend(boundsEntity, 1 * 16, [false, true, true, true])
+    for (let dir = 0 as Dir; dir < 4; dir++) {
+        if (extend[dir]) {
+            Rect.extend(boundsEntity, extend[dir] * 16, { [dir]: true })
+        }
+    }
     const offset = Vec2.mulC(boundsEntity, -1)
 
     offsetMapArrange(map, offset)
@@ -92,4 +101,13 @@ export function baseMapConstruct(
 
 export function getTprName(isEntrance: boolean, index: number): string {
     return `${isEntrance ? 'entrance' : 'rest'}_${index}`
+}
+
+function areWallsFull(walls: Record<Dir, boolean>): boolean {
+    return walls[0] && walls[1] && walls[2] && walls[3]
+}
+export function convertRoomsArrangeToRoomsConstruct(rooms: RoomArrange[]): RoomConsturct[] {
+    const newRooms = rooms.map(room => Object.assign(room, { wallsFull: areWallsFull(room.walls) }) as RoomConsturct)
+    newRooms.sort((a, b) => (b.wallsFull ? 1 : -1) - (a.wallsFull ? 1 : -1))
+    return newRooms
 }

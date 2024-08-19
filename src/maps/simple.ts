@@ -11,9 +11,14 @@ import {
 import { MapPicker, registerMapPickerNodeConfig } from '../map-arrange/map-picker/configurable'
 import { Dir, DirU, Rect } from '../util/geometry'
 import { shuffleArray } from '../util/util'
-import { baseMapConstruct, getTprName, registerMapConstructor } from '../map-construct/map-construct'
-import { placeRoom } from '../map-construct/room'
+import {
+    baseMapConstruct,
+    convertRoomsArrangeToRoomsConstruct,
+    getTprName,
+    registerMapConstructor,
+} from '../map-construct/map-construct'
 import { MapTheme } from '../map-construct/theme'
+import { placeRoom } from '../map-construct/room'
 
 declare global {
     export namespace MapPickerNodeConfigs {
@@ -126,7 +131,7 @@ export function simpleMapArrange({
 
 registerMapConstructor('Simple', (map, areaInfo, pathResolver, _mapsArranged, _mapsConstructed) => {
     const theme = MapTheme.default
-    const { mic, rectsAbsolute } = baseMapConstruct(map, pathResolver(map.id), areaInfo.id, theme)
+    const { mic, rectsAbsolute } = baseMapConstruct(map, pathResolver(map.id), areaInfo.id, theme, [7, 1, 1, 1])
 
     function pushTprEntity(tpr: TprArrange3d, isEntrance: boolean, index: number) {
         const name = getTprName(isEntrance, index)
@@ -164,7 +169,8 @@ registerMapConstructor('Simple', (map, areaInfo, pathResolver, _mapsArranged, _m
     map.entranceTprs.forEach((tpr, i) => pushTprEntity(tpr, true, i))
     map.restTprs.forEach((tpr, i) => pushTprEntity(tpr, false, i))
 
-    for (const room of map.rects) {
+    const rects = convertRoomsArrangeToRoomsConstruct(map.rects)
+    for (const room of rects) {
         placeRoom(room, mic, theme.config, true)
     }
 
@@ -172,6 +178,7 @@ registerMapConstructor('Simple', (map, areaInfo, pathResolver, _mapsArranged, _m
 
     return {
         ...map,
+        rects,
         constructed,
         rectsAbsolute,
         title: `map ${constructed.name}`,

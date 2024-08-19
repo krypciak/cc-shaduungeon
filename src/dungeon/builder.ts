@@ -14,8 +14,8 @@ export class DungeonBuilder {
 
         const queue = new BuildQueue<MapArrangeData>(true)
         const randomizeDirTryOrder = true
-        const roomSizeReg = { x: 9 * 16, y: 9 * 16 }
-        // const tunnelSizeReg = { x: 1, y: 1 }
+        const roomSizeReg = { x: 13 * 16, y: 13 * 16 }
+        const tunnelSizeReg = { x: 5 * 16, y: 3 * 16 }
         // const roomSizeBranch = { x: 5, y: 5 }
         // const tunnelSizeBranch = { x: 1, y: 1 }
         //
@@ -57,9 +57,10 @@ export class DungeonBuilder {
 
         const mapPicker: MapPicker = mapPickerConfigurable({
             root: {
-                type: 'Simple',
-                size: roomSizeReg,
-                count: 6,
+                type: 'SimpleTunnel',
+                roomSize: roomSizeReg,
+                tunnelSize: tunnelSizeReg,
+                count: 5,
                 randomizeDirTryOrder,
 
                 // followedBy: branch(

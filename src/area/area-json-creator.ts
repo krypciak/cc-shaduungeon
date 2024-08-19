@@ -1,6 +1,6 @@
 import { Id } from '../build-queue/build-queue'
 import { RoomArrange } from '../map-arrange/map-arrange'
-import { AreaInfo, MapConstruct } from '../map-construct/map-construct'
+import { AreaInfo, MapConstruct, RoomConsturct } from '../map-construct/map-construct'
 import { Rect } from '../util/geometry'
 import { ObjectEntriesT } from '../util/modify-prototypes'
 import { allLangs, assert } from '../util/util'
@@ -37,7 +37,7 @@ declare global {
                     id: Id
                     min: Vec2
                     max: Vec2
-                    rects: (RoomArrange & {
+                    rects: (RoomConsturct & {
                         drawEmptyRect?: Rect
                         drawRect?: Rect & { x2: number; y2: number }
                         areaRect?: Rect

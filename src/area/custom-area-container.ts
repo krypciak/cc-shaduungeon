@@ -255,7 +255,7 @@ sc.MapRoom.inject({
                 const rect = o.drawRect!
                 const eRect = o.drawEmptyRect!
 
-                const borderIncGlobal = 0 // o.roomType == RoomType.Tunnel ? 1 : 0
+                const borderIncGlobal = o.wallsFull ? 0 : 1
                 const biPX = o.walls[Dir.EAST] ? 0 : borderIncGlobal
                 const biNX = o.walls[Dir.WEST] ? 0 : borderIncGlobal
                 const biPY = o.walls[Dir.SOUTH] ? 0 : borderIncGlobal
