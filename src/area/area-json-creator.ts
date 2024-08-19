@@ -74,7 +74,7 @@ export function createArea(
             const boundsAbsolute: Rect = Rect.boundsOfArr(map.rectsAbsolute)
             const offsetRelative: Vec2 = Vec2.divC(Rect.boundsOfArr(map.rects), divider)
             return {
-                path: map.constructed.name,
+                path: map.constructed.name.replace('/', '.'),
                 name: allLangs(map.title),
                 offset: Vec2.copy(offsetRelative),
                 dungeon: 'DUNGEON',

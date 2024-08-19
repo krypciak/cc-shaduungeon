@@ -2,7 +2,6 @@ import { Id, BuildQueueAccesor, NextQueueEntryGenerator } from '../../build-queu
 import { MapArrangeData, TprArrange, MapArrange } from '../../map-arrange/map-arrange'
 import { Dir } from '../../util/geometry'
 import { assert } from '../../util/util'
-import { printMapArrangeQueue } from '../drawer'
 
 declare global {
     export namespace MapPickerNodeConfigs {
@@ -105,12 +104,12 @@ export function mapPickerConfigurable(_config: MapPicker.Config): MapPicker {
         { newId = id + 1, newIndex = 0, nextBranch, nextConfig }: MapPickerData = {}
     ): NextQueueEntryGenerator<MapArrangeData> => {
         const last = id == -1 ? undefined : (accesor.get(id) as MapArrange)
-        {
-            const push = accesor.globalPushCount
-            const pop = accesor.globalPopCount
-            const str = `push: ${push}, pop: ${pop}, len: ${accesor.queue.length}, ratio: ${(accesor.queue.length / pop).toPrecision(4)}`
-            printMapArrangeQueue(accesor, 16, true, undefined, true, true, str)
-        }
+        // {
+        //     const push = accesor.globalPushCount
+        //     const pop = accesor.globalPopCount
+        //     const str = `push: ${push}, pop: ${pop}, len: ${accesor.queue.length}, ratio: ${(accesor.queue.length / pop).toPrecision(4)}`
+        //     printMapArrangeQueue(accesor, 16, true, undefined, true, true, str)
+        // }
 
         const lastTpr = last
             ? (last.restTprs.find(t => t.destId == newId)! as TprArrange)

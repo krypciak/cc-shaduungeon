@@ -180,8 +180,6 @@ sc.MapRoom.inject({
             room.max.x = Math.ceil(room.max.x * tilesize) / tilesize
             room.max.y = Math.ceil(room.max.y * tilesize) / tilesize
         }
-        const name = room.name
-        room.name = name.toString().replace('/', '.')
         this.parent(room, _floor, id)
 
         if (floor.shaduungeonCustom) {
