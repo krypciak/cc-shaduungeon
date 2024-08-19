@@ -1,4 +1,4 @@
-import { NextQueueEntryGenerator, QueueEntry } from '../build-queue/build-queue'
+import { Id, NextQueueEntryGenerator, QueueEntry } from '../build-queue/build-queue'
 import {
     TprArrange,
     MapArrangeData,
@@ -38,6 +38,8 @@ export function simpleMapBranchTunnelArrange({
     roomSize,
     tunnelSize,
     branchCount,
+    destId,
+    destIndex,
     randomizeDirTryOrder,
     nodeId,
 }: {
@@ -46,6 +48,8 @@ export function simpleMapBranchTunnelArrange({
     roomSize: Vec2
     tunnelSize: Vec2
     branchCount: 1 | 2 | 3
+    destId: Id
+    destIndex: number
     randomizeDirTryOrder?: boolean
     nodeId?: number
 }): NextQueueEntryGenerator<MapArrangeData> {
@@ -54,9 +58,10 @@ export function simpleMapBranchTunnelArrange({
             dir: DirU.flip(exitTpr.dir),
             x: exitTpr.x,
             y: exitTpr.y,
-            destId: id - 1,
+            destId,
+            destIndex,
         }
-        const map: MapArrange = { type: 'Simple', rects: [], restTprs: [], id, entranceTprs: [tpr], nodeId }
+        const map: MapArrange = { type: 'SimpleBranch', rects: [], restTprs: [], id, entranceTprs: [tpr], nodeId }
 
         let tunnelEntrance: RoomArrange
         {
@@ -108,7 +113,8 @@ export function simpleMapBranchTunnelArrange({
 
                         branch: 0,
                         branchCount: 1,
-                        getNextQueueEntryGenerator: () => mapPicker(id, accesor, prevId, currentBranch),
+                        getNextQueueEntryGenerator: () =>
+                            mapPicker(id, accesor, { newId: prevId, nextBranch: currentBranch }),
                     }
                 }
                 const dir = dirs[currentBranch]
@@ -143,7 +149,8 @@ export function simpleMapBranchTunnelArrange({
 
                     branch: 0,
                     branchCount: 1,
-                    getNextQueueEntryGenerator: () => mapPicker(id, accesor, newId, currentBranch),
+                    getNextQueueEntryGenerator: () =>
+                        mapPicker(id, accesor, { newId, nextBranch: currentBranch, newIndex: currentBranch }),
                 }
             }
 

@@ -1,5 +1,5 @@
 import { Vec2 } from '../util/vec2'
-import { NextQueueEntryGenerator, QueueEntry } from '../build-queue/build-queue'
+import { Id, NextQueueEntryGenerator, QueueEntry } from '../build-queue/build-queue'
 import {
     TprArrange,
     MapArrangeData,
@@ -42,6 +42,8 @@ export function simpleMapArrange({
     mapPicker,
     exitTpr,
     size,
+    destId,
+    destIndex,
     randomizeDirTryOrder,
     finishedWhole,
     forceExit,
@@ -52,6 +54,8 @@ export function simpleMapArrange({
     mapPicker: MapPicker
     exitTpr: TprArrange
     size: Vec2
+    destId: Id
+    destIndex: number
     randomizeDirTryOrder?: boolean
     finishedWhole?: boolean
     forceExit?: Dir
@@ -64,7 +68,8 @@ export function simpleMapArrange({
             x: exitTpr.x,
             y: exitTpr.y,
             dir: DirU.flip(exitTpr.dir),
-            destId: id - 1,
+            destId,
+            destIndex,
         }
         const map: MapArrange = {
             type: 'Simple',

@@ -24,6 +24,8 @@ export class Test_SimpleMapPicker {
                 size: { x: 2, y: 2 },
                 randomizeDirTryOrder: false,
                 finishedWhole: id >= 5,
+                destId: id,
+                destIndex: 0,
             })
             return roomGen
         }
@@ -48,6 +50,8 @@ export class Test_SimpleMapPicker {
                 size: { x: 2, y: 2 },
                 randomizeDirTryOrder: true,
                 finishedWhole: id >= 5,
+                destId: id,
+                destIndex: 0,
             })
             return roomGen
         }
@@ -69,6 +73,8 @@ export class Test_SimpleMapPicker {
                     randomizeDirTryOrder: false,
                     finishedWhole: false,
                     forceExit: Dir.EAST,
+                    destId: id,
+                    destIndex: 0,
                 })
             if (id == 0)
                 return simpleMapArrange({
@@ -78,6 +84,8 @@ export class Test_SimpleMapPicker {
                     randomizeDirTryOrder: false,
                     finishedWhole: true,
                     forceExit: Dir.EAST,
+                    destId: id,
+                    destIndex: 0,
                 })
             assert(false)
         }
@@ -101,6 +109,8 @@ export class Test_SimpleMapPicker {
                 tunnelSize: { x: 1, y: 2 },
                 randomizeDirTryOrder: true,
                 finishedWhole: id >= 5,
+                destId: id,
+                destIndex: 0,
             })
             return roomGen
         }

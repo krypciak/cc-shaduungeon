@@ -6,7 +6,7 @@ import { printMapArrangeQueue } from '../drawer'
 import { simpleMapArrange } from '../../maps/simple'
 import { simpleMapBranchTunnelArrange } from '../../maps/simple-branch'
 import { simpleMapTunnelArrange } from '../../maps/simple-tunnel'
-import { MapPicker } from './configurable'
+import { MapPicker, MapPickerData } from './configurable'
 
 export function mapPickerSimpleSeedRandomSize(count: number) {
     const mapPicker: MapPicker = (id, accesor) => {
@@ -22,6 +22,8 @@ export function mapPickerSimpleSeedRandomSize(count: number) {
             size,
             randomizeDirTryOrder: true,
             finishedWhole: id + 2 >= count,
+            destId: id,
+            destIndex: 0,
         })
         return roomGen
     }
@@ -43,6 +45,8 @@ export function mapPickerSimpleTunnelSeedRandomSize(count: number, tunnelSize = 
             tunnelSize,
             randomizeDirTryOrder: true,
             finishedWhole: id + 2 >= count,
+            destId: id,
+            destIndex: 0,
         })
         return roomGen
     }
@@ -58,7 +62,11 @@ export function mapPickerSimpleTunnelBranch(branchCount: 1 | 2 | 3) {
     }
 
     const tunnelSize = { x: 1, y: 1 }
-    const mapPicker: MapPicker = (id, accesor, newId = id + 1): NextQueueEntryGenerator<MapArrangeData> => {
+    const mapPicker: MapPicker = (
+        id,
+        accesor,
+        { newId = id + 1 }: MapPickerData = {}
+    ): NextQueueEntryGenerator<MapArrangeData> => {
         const last = id == -1 ? undefined : (accesor.get(id) as MapArrange)
 
         if (last?.branchDone) {
@@ -87,6 +95,8 @@ export function mapPickerSimpleTunnelBranch(branchCount: 1 | 2 | 3) {
                 tunnelSize,
                 branchCount,
                 randomizeDirTryOrder: false,
+                destId: id,
+                destIndex: 0,
             })
         } else {
             const rand = 3 //randomInt(3, 5) * 2
@@ -101,6 +111,8 @@ export function mapPickerSimpleTunnelBranch(branchCount: 1 | 2 | 3) {
                 tunnelSize,
                 randomizeDirTryOrder: false,
                 branchDone,
+                destId: id,
+                destIndex: 0,
             })
         }
     }

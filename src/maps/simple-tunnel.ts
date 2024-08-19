@@ -1,4 +1,4 @@
-import { NextQueueEntryGenerator, QueueEntry } from '../build-queue/build-queue'
+import { Id, NextQueueEntryGenerator, QueueEntry } from '../build-queue/build-queue'
 import {
     TprArrange,
     MapArrangeData,
@@ -35,6 +35,8 @@ export function simpleMapTunnelArrange({
     exitTpr,
     roomSize,
     tunnelSize,
+    destId,
+    destIndex,
     randomizeDirTryOrder,
     finishedWhole,
     forceExit,
@@ -46,6 +48,8 @@ export function simpleMapTunnelArrange({
     exitTpr: TprArrange
     roomSize: Vec2
     tunnelSize: Vec2
+    destId: Id
+    destIndex: number
     randomizeDirTryOrder?: boolean
     finishedWhole?: boolean
     forceExit?: Dir
@@ -58,7 +62,8 @@ export function simpleMapTunnelArrange({
             dir: DirU.flip(exitTpr.dir),
             x: exitTpr.x,
             y: exitTpr.y,
-            destId: id - 1,
+            destId,
+            destIndex,
         }
         const map: MapArrange = {
             type: 'SimpleTunnel',

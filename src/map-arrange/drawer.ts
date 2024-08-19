@@ -89,6 +89,6 @@ export function printMapArrangeQueue(
     lastPrint = Date.now()
     const res = drawMapArrangeQueue(queue, scale, nonFinished, mapsAdd, keepInTheSamePlace, color)
     const len = res.split('\n')[0].length
-    console.clear()
+    // console.clear()
     console.log(add + ' ' + '='.repeat(Math.max(1, len - add.length - 1)) + ' ' + '\n' + res + '\n' + '='.repeat(len))
 }

@@ -2,6 +2,7 @@ import { Id, BuildQueueAccesor, NextQueueEntryGenerator } from '../../build-queu
 import { MapArrangeData, TprArrange, MapArrange } from '../../map-arrange/map-arrange'
 import { Dir } from '../../util/geometry'
 import { assert } from '../../util/util'
+import { printMapArrangeQueue } from '../drawer'
 
 declare global {
     export namespace MapPickerNodeConfigs {
@@ -9,11 +10,16 @@ declare global {
     }
 }
 
+export type MapPickerData = {
+    newId?: Id
+    newIndex?: number
+    nextBranch?: number
+    nextConfig?: MapPicker.ConfigNodeBuildtime
+}
 export type MapPicker = (
     id: Id,
     accesor: BuildQueueAccesor<MapArrangeData>,
-    newId?: Id,
-    nextBranch?: number
+    data?: MapPickerData
 ) => NextQueueEntryGenerator<MapArrangeData>
 
 export namespace MapPicker {
@@ -36,6 +42,8 @@ export namespace MapPicker {
             finishedWhole?: boolean
             nodeId: number
             nodeProgress?: number
+            destId: number
+            destIndex: number
         }
     ) => NextQueueEntryGenerator<MapArrangeData>
     export type NodeBuilderRecord = { [key in ConfigTypes]: NodeBuilder<key> }
@@ -94,17 +102,15 @@ export function mapPickerConfigurable(_config: MapPicker.Config): MapPicker {
     const mapPicker = (
         id: Id,
         accesor: BuildQueueAccesor<MapArrangeData>,
-        newId = id + 1,
-        nextBranch?: number,
-        nextConfig?: MapPicker.ConfigNodeBuildtime
+        { newId = id + 1, newIndex = 0, nextBranch, nextConfig }: MapPickerData = {}
     ): NextQueueEntryGenerator<MapArrangeData> => {
         const last = id == -1 ? undefined : (accesor.get(id) as MapArrange)
-        // {
-        //     const push = accesor.globalPushCount
-        //     const pop = accesor.globalPopCount
-        //     const str = `push: ${push}, pop: ${pop}, len: ${accesor.queue.length}, ratio: ${(accesor.queue.length / pop).toPrecision(4)}`
-        //     printQueue(accesor, true, undefined, true, true, str)
-        // }
+        {
+            const push = accesor.globalPushCount
+            const pop = accesor.globalPopCount
+            const str = `push: ${push}, pop: ${pop}, len: ${accesor.queue.length}, ratio: ${(accesor.queue.length / pop).toPrecision(4)}`
+            printMapArrangeQueue(accesor, 16, true, undefined, true, true, str)
+        }
 
         const lastTpr = last
             ? (last.restTprs.find(t => t.destId == newId)! as TprArrange)
@@ -131,7 +137,7 @@ export function mapPickerConfigurable(_config: MapPicker.Config): MapPicker {
                 assert(config.followedBy)
                 const nextConfig = config.followedBy as MapPicker.ConfigNodeBuildtime
 
-                return mapPicker(id, accesor, newId, undefined, nextConfig)
+                return mapPicker(id, accesor, { newId, nextConfig })
             } else {
                 const branchDone = !config.followedBy && config.count - 1 <= nodeProgress
                 const finishedWhole = branchDone && nodeId == lastNodeId
@@ -144,6 +150,8 @@ export function mapPickerConfigurable(_config: MapPicker.Config): MapPicker {
                     nodeId,
                     nodeProgress: nodeProgress + 1,
                     finishedWhole,
+                    destId: id,
+                    destIndex: newIndex,
                 })
             }
         }
@@ -152,10 +160,16 @@ export function mapPickerConfigurable(_config: MapPicker.Config): MapPicker {
             if (nextBranch !== undefined) {
                 assert(last?.createNextBranch)
                 const nextConfig = config.branches[nextBranch] as MapPicker.ConfigNodeBuildtime
-                return mapPicker(id, accesor, newId, undefined, nextConfig)
+                return mapPicker(id, accesor, { newId, nextConfig, newIndex })
             }
             const generator = nodeConfigs[config.type]
-            return generator(config as any, { exitTpr: lastTpr, mapPicker, nodeId: nodeId })
+            return generator(config as any, {
+                exitTpr: lastTpr,
+                mapPicker,
+                nodeId: nodeId,
+                destId: id,
+                destIndex: newIndex,
+            })
         }
 
         assert(false)
