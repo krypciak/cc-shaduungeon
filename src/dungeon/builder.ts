@@ -90,6 +90,7 @@ export class DungeonBuilder {
         const mapsConstruct = constructMapsFromMapsArrange(mapsArrange, areaInfo)
 
         const paths = new DungeonPaths(dungeonId)
+        await paths.clearDir()
         await Promise.all(mapsConstruct.map(map => paths.saveMap(map.constructed)))
 
         const area = createArea(mapsConstruct, areaInfo, 0, 0, { 0: 'myfloor0' })
