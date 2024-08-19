@@ -15,6 +15,7 @@ import {
     baseMapConstruct,
     convertRoomsArrangeToRoomsConstruct,
     getTprName,
+    MapConstructFunc,
     registerMapConstructor,
 } from '../map-construct/map-construct'
 import { MapTheme } from '../map-construct/theme'
@@ -129,9 +130,15 @@ export function simpleMapArrange({
     }
 }
 
-registerMapConstructor('Simple', (map, areaInfo, pathResolver, _mapsArranged, _mapsConstructed) => {
+export const simpleMapConstructor: MapConstructFunc = (
+    map,
+    areaInfo,
+    pathResolver,
+    _mapsArranged,
+    _mapsConstructed
+) => {
     const theme = MapTheme.default
-    const { mic, rectsAbsolute } = baseMapConstruct(map, pathResolver(map.id), areaInfo.id, theme, [7, 1, 1, 1])
+    const { mic, rectsAbsolute } = baseMapConstruct(map, pathResolver(map.id), areaInfo.id, theme, [8, 1, 1, 1])
 
     function pushTprEntity(tpr: TprArrange3d, isEntrance: boolean, index: number) {
         const name = getTprName(isEntrance, index)
@@ -183,4 +190,6 @@ registerMapConstructor('Simple', (map, areaInfo, pathResolver, _mapsArranged, _m
         rectsAbsolute,
         title: `map ${constructed.name}`,
     }
-})
+}
+
+registerMapConstructor('Simple', simpleMapConstructor)

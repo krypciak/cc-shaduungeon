@@ -8,8 +8,10 @@ import {
     TprArrange3d,
 } from '../map-arrange/map-arrange'
 import { MapPicker, registerMapPickerNodeConfig } from '../map-arrange/map-picker/configurable'
+import { registerMapConstructor } from '../map-construct/map-construct'
 import { DirU, Rect, Dir } from '../util/geometry'
 import { shuffleArray } from '../util/util'
+import { simpleMapConstructor } from './simple'
 
 declare global {
     export namespace MapPickerNodeConfigs {
@@ -118,7 +120,7 @@ export function simpleMapBranchTunnelArrange({
                         dir: DirU.flip(dir),
                     })
                     const walls: Record<Dir, boolean> = [true, true, true, true]
-                    walls[dir] = false
+                    walls[DirU.flip(dir)] = false
                     tunnelExit = { ...rect, walls }
                     map.rects.push(tunnelExit)
                 }
@@ -165,3 +167,5 @@ export function simpleMapBranchTunnelArrange({
         }
     }
 }
+
+registerMapConstructor('SimpleBranch', simpleMapConstructor)

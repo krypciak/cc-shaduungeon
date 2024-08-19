@@ -8,16 +8,10 @@ import {
     TprArrange3d,
 } from '../map-arrange/map-arrange'
 import { MapPicker, registerMapPickerNodeConfig } from '../map-arrange/map-picker/configurable'
-import {
-    baseMapConstruct,
-    convertRoomsArrangeToRoomsConstruct,
-    getTprName,
-    registerMapConstructor,
-} from '../map-construct/map-construct'
-import { placeRoom } from '../map-construct/room'
-import { MapTheme } from '../map-construct/theme'
+import { registerMapConstructor } from '../map-construct/map-construct'
 import { Dir, DirU, Rect } from '../util/geometry'
 import { shuffleArray } from '../util/util'
+import { simpleMapConstructor } from './simple'
 
 declare global {
     export namespace MapPickerNodeConfigs {
@@ -160,58 +154,4 @@ export function simpleMapTunnelArrange({
     }
 }
 
-registerMapConstructor('SimpleTunnel', (map, areaInfo, pathResolver, _mapsArranged, _mapsConstructed) => {
-    const theme = MapTheme.default
-    const { mic, rectsAbsolute } = baseMapConstruct(map, pathResolver(map.id), areaInfo.id, theme, [9, 2, 2, 2])
-
-    function pushTprEntity(tpr: TprArrange3d, isEntrance: boolean, index: number) {
-        const name = getTprName(isEntrance, index)
-        const dir = DirU.flip(tpr.dir as Dir)
-        if (tpr.destId == -1) {
-            const middle = Vec2.subC(Rect.middle(map.rects[0]), 16, 16)
-            return mic.entities.push({
-                type: 'Marker',
-                ...middle,
-                level: 0,
-                settings: { name, dir: DirU.toString(dir) },
-            })
-        }
-
-        let x = tpr.x
-        let y = tpr.y
-
-        if (tpr.dir != Dir.SOUTH) y -= 16
-        if (tpr.dir != Dir.EAST) x -= 16
-
-        mic.entities.push({
-            type: 'Door',
-            x,
-            y,
-            level: 0,
-            settings: {
-                name,
-                map: pathResolver(tpr.destId),
-                marker: getTprName(!isEntrance, tpr.destIndex ?? 0),
-                dir: DirU.toString(dir),
-            },
-        })
-    }
-
-    map.entranceTprs.forEach((tpr, i) => pushTprEntity(tpr, true, i))
-    map.restTprs.forEach((tpr, i) => pushTprEntity(tpr, false, i))
-
-    const rects = convertRoomsArrangeToRoomsConstruct(map.rects)
-    for (const room of rects) {
-        placeRoom(room, mic, theme.config, true)
-    }
-
-    const constructed: sc.MapModel.Map = Object.assign(mic, { layers: undefined })
-
-    return {
-        ...map,
-        rects,
-        constructed,
-        rectsAbsolute,
-        title: `map ${constructed.name}`,
-    }
-})
+registerMapConstructor('SimpleTunnel', simpleMapConstructor)
