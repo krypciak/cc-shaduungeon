@@ -1,11 +1,14 @@
-import { copyMapArrange, MapArrange } from '../map-arrange/map-arrange'
+import { copyMapArrange, MapArrange, RoomArrange } from '../map-arrange/map-arrange'
 import { MapPicker } from '../map-arrange/map-picker/configurable'
 import { Id } from '../build-queue/build-queue'
 import { assert } from '../util/util'
 import { Item } from '../util/items'
+import { Rect } from '../util/geometry'
 
 export interface MapConstruct extends MapArrange {
     constructed: sc.MapModel.Map
+    rectsAbsolute: RoomArrange[]
+    bounds: Rect
     title: string
 }
 

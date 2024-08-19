@@ -1,8 +1,10 @@
-import { unique } from 'jquery'
+import { Id } from '../build-queue/build-queue'
+import { RoomArrange } from '../map-arrange/map-arrange'
 import { AreaInfo, MapConstruct } from '../map-construct/map-construct'
 import { Rect } from '../util/geometry'
 import { ObjectEntriesT } from '../util/modify-prototypes'
-import { allLangs, Array2d, assert } from '../util/util'
+import { allLangs, assert } from '../util/util'
+import { Vec2 } from '../util/vec2'
 
 export {}
 declare global {
@@ -19,6 +21,7 @@ declare global {
                     floors: Floor[]
                 }
                 interface Floor {
+                    shaduungeonCustom: true
                     level: number
                     name: ig.LangLabel.Data
 
@@ -27,8 +30,19 @@ declare global {
                     icons: Icon[]
                     landmarks: Landmark[]
                     rooms?: sc.AreaRoomBounds[]
+
+                    size: Vec2
                 }
-                interface Map extends sc.AreaLoadable.Map {}
+                interface Map extends sc.AreaLoadable.Map {
+                    id: Id
+                    min: Vec2
+                    max: Vec2
+                    rects: (RoomArrange & {
+                        drawEmptyRect?: Rect
+                        drawRect?: Rect & { x2: number; y2: number }
+                        areaRect?: Rect
+                    })[]
+                }
             }
         }
     }
@@ -41,7 +55,10 @@ export function createArea(
     chests: number,
     floorNames: Record<number, ig.LangLabel.Data>
 ): sc.AreaLoadable.SDCustom.Data {
-    const { width, height }: Rect = Rect.boundsOfArr(maps.flatMap(a => a.rects))
+    const bounds: Rect = Rect.boundsOfArr(maps.flatMap(a => a.rectsAbsolute))
+    const divider = 64
+    const offset = Vec2.divC(Vec2.copy(bounds), divider)
+    const size = Vec2.divC({ x: bounds.width, y: bounds.height }, divider)
 
     const mapsByFloor: Record<number, MapConstruct[]> = {}
     for (const map of maps) {
@@ -54,20 +71,33 @@ export function createArea(
         if (floor == defaultFloor) actualDefaultFloor = floors.length
 
         const areaMaps: sc.AreaLoadable.SDCustom.Map[] = maps.map(map => {
+            const boundsAbsolute: Rect = Rect.boundsOfArr(map.rectsAbsolute)
+            const offsetRelative: Vec2 = Vec2.divC(Rect.boundsOfArr(map.rects), divider)
             return {
                 path: map.constructed.name,
                 name: allLangs(map.title),
-                offset: { x: 0, y: 0 },
+                offset: Vec2.copy(offsetRelative),
                 dungeon: 'DUNGEON',
+
+                id: map.id,
+                min: Vec2.sub(Vec2.divC(Vec2.copy(boundsAbsolute), divider), offset),
+                max: Vec2.sub(Vec2.divC(Rect.x2y2(boundsAbsolute), divider), offset),
+                rects: map.rects.map(a => {
+                    const copy = { ...a }
+                    Rect.div(copy, divider)
+                    Vec2.sub(copy, offsetRelative)
+                    return copy
+                }),
             }
         })
 
         const name = floorNames[floor]
         assert(name)
         floors.push({
+            shaduungeonCustom: true,
             level: floor,
             name,
-            tiles: Array2d.empty({ x: width, y: height }, 0),
+            size,
 
             maps: areaMaps,
             connections: [],
@@ -81,8 +111,8 @@ export function createArea(
         DOCTYPE: 'AREAS_MAP',
         shaduungeonCustom: true,
         name: areaInfo.id,
-        width,
-        height,
+        width: size.x,
+        height: size.y,
         defaultFloor: actualDefaultFloor,
         chests,
         floors,

@@ -127,8 +127,12 @@ export function simpleMapArrange({
 
 registerMapConstructor('Simple', (map, areaInfo, pathResolver, _mapsArranged, _mapsConstructed) => {
     const boundsEntity = Rect.boundsOfArr(map.rects)
-    Rect.extend(boundsEntity, 8 * 16)
+    const extend = 8 * 16
+    const rectsAbsolute = map.rects.map(a => ({ ...a }))
+
+    Rect.extend(boundsEntity, extend)
     const offset = Vec2.mulC(boundsEntity, -1)
+
     offsetMapArrange(map, offset)
 
     const bounds = Rect.div(Rect.copy(boundsEntity), 16)
@@ -193,6 +197,8 @@ registerMapConstructor('Simple', (map, areaInfo, pathResolver, _mapsArranged, _m
     return {
         ...map,
         constructed,
+        bounds,
+        rectsAbsolute,
         title: `map ${constructed.name}`,
     }
 })
