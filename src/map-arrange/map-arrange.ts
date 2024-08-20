@@ -7,6 +7,7 @@ export interface TprArrange3d extends Vec2 {
     dir: Dir3d
     destId: Id
     destIndex?: number
+    noDrawConnection?: boolean
 }
 export interface TprArrange extends TprArrange3d {
     dir: Dir

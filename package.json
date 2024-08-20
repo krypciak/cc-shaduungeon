@@ -21,6 +21,7 @@
         "@typescript-eslint/parser": "^6.21.0",
         "bun": "^1.1.22",
         "cc-blitzkrieg": "github:krypciak/cc-blitzkrieg",
+        "cc-hotreload": "github:krypciak/cc-hotreload",
         "ccmodmanager": "github:CCDirectLink/CCModManager",
         "colorts": "^0.1.63",
         "esbuild": "^0.18.20",

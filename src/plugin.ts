@@ -6,6 +6,8 @@ import { RuntimeResources } from './util/runtime-assets'
 import { injectGameStarting } from './util/game-start'
 import * as _ from 'ultimate-crosscode-typedefs'
 import { DungeonPaths } from './dungeon/paths'
+import type * as __ from 'cc-hotreload/src/plugin'
+import { registeredMethods } from 'cc-hotreload/src/decorators'
 
 export default class DngGen {
     static dir: string
@@ -25,6 +27,8 @@ export default class DngGen {
         injectGameStarting()
         import('./area/custom-area-container')
         DungeonPaths.registerAutoLoadDungeon()
+
+        hotreload.listen(`${DngGen.dir}/plugin.js`, registeredMethods)
     }
 
     async poststart() {

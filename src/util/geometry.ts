@@ -45,9 +45,12 @@ export namespace DirU {
     export function toString(dir: Dir): DirStr {
         return dirReverse[dir]
     }
+    export function isDir(dir: Dir3d): dir is Dir {
+        return dir <= 4
+    }
     export function fromDir3d(dir: Dir3d): Dir {
-        assert(dir >= Dir3d.UP, 'Dir3d to Dir conversion error')
-        return dir as unknown as Dir
+        assert(isDir(dir), 'Dir3d to Dir conversion error')
+        return dir
     }
     export const allExpect = {
         [Dir.NORTH]: [Dir.EAST, Dir.SOUTH, Dir.WEST],

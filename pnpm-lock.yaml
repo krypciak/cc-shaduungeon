@@ -29,6 +29,9 @@ importers:
       cc-blitzkrieg:
         specifier: github:krypciak/cc-blitzkrieg
         version: https://codeload.github.com/krypciak/cc-blitzkrieg/tar.gz/be28d62634ffe5b797046c49846fb821a8d35c6d
+      cc-hotreload:
+        specifier: github:krypciak/cc-hotreload
+        version: https://codeload.github.com/krypciak/cc-hotreload/tar.gz/80118b9d099e24c6b57d52e76be47633babd18f1
       ccmodmanager:
         specifier: github:CCDirectLink/CCModManager
         version: https://codeload.github.com/CCDirectLink/CCModManager/tar.gz/46a67246711879ecdaf620e670b86afdc2e6d5a2
@@ -423,6 +426,10 @@ packages:
   cc-blitzkrieg@https://codeload.github.com/krypciak/cc-blitzkrieg/tar.gz/be28d62634ffe5b797046c49846fb821a8d35c6d:
     resolution: {tarball: https://codeload.github.com/krypciak/cc-blitzkrieg/tar.gz/be28d62634ffe5b797046c49846fb821a8d35c6d}
     version: 0.5.9
+
+  cc-hotreload@https://codeload.github.com/krypciak/cc-hotreload/tar.gz/80118b9d099e24c6b57d52e76be47633babd18f1:
+    resolution: {tarball: https://codeload.github.com/krypciak/cc-hotreload/tar.gz/80118b9d099e24c6b57d52e76be47633babd18f1}
+    version: 0.0.1
 
   ccmodmanager@https://codeload.github.com/CCDirectLink/CCModManager/tar.gz/46a67246711879ecdaf620e670b86afdc2e6d5a2:
     resolution: {tarball: https://codeload.github.com/CCDirectLink/CCModManager/tar.gz/46a67246711879ecdaf620e670b86afdc2e6d5a2}
@@ -1217,6 +1224,8 @@ snapshots:
   cc-blitzkrieg@https://codeload.github.com/krypciak/cc-blitzkrieg/tar.gz/be28d62634ffe5b797046c49846fb821a8d35c6d:
     dependencies:
       '@types/jszip': 3.4.1
+
+  cc-hotreload@https://codeload.github.com/krypciak/cc-hotreload/tar.gz/80118b9d099e24c6b57d52e76be47633babd18f1: {}
 
   ccmodmanager@https://codeload.github.com/CCDirectLink/CCModManager/tar.gz/46a67246711879ecdaf620e670b86afdc2e6d5a2: {}
 

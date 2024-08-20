@@ -14,10 +14,10 @@ export async function startDnggenGame(titleGuiInstance?: sc.TitleScreenButtonGui
     ig.game.setPaused(false)
 
     const builder = new DungeonBuilder()
-    builder.build('helo').then(() => {
+    builder.build('heloo').then(() => {
         setTimeout(() => {
             godmode()
-        }, 2000)
+        }, 1000)
     })
 }
 

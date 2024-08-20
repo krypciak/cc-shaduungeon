@@ -1,5 +1,6 @@
 import { Rect, Dir } from '../util/geometry'
 import { assert } from '../util/util'
+import { Vec2 } from '../util/vec2'
 
 export {}
 
@@ -10,7 +11,7 @@ interface AreaRendererColorScheme {
     shadow: ig.SimpleColor
 }
 
-const addPxSpace: number = 0
+const addPxSpace: number = 4
 sc.MapAreaContainer.inject({
     findMap(mx: number, my: number, gamepad: boolean, wait?: number): boolean | undefined {
         if (sc.menu.mapMapFocus) return
@@ -19,12 +20,12 @@ sc.MapAreaContainer.inject({
 
         let pos: Vec2
         if (gamepad) {
-            pos = Vec2.create(this.area.hook.pos)
+            pos = Vec2.copy(this.area.hook.pos)
         } else {
-            pos = Vec2.createC(
-                mx - sc.menu.mapCamera.x - this.area.hook.pos.x + 1,
-                my - sc.menu.mapCamera.y - this.area.hook.pos.y + 1
-            )
+            pos = {
+                x: mx - sc.menu.mapCamera.x - this.area.hook.pos.x + 1,
+                y: my - sc.menu.mapCamera.y - this.area.hook.pos.y + 1,
+            }
         }
         Vec2.subC(pos, addPxSpace)
 
@@ -162,14 +163,45 @@ type GuiHookMapRoomList = ig.GuiHook & {
 sc.MapCurrentRoomWrapper.inject({
     init(hook: ig.GuiHook) {
         const floor = (hook as GuiHookMapRoomList).gui.floor
-        if (!floor.shaduungeonCustom) return this.parent(hook)
+        if (!floor.shaduungeonCustom) {
+            this.parent(hook)
+            this.doStateTransition('HIDDEN')
+            return
+        }
 
         this.parent({
             pos: { x: hook.pos.x + addPxSpace, y: hook.pos.y + addPxSpace },
             size: { x: hook.size.x - addPxSpace * 2, y: hook.size.y - addPxSpace * 2 },
         } as ig.GuiHook)
+        this.doStateTransition('HIDDEN')
     },
 })
+function drawConnection(v: Vec2, connection: sc.AreaLoadable.SDCustom.Connection) {
+    assert(connection.size == 3)
+    let { x, y } = v
+    y += 2
+    x += 2
+    let h = 4
+    if (connection.dir == Dir.NORTH) {
+        inactiveColors.empty.draw(x, y, connection.size, h)
+        inactiveColors.border.draw(x - 1, y + 1, 1, h - 2)
+        inactiveColors.border.draw(x + connection.size, y + 1, 1, h - 2)
+    } else if (connection.dir == Dir.EAST) {
+        inactiveColors.empty.draw(x, y, connection.size, h)
+        inactiveColors.border.draw(x, y - 1, connection.size, 1)
+        inactiveColors.shadow.draw(x, y, connection.size, 2)
+        inactiveColors.border.draw(x, y + connection.size, connection.size, 1)
+    } else if (connection.dir == Dir.SOUTH) {
+        inactiveColors.empty.draw(x, y, connection.size, h + 1)
+        inactiveColors.border.draw(x - 1, y, 1, h - 1)
+        inactiveColors.border.draw(x + connection.size, y, 1, h - 1)
+    } else if (connection.dir == Dir.WEST) {
+        inactiveColors.empty.draw(x, y, connection.size, h)
+        inactiveColors.border.draw(x, y - 1, connection.size, 1)
+        inactiveColors.shadow.draw(x, y, connection.size, 2)
+        inactiveColors.border.draw(x, y + connection.size, connection.size, 1)
+    }
+}
 
 sc.MapRoom.inject({
     init(room, _floor, id) {
@@ -195,52 +227,22 @@ sc.MapRoom.inject({
         assert(map.rects)
         const c = this.active ? activeColors : inactiveColors
 
-        /*
-                function drawConnection(x: number, y: number, connection: sc.AreaLoadable.ConnectionRoomList) {
-                    const h = 4
-                    switch (connection.dir) {
-                        case Dir.NORTH:
-                            inactiveColors.empty.draw(x, y, connection.size, h)
-                            inactiveColors.border.draw(x - 1, y + 1, 1, h - 1)
-                            inactiveColors.border.draw(x + connection.size, y + 1, 1, h - 1)
-                            break
-                        case Dir.EAST:
-                            inactiveColors.empty.draw(x, y, connection.size, h)
-                            inactiveColors.border.draw(x, y - 1, connection.size, 1)
-                            inactiveColors.border.draw(x, y + connection.size, connection.size, 1)
-                            break
-                        case Dir.SOUTH:
-                            inactiveColors.empty.draw(x, y, connection.size, h)
-                            inactiveColors.border.draw(x - 1, y, 1, h - 1)
-                            inactiveColors.border.draw(x + connection.size, y, 1, h - 1)
-                            break
-                        case Dir.WEST:
-                            inactiveColors.empty.draw(x, y, connection.size, h)
-                            inactiveColors.border.draw(x, y - 1, connection.size, 1)
-                            inactiveColors.border.draw(x, y + connection.size, connection.size, 1)
-                            break
-                    }
-                }
-                */
-
         this.buffer = ig.imageAtlas.getFragment(this.hook.size.x, this.hook.size.y, () => {
             /* draw black on south and east edges */
             for (const o of map.rects) {
-                if (!o.drawRect) {
-                    const rect = {
-                        x: o.x * tilesize + addPxSpace,
-                        y: o.y * tilesize + addPxSpace,
-                        width: o.width * tilesize,
-                        height: o.height * tilesize,
-                        x2: 0,
-                        y2: 0,
-                    }
-                    o.drawRect = rect
-                    o.drawEmptyRect = Rect.copy(rect)
-                    rect.x2 = rect.x + rect.width - 1
-                    rect.y2 = rect.y + rect.height - 1
+                const rect = {
+                    x: o.x * tilesize + addPxSpace,
+                    y: o.y * tilesize + addPxSpace,
+                    width: o.width * tilesize,
+                    height: o.height * tilesize,
+                    x2: 0,
+                    y2: 0,
                 }
-                const rect = o.drawRect
+                o.drawRect = rect
+                o.drawEmptyRect = Rect.copy(rect)
+                rect.x2 = rect.x + rect.width - 1
+                rect.y2 = rect.y + rect.height - 1
+
                 if (o.walls[Dir.SOUTH]) {
                     black.draw(rect.x, rect.y2, rect.width, 1)
                 }
@@ -269,7 +271,7 @@ sc.MapRoom.inject({
                 if (o.walls[Dir.SOUTH]) {
                     c.border.draw(rect.x - biNX, rect.y2 - 1, rect.width + biNX + biPX - 1, 1)
                 } else {
-                    eRect.height += tunnelClear
+                    eRect.height += tunnelClear + 1
                 }
 
                 if (o.walls[Dir.EAST]) {
@@ -288,44 +290,31 @@ sc.MapRoom.inject({
             for (const o of map.rects) {
                 if (o.walls[Dir.NORTH]) {
                     const rect = o.drawEmptyRect!
-                    c.shadow.draw(rect.x + 1, rect.y + 1, rect.width - 3, 1)
+                    c.shadow.draw(rect.x + 1, rect.y + 1, rect.width - 3, 2)
                 }
             }
             /* fill the rooms */
             for (const o of map.rects) {
                 const rect = o.drawEmptyRect!
-                const shadowOffset = o.walls[Dir.NORTH] ? 1 : 0
+                const shadowOffset = o.walls[Dir.NORTH] ? 2 : 0
                 c.empty.draw(rect.x + 1, rect.y + shadowOffset + 1, rect.width - 3, rect.height - shadowOffset - 3)
             }
 
-            /*
-                        const connections: sc.AreaLoadable.ConnectionRoomList[] = this.floor.connections
-                        let i = connections.length
-                        while (i--) {
-                            const connection = connections[i]
-                            // apperently map connections can have a condition? didnt bother implementing that
-                            if (connection.map1 + 1 == this.room.id || connection.map2 + 1 == this.room.id) {
-                                const rect: bareRect =
-                                    // @root/ts-ignore
-                                    connection.rect
-                                new ig.SimpleColor('#00ff0055').draw(
-                                    (rect.x - this.room.min.x) * tilesize + addPxSpace,
-                                    (rect.y - this.room.min.y) * tilesize + addPxSpace,
-                                    rect.width * tilesize,
-                                    rect.height * tilesize
-                                )
-                                drawConnection(
-                                    (connection.tx - this.room.min.x) * tilesize + addPxSpace,
-                                    (connection.ty - this.room.min.y) * tilesize + addPxSpace,
-                                    connection,
-                                )
-                            }
-                        }
-                        */
-            // activeColors.empty.draw(0, 0, addPxSpace, addPxSpace)
-            // activeColors.empty.draw(this.hook.size.x - addPxSpace, 0, addPxSpace, addPxSpace)
-            // activeColors.empty.draw(this.hook.size.x - addPxSpace, this.hook.size.y - addPxSpace, addPxSpace, addPxSpace)
-            // activeColors.empty.draw(0, this.hook.size.y - addPxSpace, addPxSpace, addPxSpace)
+            const connections = this.floor.connections as unknown as sc.AreaLoadable.SDCustom.Connection[]
+            let i = connections.length
+            while (i--) {
+                const connection = connections[i]
+                // apperently map connections can have a condition? didnt bother implementing that
+                if (connection.map1 + 1 == this.room.id || connection.map2 + 1 == this.room.id) {
+                    drawConnection(
+                        {
+                            x: (connection.tx - this.room.min.x) * tilesize,
+                            y: (connection.ty - this.room.min.y) * tilesize,
+                        },
+                        connection
+                    )
+                }
+            }
         })
         this.prerendered = true
     },

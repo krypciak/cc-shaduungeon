@@ -7,6 +7,7 @@ import {
     RoomArrange,
     doesMapArrangeFit,
     TprArrange3d,
+    copyMapArrange,
 } from '../map-arrange/map-arrange'
 import { MapPicker, registerMapPickerNodeConfig } from '../map-arrange/map-picker/configurable'
 import { Dir, DirU, Rect } from '../util/geometry'
@@ -143,7 +144,8 @@ export const simpleMapConstructor: MapConstructFunc = (
     _mapsConstructed
 ) => {
     const theme = MapTheme.default
-    const { mic, rectsAbsolute } = baseMapConstruct(map, pathResolver(map.id), areaInfo.id, theme, [8, 1, 1, 1])
+    const arrangeCopy = copyMapArrange(map)
+    const mic = baseMapConstruct(map, pathResolver(map.id), areaInfo.id, theme, [8, 1, 1, 1])
 
     function pushTprEntity(tpr: TprArrange3d, isEntrance: boolean, index: number) {
         const name = getTprName(isEntrance, index)
@@ -192,7 +194,7 @@ export const simpleMapConstructor: MapConstructFunc = (
         ...map,
         rects,
         constructed,
-        rectsAbsolute,
+        arrangeCopy,
         title: `map ${constructed.name}`,
     }
 }

@@ -42,7 +42,7 @@ export namespace Vec2 {
         return res
     }
 
-    export function subC(v1: Vec2, x: number, y: number, copy?: boolean) {
+    export function subC(v1: Vec2, x: number, y?: number, copy?: boolean) {
         const res: any = copy ? {} : v1
         y = y === undefined || y === null ? x : y
         res.x = (v1.x || 0) - (x || 0)

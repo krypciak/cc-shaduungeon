@@ -1,7 +1,6 @@
 import { Id } from '../build-queue/build-queue'
-import { RoomArrange } from '../map-arrange/map-arrange'
 import { AreaInfo, MapConstruct, RoomConsturct } from '../map-construct/map-construct'
-import { Rect } from '../util/geometry'
+import { Dir, DirU, Rect } from '../util/geometry'
 import { ObjectEntriesT } from '../util/modify-prototypes'
 import { allLangs, assert } from '../util/util'
 import { Vec2 } from '../util/vec2'
@@ -43,6 +42,14 @@ declare global {
                         areaRect?: Rect
                     })[]
                 }
+                interface Connection {
+                    dir: Dir
+                    tx: number
+                    ty: number
+                    size: number
+                    map1: number
+                    map2: number
+                }
             }
         }
     }
@@ -55,7 +62,7 @@ export function createArea(
     chests: number,
     floorNames: Record<number, ig.LangLabel.Data>
 ): sc.AreaLoadable.SDCustom.Data {
-    const bounds: Rect = Rect.boundsOfArr(maps.flatMap(a => a.rectsAbsolute))
+    const bounds: Rect = Rect.boundsOfArr(maps.flatMap(a => a.arrangeCopy.rects))
     const divider = 64
     const offset = Vec2.divC(Vec2.copy(bounds), divider)
     const size = Vec2.divC({ x: bounds.width, y: bounds.height }, divider)
@@ -70,9 +77,30 @@ export function createArea(
     for (const [floor, maps] of ObjectEntriesT(mapsByFloor)) {
         if (floor == defaultFloor) actualDefaultFloor = floors.length
 
+        const connections: sc.AreaLoadable.SDCustom.Connection[] = []
+        const offsetDas = Vec2.divC(Rect.boundsOfArr(maps.flatMap(map => map.arrangeCopy.rects)), divider)
         const areaMaps: sc.AreaLoadable.SDCustom.Map[] = maps.map(map => {
-            const boundsAbsolute: Rect = Rect.boundsOfArr(map.rectsAbsolute)
+            const boundsAbsolute: Rect = Rect.boundsOfArr(map.arrangeCopy.rects)
             const offsetRelative: Vec2 = Vec2.divC(Rect.boundsOfArr(map.rects), divider)
+
+            for (const tpr of [...map.arrangeCopy.entranceTprs, ...map.arrangeCopy.restTprs]) {
+                if (tpr.noDrawConnection) continue
+                if (tpr.destId < map.id) continue
+                assert(DirU.isDir(tpr.dir))
+
+                const pos: Vec2 = Vec2.copy(tpr)
+                Vec2.divC(pos, divider)
+                Vec2.sub(pos, offsetDas)
+                connections.push({
+                    tx: pos.x,
+                    ty: pos.y,
+                    dir: tpr.dir,
+                    size: 3,
+                    map1: tpr.destId,
+                    map2: map.id,
+                })
+            }
+
             return {
                 path: map.constructed.name.replace('/', '.'),
                 name: allLangs(map.title),
@@ -100,7 +128,7 @@ export function createArea(
             size,
 
             maps: areaMaps,
-            connections: [],
+            connections,
             icons: [],
             landmarks: [],
         })

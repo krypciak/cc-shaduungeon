@@ -59,11 +59,11 @@ export class DungeonBuilder {
             root: {
                 type: 'Simple',
                 size: roomSizeReg,
-                count: 1,
+                count: 2,
                 randomizeDirTryOrder,
 
                 followedBy: branch(
-                    3,
+                    1,
                     () => 1,
                     () => 1,
                     () => 2

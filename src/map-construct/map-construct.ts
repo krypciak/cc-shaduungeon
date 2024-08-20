@@ -9,8 +9,8 @@ import { getEmptyLayers } from './layer'
 import { MapTheme } from './theme'
 
 export interface MapConstruct extends MapArrange {
+    arrangeCopy: MapArrange
     constructed: sc.MapModel.Map
-    rectsAbsolute: Rect[]
     title: string
     rects: RoomConsturct[]
 }
@@ -67,9 +67,7 @@ export function baseMapConstruct(
     areaId: string,
     theme: MapTheme,
     extend: Record<Dir, number>
-): { mic: MapInConstruction; rectsAbsolute: Rect[] } {
-    const rectsAbsolute = map.rects.map(Rect.copy)
-
+):  MapInConstruction {
     const boundsEntity = Rect.boundsOfArr(map.rects)
 
     for (let dir = 0 as Dir; dir < 4; dir++) {
@@ -96,7 +94,7 @@ export function baseMapConstruct(
 
         ...getEmptyLayers(mapSize, 3, theme.config),
     }
-    return { mic, rectsAbsolute }
+    return mic
 }
 
 export function getTprName(isEntrance: boolean, index: number): string {
