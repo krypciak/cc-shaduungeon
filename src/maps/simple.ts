@@ -84,7 +84,7 @@ export function simpleMapArrange({
         }
         let room: RoomArrange
         {
-            const rect = Rect.centeredRect(size, tpr)
+            const rect = Rect.centered(size, tpr)
             room = { ...rect, walls: [true, true, true, true] }
 
             map.rects.push(room)

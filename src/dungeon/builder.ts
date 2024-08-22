@@ -4,6 +4,8 @@ import { drawMapArrangeQueue } from '../map-arrange/drawer'
 import { MapArrange, MapArrangeData } from '../map-arrange/map-arrange'
 import { MapPicker, mapPickerConfigurable } from '../map-arrange/map-picker/configurable'
 import { AreaInfo, constructMapsFromMapsArrange } from '../map-construct/map-construct'
+import { initAllPuzzles } from '../maps/puzzle-data'
+import { Dir } from '../util/geometry'
 import { Item } from '../util/items'
 import { setRandomSeed } from '../util/util'
 import { DungeonPaths } from './paths'
@@ -15,7 +17,7 @@ export class DungeonBuilder {
         const queue = new BuildQueue<MapArrangeData>(true)
         const randomizeDirTryOrder = true
         const roomSizeReg = { x: 13 * 16, y: 13 * 16 }
-        const tunnelSizeReg = { x: 5 * 16, y: 3 * 16 }
+        const tunnelSizeReg = { x: 5 * 16, y: 5 * 16 }
         const roomSizeBranch = { x: 17 * 16, y: 17 * 16 }
         const tunnelSizeBranch = { x: 5 * 16, y: 5 * 16 }
 
@@ -57,21 +59,25 @@ export class DungeonBuilder {
 
         const mapPicker: MapPicker = mapPickerConfigurable({
             root: {
-                type: 'Simple',
-                size: roomSizeReg,
-                count: 2,
+                type: 'DngPuzzleTunnel',
+                tunnelSize: tunnelSizeReg,
+                // size: roomSizeReg,
+                count: 20,
                 randomizeDirTryOrder,
 
-                followedBy: branch(
-                    1,
-                    () => 1,
-                    () => 1,
-                    () => 2
-                ),
+                // followedBy: branch(
+                //     1,
+                //     () => 1,
+                //     () => 1,
+                //     () => 2
+                // ),
             },
         })
 
         setRandomSeed(seed)
+
+        await initAllPuzzles()
+
         const mapsArrange = queue.begin(mapPicker(-1, queue)) as MapArrange[]
         // console.dir(queue.queue, { depth: null })
         console.log(drawMapArrangeQueue(queue, 16, false, undefined, false, true))
@@ -103,6 +109,6 @@ export class DungeonBuilder {
             mapsConstruct[0].constructed.name,
             ig.TeleportPosition.createFromJson({ marker: 'entrance_0', level: 0, baseZPos: 0, size: { x: 0, y: 0 } })
         )
-        // console.dir(mapsConstruct, { depth: null })
+        console.dir(mapsConstruct, { depth: null })
     }
 }

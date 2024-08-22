@@ -91,6 +91,9 @@ export function createArea(
                 const pos: Vec2 = Vec2.copy(tpr)
                 Vec2.divC(pos, divider)
                 Vec2.sub(pos, offsetDas)
+
+                Vec2.divC(Vec2.floor(Vec2.mulC(pos, 8)), 8)
+
                 connections.push({
                     tx: pos.x,
                     ty: pos.y,

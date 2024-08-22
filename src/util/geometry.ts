@@ -85,12 +85,6 @@ export namespace Rect {
             height: v2.y,
         }
     }
-    export function toTwoVecSize(rect: Rect): [Vec2, Vec2] {
-        return [
-            { x: rect.x, y: rect.y },
-            { x: rect.width, y: rect.height },
-        ]
-    }
     export function mul(rect: Rect, mul: number): Rect {
         rect.x *= mul
         rect.y *= mul
@@ -231,6 +225,34 @@ export namespace Rect {
         }
         return smallest
     }
+    export function closestSideArr(rects: Rect[], vec: Vec2): { distance: number; dir: Dir; vec: Vec2; index: number } {
+        let smallest: { distance: number; dir: Dir; vec: Vec2; index: number } = {
+            distance: 10000,
+            dir: Dir.NORTH,
+            vec: { x: 0, y: 0 },
+            index: -1,
+        }
+        rects.forEach((rect, i) => {
+            for (let dir = Dir.NORTH; dir < 4; dir++) {
+                const v: Vec2 = Rect.side(rect, dir)
+                if (DirU.isVertical(dir)) {
+                    v.x = vec.x
+                } else {
+                    v.y = vec.y
+                }
+                const distance = Vec2.distance(vec, v)
+                if (distance < smallest.distance) {
+                    smallest = {
+                        distance,
+                        dir,
+                        vec: v,
+                        index: i,
+                    }
+                }
+            }
+        })
+        return smallest
+    }
     export function isVecIn(rect: Rect, vec: Vec2): boolean {
         return vec.x >= rect.x && vec.x < rect.x + rect.width && vec.y >= rect.y && vec.y < rect.y + rect.height
     }
@@ -260,13 +282,14 @@ export namespace Rect {
             height: y2 - y,
         }
     }
-    export function centeredRect(size: Vec2, tpr: Vec2Dir): Rect {
+    export function centered(size: Vec2, tpr: Vec2Dir): Rect {
         const pos: Vec2 = Vec2.copy(tpr)
         if (tpr.dir == Dir.SOUTH || tpr.dir == Dir.EAST) {
             Vec2.moveInDirection(pos, DirU.flip(tpr.dir), size.y)
         }
         const move = size.x / 2
         Vec2.moveInDirection(pos, DirU.isVertical(tpr.dir) ? Dir.WEST : Dir.NORTH, move)
-        return Rect.fromTwoVecSize(pos, Vec2.flipSides(size, !DirU.isVertical(tpr.dir)))
+        const res = Rect.fromTwoVecSize(pos, Vec2.flipSides(size, !DirU.isVertical(tpr.dir)))
+        return res
     }
 }

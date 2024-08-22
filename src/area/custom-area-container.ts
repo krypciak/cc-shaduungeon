@@ -183,7 +183,7 @@ function drawConnection(v: Vec2, connection: sc.AreaLoadable.SDCustom.Connection
     x += 2
     let h = 4
     if (connection.dir == Dir.NORTH) {
-        inactiveColors.empty.draw(x, y, connection.size, h)
+        inactiveColors.empty.draw(x, y, connection.size, h + 2)
         inactiveColors.border.draw(x - 1, y + 1, 1, h - 2)
         inactiveColors.border.draw(x + connection.size, y + 1, 1, h - 2)
     } else if (connection.dir == Dir.EAST) {

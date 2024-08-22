@@ -65,7 +65,7 @@ export function simpleMapBranchTunnelArrange({
 
         let tunnelEntrance: RoomArrange
         {
-            const rect = Rect.centeredRect(tunnelSize, tpr)
+            const rect = Rect.centered(tunnelSize, tpr)
             const walls: Record<Dir, boolean> = [true, true, true, true]
             walls[exitTpr.dir] = false
             tunnelEntrance = { ...rect, walls }
@@ -73,7 +73,7 @@ export function simpleMapBranchTunnelArrange({
         }
         let room: RoomArrange
         {
-            const rect = Rect.centeredRect(roomSize, {
+            const rect = Rect.centered(roomSize, {
                 ...Rect.middle(Rect.side(tunnelEntrance, exitTpr.dir)),
                 dir: tpr.dir,
             })
@@ -121,7 +121,7 @@ export function simpleMapBranchTunnelArrange({
 
                 let tunnelExit: RoomArrange
                 {
-                    const rect = Rect.centeredRect(tunnelSize, {
+                    const rect = Rect.centered(tunnelSize, {
                         ...Rect.middle(Rect.side(room, dir)),
                         dir: DirU.flip(dir),
                     })

@@ -5,7 +5,7 @@ import { MapArrangeData, MapArrange, offsetMapArrange, copyMapArrange } from '..
 import { BuildQueueAccesor } from '../build-queue/build-queue'
 import 'colorts/lib/string'
 
-const colorMap = ['red', 'green', 'yellow', 'blue', 'magenta', 'cyan'] as const
+const colorMap = ['yellow', 'blue', 'magenta', 'cyan'] as const
 
 export function drawMapArrangeQueue(
     queue: BuildQueueAccesor<MapArrangeData>,
@@ -68,6 +68,19 @@ export function drawMapArrangeQueue(
                 console.error(`error while trying to parse rect ${Rect.toString(rect)} of map ${map.id}`, e)
             }
         }
+        // for (const tpr of map.entranceTprs) {
+        //     const { x, y } = Vec2.round(Vec2.divC(Vec2.copy(tpr), scale))
+        //     let char = (map.id % 10).toString()
+        //     if (color) char = char.green.italic
+        //
+        //     strmap[y][x] = char
+        // }
+        // for (const tpr of map.rects) {
+        //     const { x, y } = Vec2.round(Vec2.divC(Vec2.copy(tpr), scale))
+        //     let char = (map.id % 10).toString()
+        //     if (color) char = char.red.italic
+        //     strmap[y][x] = char
+        // }
     }
 
     return strmap.map(arr => arr.join('')).join('\n')

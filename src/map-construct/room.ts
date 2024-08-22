@@ -9,6 +9,10 @@ export function placeRoom(room: RoomArrange, map: MapInConstruction, tc: MapThem
     const rect = Rect.div(Rect.copy(room), 16)
     const { x: rx, y: ry } = rect
     const { x: rx2, y: ry2 } = Rect.x2y2(rect)
+    assert(rx % 1 == 0)
+    assert(ry % 1 == 0)
+    assert(rx2 % 1 == 0)
+    assert(ry2 % 1 == 0)
     const background = map.layers.background[0]
     const shadow = map.layers.shadow
     const light = map.layers.light

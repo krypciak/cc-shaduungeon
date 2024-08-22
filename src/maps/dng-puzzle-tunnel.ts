@@ -1,4 +1,4 @@
-import { Id, NextQueueEntryGenerator, QueueEntry } from '../build-queue/build-queue'
+import { Id, NextQueueEntryGenerator } from '../build-queue/build-queue'
 import {
     TprArrange,
     MapArrangeData,
@@ -11,48 +11,43 @@ import { MapPicker, registerMapPickerNodeConfig } from '../map-arrange/map-picke
 import { registerMapConstructor } from '../map-construct/map-construct'
 import { Dir, DirU, Rect } from '../util/geometry'
 import { shuffleArray } from '../util/util'
+import { Vec2 } from '../util/vec2'
+import { getPuzzleList } from './puzzle-data'
 import { simpleMapConstructor } from './simple'
 
 declare global {
     export namespace MapPickerNodeConfigs {
         export interface All {
-            SimpleTunnel: SimpleTunnel
+            DngPuzzleTunnel: DngPuzzleTunnel
         }
-        export interface SimpleTunnel {
+        export interface DngPuzzleTunnel {
             count: number
-            roomSize: Vec2
             tunnelSize: Vec2
             randomizeDirTryOrder?: boolean
             followedBy?: MapPicker.ConfigNode
         }
     }
 }
-registerMapPickerNodeConfig('SimpleTunnel', (data, buildtimeData) => {
-    return simpleMapTunnelArrange({ ...data, ...buildtimeData })
+registerMapPickerNodeConfig('DngPuzzleTunnel', (data, buildtimeData) => {
+    return das({ ...data, ...buildtimeData })
 })
-export function simpleMapTunnelArrange({
+export function das({
     mapPicker,
     exitTpr,
-    roomSize,
     tunnelSize,
     destId,
     destIndex,
-    randomizeDirTryOrder,
     finishedWhole,
-    forceExit,
     branchDone,
     nodeId,
     nodeProgress,
 }: {
     mapPicker: MapPicker
     exitTpr: TprArrange
-    roomSize: Vec2
     tunnelSize: Vec2
     destId: Id
     destIndex: number
-    randomizeDirTryOrder?: boolean
     finishedWhole?: boolean
-    forceExit?: Dir
     branchDone?: boolean
     nodeId?: number
     nodeProgress?: number
@@ -66,7 +61,7 @@ export function simpleMapTunnelArrange({
             destIndex,
         }
         const map: MapArrange = {
-            type: 'SimpleTunnel',
+            type: 'DngPuzzleTunnel',
             rects: [],
             restTprs: [],
             id,
@@ -84,57 +79,55 @@ export function simpleMapTunnelArrange({
             tunnelEntrance = { ...rect, walls }
             map.rects.push(tunnelEntrance)
         }
-        let room: RoomArrange
-        {
-            const rect = Rect.centered(roomSize, {
-                ...Rect.middle(Rect.side(tunnelEntrance, exitTpr.dir)),
-                dir: tpr.dir,
-            })
-            room = { ...rect, walls: [true, true, true, true] }
-            map.rects.push(room)
-        }
-
         if (!doesMapArrangeFit(accesor, map, id)) return null
 
-        let dirChoices = DirU.allExpect[tpr.dir]
-        if (randomizeDirTryOrder) dirChoices = shuffleArray(dirChoices) as any
-        if (forceExit) dirChoices = [forceExit]
+        const puzzles = shuffleArray(getPuzzleList(tpr.dir))
 
-        let branchCount = dirChoices.length
-        if (branchDone) branchCount = 1
-
-        const ret: QueueEntry<MapArrangeData> = {
+        return {
             data: map,
             id,
             branch: 0,
-            branchCount,
-            finishedEntry: branchDone,
+            branchCount: puzzles.length,
 
             nextQueueEntryGenerator: (_, branch, accesor) => {
                 const map = { rects: [] as RoomArrange[], restTprs: [] as TprArrange3d[] }
-                const dir = dirChoices[branch]
+                const puzzle = puzzles[branch]
 
-                let tunnelExit: RoomArrange
-                {
-                    const rect = Rect.centered(tunnelSize, {
-                        ...Rect.middle(Rect.side(room, dir)),
-                        dir: DirU.flip(dir),
-                    })
-                    const walls: Record<Dir, boolean> = [true, true, true, true]
-                    walls[DirU.flip(dir)] = false
-                    tunnelExit = { ...rect, walls }
-                    map.rects.push(tunnelExit)
+                const bounds = Rect.boundsOfArr(puzzle.rects)
+                if (puzzle.sel.data.type == blitzkrieg.PuzzleRoomType.AddWalls) Rect.extend(bounds, 3 * 2 * 16)
+                const size = { x: bounds.width, y: bounds.height }
+                const offset = { x: 0, y: 0 }
+                if ((tunnelSize.x / 16) % 2 != (size.x / 16) % 2) offset.x += 16
+                if ((tunnelSize.x / 16) % 2 != (size.y / 16) % 2) offset.y += 16
+
+                Vec2.add(size, offset)
+
+                const rect = Rect.centered(size, {
+                    ...Rect.middle(Rect.side(tunnelEntrance, exitTpr.dir)),
+                    dir: tpr.dir,
+                })
+                // const rect = Rect.centered(size, tpr)
+
+                const room: RoomArrange = {
+                    ...rect,
+                    walls: [true, true, true, true],
                 }
+
+                map.rects.push(room)
+
                 if (!doesMapArrangeFit(accesor, map, id)) return null
 
                 {
-                    const exitTpr: TprArrange = {
-                        ...Rect.middle(Rect.side(tunnelExit, dir)),
-                        dir,
+                    const pos: Vec2 = Rect.sideVec(room, Vec2.add(Vec2.copy(puzzle.exit.vec), room), puzzle.exit.dir)
+                    Vec2.round(pos)
+
+                    map.restTprs.push({
+                        ...pos,
+                        dir: puzzle.exit.dir,
                         destId: id + 1,
-                    }
-                    map.restTprs.push(exitTpr)
+                    })
                 }
+
                 return {
                     data: map,
                     id,
@@ -147,16 +140,7 @@ export function simpleMapTunnelArrange({
                 }
             },
         }
-        if (branchDone) {
-            Object.assign(ret, {
-                nextQueueEntryGenerator: undefined,
-                finishedWhole,
-                getNextQueueEntryGenerator: () => mapPicker(id, accesor),
-            })
-        }
-
-        return ret
     }
 }
 
-registerMapConstructor('SimpleTunnel', simpleMapConstructor)
+registerMapConstructor('DngPuzzleTunnel', simpleMapConstructor)

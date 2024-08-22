@@ -8,6 +8,9 @@ import { MapConstructionLayers } from './layer'
 import { getEmptyLayers } from './layer'
 import { MapTheme } from './theme'
 
+export type TprDoorLikeType = 'Door' | 'TeleportGround'
+export type TprType = TprDoorLikeType | 'TeleportField'
+
 export interface MapConstruct extends MapArrange {
     arrangeCopy: MapArrange
     constructed: sc.MapModel.Map
@@ -67,7 +70,7 @@ export function baseMapConstruct(
     areaId: string,
     theme: MapTheme,
     extend: Record<Dir, number>
-):  MapInConstruction {
+): MapInConstruction {
     const boundsEntity = Rect.boundsOfArr(map.rects)
 
     for (let dir = 0 as Dir; dir < 4; dir++) {
@@ -81,7 +84,7 @@ export function baseMapConstruct(
 
     const bounds = Rect.div(Rect.copy(boundsEntity), 16)
 
-    const mapSize: Vec2 = Rect.toTwoVecSize(bounds)[1]
+    const mapSize: Vec2 = { x: bounds.width, y: bounds.height }
 
     const mic: MapInConstruction = {
         name: mapName,

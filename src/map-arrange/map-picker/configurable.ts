@@ -49,6 +49,7 @@ export namespace MapPicker {
 
     export interface Config {
         root: ConfigNode
+        startDir?: Dir
     }
 
     export type ConfigNodeBuildtime = ConfigNode & {
@@ -113,7 +114,7 @@ export function mapPickerConfigurable(_config: MapPicker.Config): MapPicker {
 
         const lastTpr = last
             ? (last.restTprs.find(t => t.destId == newId)! as TprArrange)
-            : { x: 0, y: 0, dir: Dir.NORTH, destId: 0 }
+            : { x: 0, y: 0, dir: _config.startDir ?? Dir.NORTH, destId: 0 }
 
         const nodeId = nextConfig?.nodeId ?? last?.nodeId ?? 0
         const nodeProgress = nextConfig ? 0 : (last?.nodeProgress ?? 0)
