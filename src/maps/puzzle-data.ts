@@ -19,6 +19,7 @@ export interface PuzzleData {
     exit: ReturnType<typeof Rect.closestSideArr>
     exitTpr?: PuzzleData.Tpr
     completionCondition?: { path: string; value: any }
+    pasteOffset: number
 }
 
 let allPuzzles!: PuzzleData[]
@@ -84,6 +85,9 @@ function createPuzzleData(map: string, sel: PuzzleSelection, mapData: sc.MapMode
 
     const entrance = Rect.closestSideArr(rects, Vec2.sub(Vec2.copy(sel.data.startPos), selPos))
     const exit = Rect.closestSideArr(rects, Vec2.sub(Vec2.copy(sel.data.endPos), selPos))
+
+    const pasteOffset = sel.data.type == blitzkrieg.PuzzleRoomType.AddWalls ? 3 : 0
+
     const res: PuzzleData = {
         sel,
         rects,
@@ -92,6 +96,7 @@ function createPuzzleData(map: string, sel: PuzzleSelection, mapData: sc.MapMode
         exit,
         exitTpr,
         completionCondition,
+        pasteOffset,
     }
 
     if (res.entrance.dir == res.exit.dir) return

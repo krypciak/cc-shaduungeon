@@ -5,7 +5,6 @@ import { MapArrange, MapArrangeData } from '../map-arrange/map-arrange'
 import { MapPicker, mapPickerConfigurable } from '../map-arrange/map-picker/configurable'
 import { AreaInfo, constructMapsFromMapsArrange } from '../map-construct/map-construct'
 import { initAllPuzzles } from '../maps/puzzle-data'
-import { Dir } from '../util/geometry'
 import { Item } from '../util/items'
 import { setRandomSeed } from '../util/util'
 import { DungeonPaths } from './paths'
@@ -62,7 +61,7 @@ export class DungeonBuilder {
                 type: 'DngPuzzleTunnel',
                 tunnelSize: tunnelSizeReg,
                 // size: roomSizeReg,
-                count: 20,
+                count: 5,
                 randomizeDirTryOrder,
 
                 // followedBy: branch(

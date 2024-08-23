@@ -25,10 +25,10 @@ export class Test_Geometry {
         )
     }
     @Test()
-    @TestCase('side north', { x: 1, y: 2, width: 2, height: 4 }, Dir.NORTH, { x: 1, y: 2, width: 2, height: 0 })
-    @TestCase('side east', { x: 1, y: 2, width: 2, height: 4 }, Dir.EAST, { x: 3, y: 2, width: 0, height: 4 })
-    @TestCase('side south', { x: 1, y: 2, width: 2, height: 4 }, Dir.SOUTH, { x: 1, y: 6, width: 2, height: 0 })
-    @TestCase('side west', { x: 1, y: 2, width: 2, height: 4 }, Dir.WEST, { x: 1, y: 2, width: 0, height: 4 })
+    @TestCase('side N', { x: 1, y: 2, width: 2, height: 4 }, Dir.NORTH, { x: 1, y: 2, width: 2, height: 0 })
+    @TestCase('side E', { x: 1, y: 2, width: 2, height: 4 }, Dir.EAST, { x: 3, y: 2, width: 0, height: 4 })
+    @TestCase('side S', { x: 1, y: 2, width: 2, height: 4 }, Dir.SOUTH, { x: 1, y: 6, width: 2, height: 0 })
+    @TestCase('side W', { x: 1, y: 2, width: 2, height: 4 }, Dir.WEST, { x: 1, y: 2, width: 0, height: 4 })
     side(rect: Rect, dir: Dir, expected: Rect) {
         const res = Rect.side(rect, dir)
         expect.toBeTrue(
@@ -38,10 +38,10 @@ export class Test_Geometry {
     }
 
     @Test()
-    @TestCase('corner north east', { x: 1, y: 2, width: 2, height: 4 }, Dir.EAST, Dir.NORTH, { x: 3, y: 2 })
-    @TestCase('corner north west', { x: 1, y: 2, width: 2, height: 4 }, Dir.WEST, Dir.NORTH, { x: 1, y: 2 })
-    @TestCase('corner south east', { x: 1, y: 2, width: 2, height: 4 }, Dir.EAST, Dir.SOUTH, { x: 3, y: 6 })
-    @TestCase('corner south west', { x: 1, y: 2, width: 2, height: 4 }, Dir.WEST, Dir.SOUTH, { x: 1, y: 6 })
+    @TestCase('corner NE', { x: 1, y: 2, width: 2, height: 4 }, Dir.EAST, Dir.NORTH, { x: 3, y: 2 })
+    @TestCase('corner NW', { x: 1, y: 2, width: 2, height: 4 }, Dir.WEST, Dir.NORTH, { x: 1, y: 2 })
+    @TestCase('corner SE', { x: 1, y: 2, width: 2, height: 4 }, Dir.EAST, Dir.SOUTH, { x: 3, y: 6 })
+    @TestCase('corner SW', { x: 1, y: 2, width: 2, height: 4 }, Dir.WEST, Dir.SOUTH, { x: 1, y: 6 })
     corner(rect: Rect, h: typeof Dir.EAST | typeof Dir.WEST, v: typeof Dir.NORTH | typeof Dir.SOUTH, expected: Vec2) {
         const res = Rect.corner(rect, h, v)
         expect.toBeTrue(
@@ -58,6 +58,19 @@ export class Test_Geometry {
     @TestCase('equal', { x: 0, y: 0, width: 10, height: 10 }, { x: 0, y: 0, width: 10, height: 10 }, true)
     doOverlap(r1: Rect, r2: Rect, expected: boolean) {
         const res = Rect.doOverlap(r1, r2)
+        expect.toBeEqual(res, expected)
+    }
+
+    @Test()
+    @TestCase('far away', { x: 0, y: 0, width: 2, height: 2 }, { x: 9, y: 9 }, false)
+    @TestCase('away', { x: 0, y: 0, width: 2, height: 2 }, { x: 1, y: 9 }, false)
+    @TestCase('inside', { x: 0, y: 0, width: 10, height: 10 }, { x: 5, y: 5 }, true)
+    @TestCase('inside corner NW', { x: 0, y: 0, width: 2, height: 2 }, { x: 0, y: 0 }, true)
+    @TestCase('inside corner NE', { x: 0, y: 0, width: 2, height: 2 }, { x: 2, y: 0 }, true)
+    @TestCase('inside corner SW', { x: 0, y: 0, width: 2, height: 2 }, { x: 0, y: 2 }, true)
+    @TestCase('inside corner SE', { x: 0, y: 0, width: 2, height: 2 }, { x: 2, y: 2 }, true)
+    isVecIn(rect: Rect, vec: Vec2, expected: boolean) {
+        const res = Rect.isVecIn(rect, vec)
         expect.toBeEqual(res, expected)
     }
 }

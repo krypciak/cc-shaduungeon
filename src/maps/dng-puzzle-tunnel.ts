@@ -6,11 +6,12 @@ import {
     RoomArrange,
     doesMapArrangeFit,
     TprArrange3d,
+    RoomPlaceOrder,
 } from '../map-arrange/map-arrange'
 import { MapPicker, registerMapPickerNodeConfig } from '../map-arrange/map-picker/configurable'
-import { registerMapConstructor } from '../map-construct/map-construct'
+import { AreaInfo, MapConstruct, registerMapConstructor } from '../map-construct/map-construct'
 import { Dir, DirU, Rect } from '../util/geometry'
-import { shuffleArray } from '../util/util'
+import { assert, shuffleArray } from '../util/util'
 import { Vec2 } from '../util/vec2'
 import { getPuzzleList } from './puzzle-data'
 import { simpleMapConstructor } from './simple'
@@ -76,7 +77,7 @@ export function das({
             const rect = Rect.centered(tunnelSize, tpr)
             const walls: Record<Dir, boolean> = [true, true, true, true]
             walls[exitTpr.dir] = false
-            tunnelEntrance = { ...rect, walls }
+            tunnelEntrance = { ...rect, walls, placeOrder: RoomPlaceOrder.Tunnel }
             map.rects.push(tunnelEntrance)
         }
         if (!doesMapArrangeFit(accesor, map, id)) return null
@@ -90,27 +91,47 @@ export function das({
             branchCount: puzzles.length,
 
             nextQueueEntryGenerator: (_, branch, accesor) => {
-                const map = { rects: [] as RoomArrange[], restTprs: [] as TprArrange3d[] }
                 const puzzle = puzzles[branch]
+                const map = {
+                    rects: [] as RoomArrange[],
+                    restTprs: [] as TprArrange3d[],
+                    placeData: {
+                        puzzle,
+                    },
+                } satisfies MapArrangeData
 
                 const bounds = Rect.boundsOfArr(puzzle.rects)
-                if (puzzle.sel.data.type == blitzkrieg.PuzzleRoomType.AddWalls) Rect.extend(bounds, 3 * 2 * 16)
+                Rect.extend(bounds, puzzle.pasteOffset * 2 * 16)
                 const size = { x: bounds.width, y: bounds.height }
-                const offset = { x: 0, y: 0 }
-                if ((tunnelSize.x / 16) % 2 != (size.x / 16) % 2) offset.x += 16
-                if ((tunnelSize.x / 16) % 2 != (size.y / 16) % 2) offset.y += 16
 
-                Vec2.add(size, offset)
+                const rect = {
+                    ...Vec2.snapToGrid(
+                        tunnelEntrance,
+                        16,
+                        Vec2.sub(Rect.middle(Rect.side(tunnelEntrance, exitTpr.dir)), puzzle.entrance.vec)
+                    ),
+                    width: size.x,
+                    height: size.y,
+                }
 
-                const rect = Rect.centered(size, {
-                    ...Rect.middle(Rect.side(tunnelEntrance, exitTpr.dir)),
-                    dir: tpr.dir,
-                })
-                // const rect = Rect.centered(size, tpr)
+                function assertRect(rect: Rect, rects1: Rect[]) {
+                    const rects = rects1.map(Rect.copy)
+                    const bounds = Rect.boundsOfArr(rects)
+
+                    const rect1 = Rect.copy(rect)
+                    Vec2.sub(rect1, bounds)
+                    assert(rect1.x % 16 == 0)
+                    assert(rect1.y % 16 == 0)
+                    assert(rect1.width % 16 == 0)
+                    assert(rect1.height % 16 == 0)
+                }
+                assertRect(tunnelEntrance, [tunnelEntrance, rect])
+                assertRect(rect, [tunnelEntrance, rect])
 
                 const room: RoomArrange = {
                     ...rect,
                     walls: [true, true, true, true],
+                    dontPlace: true
                 }
 
                 map.rects.push(room)
@@ -143,4 +164,41 @@ export function das({
     }
 }
 
-registerMapConstructor('DngPuzzleTunnel', simpleMapConstructor)
+registerMapConstructor(
+    'DngPuzzleTunnel',
+    (
+        map: MapArrange,
+        areaInfo: AreaInfo,
+        pathResolver: (id: Id) => string,
+        mapsArranged: MapArrange[],
+        mapsConstructed: MapConstruct[]
+    ) => {
+        const res = simpleMapConstructor(map, areaInfo, pathResolver, mapsArranged, mapsConstructed, [8, 1, 1, 1])
+        const puzzle = res.placeData!.puzzle!
+
+        const puzzleMapRaw: string = blitzkrieg.mapUtil.cachedMaps[puzzle.map]
+        assert(puzzleMapRaw)
+        const puzzleMap: sc.MapModel.Map = JSON.parse(blitzkrieg.mapUtil.cachedMaps[puzzle.map])
+        const pastePos = Vec2.add(Vec2.divC(Vec2.copy(res.rects[0]), 16), {
+            x: puzzle.pasteOffset,
+            y: puzzle.pasteOffset,
+        })
+        const out: sc.MapModel.Map = blitzkrieg.mapUtil.copySelMapAreaTo(
+            res.constructed,
+            puzzleMap,
+            puzzle.sel,
+            pastePos,
+            [],
+            {
+                disableEntities: false,
+                mergeLayers: false,
+                removeCutscenes: true,
+                // makePuzzlesUnique: true,
+                // uniqueId: puzzle.usel.id,
+                // uniqueSel: puzzle.usel.sel,
+            }
+        )
+        res.constructed = out
+        return res
+    }
+)

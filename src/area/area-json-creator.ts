@@ -40,6 +40,7 @@ declare global {
                         drawEmptyRect?: Rect
                         drawRect?: Rect & { x2: number; y2: number }
                         areaRect?: Rect
+                        wallsFull?: boolean
                     })[]
                 }
                 interface Connection {
@@ -114,7 +115,7 @@ export function createArea(
                 min: Vec2.sub(Vec2.divC(Vec2.copy(boundsAbsolute), divider), offset),
                 max: Vec2.sub(Vec2.divC(Rect.x2y2(boundsAbsolute), divider), offset),
                 rects: map.rects.map(a => {
-                    const copy = { ...a }
+                    const copy: sc.AreaLoadable.SDCustom.Map['rects'][number] = { ...a }
                     Rect.div(copy, divider)
                     Vec2.sub(copy, offsetRelative)
                     return copy

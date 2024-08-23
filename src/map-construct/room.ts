@@ -37,7 +37,6 @@ export function placeRoom(room: RoomArrange, map: MapInConstruction, tc: MapThem
             }
         }
     }
-
     if (room.walls[Dir.NORTH]) {
         for (let x = rx; x < rx2; x++) {
             placeWall(map, tc, { x, y: ry }, Dir.NORTH)

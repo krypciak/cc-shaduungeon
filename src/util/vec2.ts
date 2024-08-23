@@ -1,6 +1,7 @@
 // Vector tools (source: http://impactjs.com/forums/impact-engine/vector-math-helper-class/page/1)
 
-import { Dir } from './geometry'
+import { Dir, Rect } from './geometry'
+import { assert } from './util'
 
 export interface Vec2 {
     x: number
@@ -242,5 +243,25 @@ export namespace Vec2 {
         v.x = Math.max(v.x, x)
         v.y = Math.max(v.y, y)
         return v
+    }
+
+    export function snapToGrid(gridCorner: Vec2, interval: number, toSnap: Vec2): Vec2 {
+        const offset: Vec2 = Vec2.sub(
+            Vec2.copy(gridCorner),
+            Vec2.mulC(Vec2.floor(Vec2.divC(Vec2.copy(gridCorner), interval)), interval)
+        )
+        assert(offset.x < interval)
+        assert(offset.y < interval)
+
+        const div = Vec2.divC(Vec2.sub(Vec2.copy(toSnap), offset), interval)
+
+        const min = Vec2.add(Vec2.mulC(Vec2.floor(Vec2.copy(div)), interval), offset)
+        const max = Vec2.addC(Vec2.copy(min), interval)
+        const rect: Rect = Rect.fromTwoVecX2Y2(min, max)
+        assert(Rect.isVecIn(rect, toSnap))
+
+        const { vec } = Rect.closestCorner(rect, toSnap)
+
+        return vec
     }
 }

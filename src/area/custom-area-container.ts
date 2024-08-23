@@ -242,6 +242,7 @@ sc.MapRoom.inject({
                 o.drawEmptyRect = Rect.copy(rect)
                 rect.x2 = rect.x + rect.width - 1
                 rect.y2 = rect.y + rect.height - 1
+                o.wallsFull ??= o.walls[0] && o.walls[1] && o.walls[2] && o.walls[3]
 
                 if (o.walls[Dir.SOUTH]) {
                     black.draw(rect.x, rect.y2, rect.width, 1)

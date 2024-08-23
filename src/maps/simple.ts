@@ -136,16 +136,17 @@ export function simpleMapArrange({
     }
 }
 
-export const simpleMapConstructor: MapConstructFunc = (
+export const simpleMapConstructor = ((
     map,
     areaInfo,
     pathResolver,
     _mapsArranged,
-    _mapsConstructed
+    _mapsConstructed,
+    extension: Record<Dir, number> = [8, 1, 1, 1]
 ) => {
     const theme = MapTheme.default
     const arrangeCopy = copyMapArrange(map)
-    const mic = baseMapConstruct(map, pathResolver(map.id), areaInfo.id, theme, [8, 1, 1, 1])
+    const mic = baseMapConstruct(map, pathResolver(map.id), areaInfo.id, theme, extension)
 
     function pushTprEntity(tpr: TprArrange3d, isEntrance: boolean, index: number) {
         const name = getTprName(isEntrance, index)
@@ -185,6 +186,7 @@ export const simpleMapConstructor: MapConstructFunc = (
 
     const rects = convertRoomsArrangeToRoomsConstruct(map.rects)
     for (const room of rects) {
+        if (room.dontPlace) continue
         placeRoom(room, mic, theme.config, true)
     }
 
@@ -197,6 +199,6 @@ export const simpleMapConstructor: MapConstructFunc = (
         arrangeCopy,
         title: `map ${constructed.name}`,
     }
-}
+}) satisfies MapConstructFunc
 
 registerMapConstructor('Simple', simpleMapConstructor)

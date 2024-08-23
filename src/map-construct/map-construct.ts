@@ -18,9 +18,7 @@ export interface MapConstruct extends MapArrange {
     rects: RoomConsturct[]
 }
 
-export interface RoomConsturct extends RoomArrange {
-    wallsFull: boolean
-}
+export interface RoomConsturct extends RoomArrange {}
 
 export interface AreaInfo {
     id: string
@@ -104,11 +102,7 @@ export function getTprName(isEntrance: boolean, index: number): string {
     return `${isEntrance ? 'entrance' : 'rest'}_${index}`
 }
 
-function areWallsFull(walls: Record<Dir, boolean>): boolean {
-    return walls[0] && walls[1] && walls[2] && walls[3]
-}
 export function convertRoomsArrangeToRoomsConstruct(rooms: RoomArrange[]): RoomConsturct[] {
-    const newRooms = rooms.map(room => Object.assign(room, { wallsFull: areWallsFull(room.walls) }) as RoomConsturct)
-    newRooms.sort((a, b) => (b.wallsFull ? 1 : -1) - (a.wallsFull ? 1 : -1))
-    return newRooms
+    rooms.sort((a, b) => (a.placeOrder ?? 0) - (b.placeOrder ?? 0))
+    return rooms
 }

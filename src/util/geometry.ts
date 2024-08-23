@@ -201,6 +201,29 @@ export namespace Rect {
         if (dir == Dir.SOUTH) return { x: vec.x, y: Rect.y2(rect) }
         return { x: vec.x, y: vec.y }
     }
+    export function closestCorner(
+        rect: Rect,
+        vec: Vec2
+    ): { distance: number; h: typeof Dir.EAST | typeof Dir.WEST; v: typeof Dir.NORTH | typeof Dir.SOUTH; vec: Vec2 } {
+        return (
+            [
+                [Dir.EAST, Dir.NORTH],
+                [Dir.WEST, Dir.NORTH],
+                [Dir.EAST, Dir.SOUTH],
+                [Dir.WEST, Dir.SOUTH],
+            ] as const
+        ).reduce(
+            (acc, [h, v]) => {
+                const corner = Rect.corner(rect, h, v)
+                const distance = Vec2.distance(vec, corner)
+                if (distance < acc.distance) {
+                    return { distance, h, v, vec: corner }
+                }
+                return acc
+            },
+            { distance: 100e3 } as ReturnType<typeof Rect.closestCorner>
+        )
+    }
     export function closestSide(rect: Rect, vec: Vec2): { distance: number; dir: Dir; vec: Vec2 } {
         let smallest: { distance: number; dir: Dir; vec: Vec2 } = {
             distance: 10000,
@@ -208,7 +231,7 @@ export namespace Rect {
             vec: { x: 0, y: 0 },
         }
         for (let dir = Dir.NORTH; dir < 4; dir++) {
-            const v: Vec2 = Rect.side(rect, dir)
+            const v: Vec2 = Vec2.copy(Rect.side(rect, dir))
             if (DirU.isVertical(dir)) {
                 v.x = vec.x
             } else {
@@ -254,7 +277,7 @@ export namespace Rect {
         return smallest
     }
     export function isVecIn(rect: Rect, vec: Vec2): boolean {
-        return vec.x >= rect.x && vec.x < rect.x + rect.width && vec.y >= rect.y && vec.y < rect.y + rect.height
+        return vec.x >= rect.x && vec.x <= rect.x + rect.width && vec.y >= rect.y && vec.y <= rect.y + rect.height
     }
     export function isVecInArr(rects: Rect[], vec: Vec2): boolean {
         for (const rect of rects) {

@@ -1,4 +1,5 @@
 import { BuildQueueAccesor, Id, NextQueueEntryGenerator } from '../build-queue/build-queue'
+import { PuzzleData } from '../maps/puzzle-data'
 import { Dir, Dir3d, Rect } from '../util/geometry'
 import { Vec2 } from '../util/vec2'
 import { MapPicker } from './map-picker/configurable'
@@ -27,6 +28,10 @@ export interface MapArrange {
 
     nodeId?: number
     nodeProgress?: number
+
+    placeData?: {
+        puzzle?: PuzzleData
+    }
 }
 
 export function copyMapArrange(map: MapArrangeData): MapArrange {
@@ -44,6 +49,8 @@ export function copyMapArrange(map: MapArrangeData): MapArrange {
 
         nodeId: map.nodeId,
         nodeProgress: map.nodeProgress,
+
+        placeData: map.placeData,
     }
 }
 
@@ -55,8 +62,16 @@ export function offsetMapArrange(map: MapArrange, vec: Vec2) {
 
 export type MapArrangeData = Partial<MapArrange>
 
+export const RoomPlaceOrder = {
+    Room: 0,
+    Tunnel: 1,
+} as const
+export type RoomPlaceOrder = (typeof RoomPlaceOrder)[keyof typeof RoomPlaceOrder]
+
 export interface RoomArrange extends Rect {
     walls: Record<Dir, boolean>
+    placeOrder?: RoomPlaceOrder
+    dontPlace?: boolean
 }
 
 export function doesMapArrangeFit(

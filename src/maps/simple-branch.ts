@@ -6,6 +6,7 @@ import {
     RoomArrange,
     doesMapArrangeFit,
     TprArrange3d,
+    RoomPlaceOrder,
 } from '../map-arrange/map-arrange'
 import { MapPicker, registerMapPickerNodeConfig } from '../map-arrange/map-picker/configurable'
 import { registerMapConstructor } from '../map-construct/map-construct'
@@ -68,7 +69,7 @@ export function simpleMapBranchTunnelArrange({
             const rect = Rect.centered(tunnelSize, tpr)
             const walls: Record<Dir, boolean> = [true, true, true, true]
             walls[exitTpr.dir] = false
-            tunnelEntrance = { ...rect, walls }
+            tunnelEntrance = { ...rect, walls, placeOrder: RoomPlaceOrder.Tunnel }
             map.rects.push(tunnelEntrance)
         }
         let room: RoomArrange
@@ -127,7 +128,7 @@ export function simpleMapBranchTunnelArrange({
                     })
                     const walls: Record<Dir, boolean> = [true, true, true, true]
                     walls[DirU.flip(dir)] = false
-                    tunnelExit = { ...rect, walls }
+                    tunnelExit = { ...rect, walls, placeOrder: RoomPlaceOrder.Tunnel }
                     map.rects.push(tunnelExit)
                 }
                 if (!doesMapArrangeFit(accesor, map, id)) return null
