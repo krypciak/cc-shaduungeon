@@ -250,8 +250,6 @@ export namespace Vec2 {
             Vec2.copy(gridCorner),
             Vec2.mulC(Vec2.floor(Vec2.divC(Vec2.copy(gridCorner), interval)), interval)
         )
-        assert(offset.x < interval)
-        assert(offset.y < interval)
 
         const div = Vec2.divC(Vec2.sub(Vec2.copy(toSnap), offset), interval)
 

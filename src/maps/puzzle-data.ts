@@ -65,11 +65,10 @@ function createPuzzleData(map: string, sel: PuzzleSelection, mapData: sc.MapMode
             },
             { dist: 100e3, entity: undefined } as { dist: number; entity: sc.MapModel.MapEntity<TprType> | undefined }
         )
-        if (dist < 200) break exitTprIf
+        if (dist > 200) break exitTprIf
         assert(entity)
 
         exitTpr = { ...entity }
-        Vec2.sub(exitTpr, selPos)
     } else assert(false)
 
     let completionCondition: { path: string; value: any } | undefined

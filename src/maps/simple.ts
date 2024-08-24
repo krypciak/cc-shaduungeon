@@ -149,6 +149,7 @@ export const simpleMapConstructor = ((
     const mic = baseMapConstruct(map, pathResolver(map.id), areaInfo.id, theme, extension)
 
     function pushTprEntity(tpr: TprArrange3d, isEntrance: boolean, index: number) {
+        if (tpr.dontPlace) return
         const name = getTprName(isEntrance, index)
         const dir = DirU.flip(tpr.dir as Dir)
         if (tpr.destId == -1) {
@@ -171,7 +172,7 @@ export const simpleMapConstructor = ((
             type: 'Door',
             x,
             y,
-            level: 0,
+            level: tpr.level ?? 0,
             settings: {
                 name,
                 map: pathResolver(tpr.destId),

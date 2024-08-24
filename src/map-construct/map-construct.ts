@@ -11,6 +11,10 @@ import { MapTheme } from './theme'
 export type TprDoorLikeType = 'Door' | 'TeleportGround'
 export type TprType = TprDoorLikeType | 'TeleportField'
 
+export function isEntityATpr(e: sc.MapModel.MapEntity): e is sc.MapModel.MapEntity<TprType> {
+    return e.type == 'Door' || e.type == 'TeleportGround' || e.type == 'TeleportField'
+}
+
 export interface MapConstruct extends MapArrange {
     arrangeCopy: MapArrange
     constructed: sc.MapModel.Map

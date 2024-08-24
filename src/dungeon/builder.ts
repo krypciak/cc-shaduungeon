@@ -5,6 +5,7 @@ import { MapArrange, MapArrangeData } from '../map-arrange/map-arrange'
 import { MapPicker, mapPickerConfigurable } from '../map-arrange/map-picker/configurable'
 import { AreaInfo, constructMapsFromMapsArrange } from '../map-construct/map-construct'
 import { initAllPuzzles } from '../maps/puzzle-data'
+import { Dir } from '../util/geometry'
 import { Item } from '../util/items'
 import { setRandomSeed } from '../util/util'
 import { DungeonPaths } from './paths'
@@ -57,13 +58,20 @@ export class DungeonBuilder {
         }
 
         const mapPicker: MapPicker = mapPickerConfigurable({
+            startDir: Dir.WEST,
             root: {
                 type: 'DngPuzzleTunnel',
                 tunnelSize: tunnelSizeReg,
                 // size: roomSizeReg,
                 count: 5,
                 randomizeDirTryOrder,
+                // forcePuzzleMap: 'rhombus-dng/room-1',
 
+                followedBy: {
+                    type: 'Simple',
+                    size: roomSizeReg,
+                    count: 1,
+                },
                 // followedBy: branch(
                 //     1,
                 //     () => 1,
@@ -108,6 +116,5 @@ export class DungeonBuilder {
             mapsConstruct[0].constructed.name,
             ig.TeleportPosition.createFromJson({ marker: 'entrance_0', level: 0, baseZPos: 0, size: { x: 0, y: 0 } })
         )
-        console.dir(mapsConstruct, { depth: null })
     }
 }

@@ -5,10 +5,12 @@ import { Vec2 } from '../util/vec2'
 import { MapPicker } from './map-picker/configurable'
 
 export interface TprArrange3d extends Vec2 {
+    level?: number
     dir: Dir3d
     destId: Id
     destIndex?: number
     noDrawConnection?: boolean
+    dontPlace?: boolean
 }
 export interface TprArrange extends TprArrange3d {
     dir: Dir

@@ -9,11 +9,18 @@ import {
     RoomPlaceOrder,
 } from '../map-arrange/map-arrange'
 import { MapPicker, registerMapPickerNodeConfig } from '../map-arrange/map-picker/configurable'
-import { AreaInfo, MapConstruct, registerMapConstructor } from '../map-construct/map-construct'
+import {
+    AreaInfo,
+    getTprName,
+    isEntityATpr,
+    MapConstruct,
+    registerMapConstructor,
+    TprType,
+} from '../map-construct/map-construct'
 import { Dir, DirU, Rect } from '../util/geometry'
 import { assert, shuffleArray } from '../util/util'
 import { Vec2 } from '../util/vec2'
-import { getPuzzleList } from './puzzle-data'
+import { getPuzzleList, PuzzleData } from './puzzle-data'
 import { simpleMapConstructor } from './simple'
 
 declare global {
@@ -26,6 +33,7 @@ declare global {
             tunnelSize: Vec2
             randomizeDirTryOrder?: boolean
             followedBy?: MapPicker.ConfigNode
+            forcePuzzleMap?: string
         }
     }
 }
@@ -42,6 +50,7 @@ export function das({
     branchDone,
     nodeId,
     nodeProgress,
+    forcePuzzleMap,
 }: {
     mapPicker: MapPicker
     exitTpr: TprArrange
@@ -52,6 +61,7 @@ export function das({
     branchDone?: boolean
     nodeId?: number
     nodeProgress?: number
+    forcePuzzleMap?: string
 }): NextQueueEntryGenerator<MapArrangeData> {
     return (id, _, accesor) => {
         const tpr: TprArrange = {
@@ -82,7 +92,9 @@ export function das({
         }
         if (!doesMapArrangeFit(accesor, map, id)) return null
 
-        const puzzles = shuffleArray(getPuzzleList(tpr.dir))
+        let puzzles = shuffleArray(getPuzzleList(tpr.dir))
+        if (forcePuzzleMap) puzzles = puzzles.filter(p => p.map == forcePuzzleMap)
+        // printMapArrangeQueue(accesor, 16, true, [], false, true)
 
         return {
             data: map,
@@ -131,7 +143,7 @@ export function das({
                 const room: RoomArrange = {
                     ...rect,
                     walls: [true, true, true, true],
-                    dontPlace: true
+                    dontPlace: true,
                 }
 
                 map.rects.push(room)
@@ -173,12 +185,28 @@ registerMapConstructor(
         mapsArranged: MapArrange[],
         mapsConstructed: MapConstruct[]
     ) => {
-        const res = simpleMapConstructor(map, areaInfo, pathResolver, mapsArranged, mapsConstructed, [8, 1, 1, 1])
-        const puzzle = res.placeData!.puzzle!
-
+        const puzzle = map.placeData!.puzzle!
         const puzzleMapRaw: string = blitzkrieg.mapUtil.cachedMaps[puzzle.map]
         assert(puzzleMapRaw)
         const puzzleMap: sc.MapModel.Map = JSON.parse(blitzkrieg.mapUtil.cachedMaps[puzzle.map])
+
+        const exitTpr = removeUnwantedTprsFromMap(puzzleMap, puzzle.exitTpr)
+        removeCutscenesFromMap(puzzleMap)
+
+        if (exitTpr) {
+            const destId = map.id + 1
+            const prevExitTprIndex = map.restTprs.findIndex(tpr => tpr.destId == destId)
+            assert(prevExitTprIndex != -1)
+            const prevExitTpr = map.restTprs[prevExitTprIndex]
+            prevExitTpr.dontPlace = true
+
+            exitTpr.settings.name = getTprName(false, prevExitTprIndex)
+            exitTpr.settings.map = pathResolver(destId)
+            exitTpr.settings.marker = getTprName(true, prevExitTpr.destIndex ?? 0)
+        }
+
+        const res = simpleMapConstructor(map, areaInfo, pathResolver, mapsArranged, mapsConstructed, [8, 1, 1, 1])
+
         const pastePos = Vec2.add(Vec2.divC(Vec2.copy(res.rects[0]), 16), {
             x: puzzle.pasteOffset,
             y: puzzle.pasteOffset,
@@ -192,13 +220,67 @@ registerMapConstructor(
             {
                 disableEntities: false,
                 mergeLayers: false,
-                removeCutscenes: true,
-                // makePuzzlesUnique: true,
-                // uniqueId: puzzle.usel.id,
-                // uniqueSel: puzzle.usel.sel,
             }
         )
+
         res.constructed = out
         return res
     }
 )
+
+function removeUnwantedTprsFromMap(
+    map: sc.MapModel.Map,
+    keep: PuzzleData.Tpr | undefined
+): sc.MapModel.MapEntity<TprType> | undefined {
+    let foundToKeep: sc.MapModel.MapEntity<TprType> | undefined
+    map.entities = map.entities.filter(e => {
+        if (!isEntityATpr(e)) return true
+        if (!keep) return false
+        if (!(e.x == keep.x && e.y == keep.y && e.level == keep.level && e.type == keep.type)) return false
+        assert(!foundToKeep)
+        foundToKeep = e
+        return true
+    })
+    if (keep) assert(foundToKeep)
+    return foundToKeep
+}
+
+const cutsceneEventTypes = new Set<string>([
+    'ADD_MSG_PERSON',
+    'CLEAR_MSG',
+    'SHOW_MSG',
+    'SHOW_SIDE_MSG',
+    'SET_MSG_EXPRESSION',
+    'SET_TASK',
+    'SET_ENTITY_ON_TOP_OTHER',
+    'SET_CAMERA_TARGET',
+    'SET_CAMERA_POS',
+    'WAIT_UNTIL_ACTION_DONE',
+    'CLEAR_TASK',
+])
+const cutsceneActionTypes = new Set<string>(['ENTER_DOOR', 'MOVE_TO_POINT', 'NAVIGATE_TO_POINT', 'SET_FACE_TO_ENTITY'])
+function removeCutscenesFromMap(map: sc.MapModel.Map) {
+    for (let enI = map.entities.length - 1; enI >= 0; enI--) {
+        const entity = map.entities[enI]
+
+        if (entity.type == 'NPC') {
+            map.entities.splice(enI, 1)
+        } else if (entity.type == 'EventTrigger') {
+            const events = entity.settings.event ?? []
+            for (let evI = events.length - 1; evI >= 0; evI--) {
+                const event = events[evI]
+
+                if (cutsceneEventTypes.has(event.type)) {
+                    events.splice(evI)
+                } else if (event.type == 'DO_ACTION') {
+                    for (let acI = event.action.length - 1; acI >= 0; acI--) {
+                        const action = event.action[acI]
+                        if (cutsceneActionTypes.has(action.type)) {
+                            event.action.splice(acI, 1)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
