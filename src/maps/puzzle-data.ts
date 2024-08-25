@@ -14,6 +14,7 @@ export interface PuzzleData {
     sel: PuzzleSelection
 
     map: string
+    index: number
     rects: Rect[]
     entrance: ReturnType<typeof Rect.closestSideArr>
     exit: ReturnType<typeof Rect.closestSideArr>
@@ -28,20 +29,25 @@ export async function initAllPuzzles() {
     const promises: Promise<unknown>[] = []
 
     for (const [map, entry] of ObjectEntriesT(blitzkrieg.sels.puzzle.selMap)) {
-        for (const sel of entry.sels) {
-            if (sel.data.type == blitzkrieg.PuzzleRoomType.Dis) continue
+        entry.sels.forEach((sel, i) => {
+            if (sel.data.type == blitzkrieg.PuzzleRoomType.Dis) return
 
             const promise = blitzkrieg.mapUtil.getMapObject(map)
             promises.push(promise)
-            promise.then(mapData => puzzles.push(createPuzzleData(map, sel, mapData)))
-        }
+            promise.then(mapData => puzzles.push(createPuzzleData(map, sel, i, mapData)))
+        })
     }
 
     await Promise.all(promises)
     allPuzzles = puzzles.filter(Boolean) as PuzzleData[]
 }
 
-function createPuzzleData(map: string, sel: PuzzleSelection, mapData: sc.MapModel.Map): PuzzleData | undefined {
+function createPuzzleData(
+    map: string,
+    sel: PuzzleSelection,
+    index: number,
+    mapData: sc.MapModel.Map
+): PuzzleData | undefined {
     if (sel.data.completionType == blitzkrieg.PuzzleCompletionType.Item) {
         console.warn(`sel on ${map} has UNIMPLEMENTED PuzzleCompletionType.Item`)
         return
@@ -65,7 +71,7 @@ function createPuzzleData(map: string, sel: PuzzleSelection, mapData: sc.MapMode
             },
             { dist: 100e3, entity: undefined } as { dist: number; entity: sc.MapModel.MapEntity<TprType> | undefined }
         )
-        if (dist > 200) break exitTprIf
+        if (dist > 5 * 16) break exitTprIf
         assert(entity)
 
         exitTpr = { ...entity }
@@ -82,8 +88,14 @@ function createPuzzleData(map: string, sel: PuzzleSelection, mapData: sc.MapMode
         assert(false, `sel on ${map} has UNIMPLEMENTED PuzzleCompletionType.Item`)
     } else assert(false)
 
-    const entrance = Rect.closestSideArr(rects, Vec2.sub(Vec2.copy(sel.data.startPos), selPos))
-    const exit = Rect.closestSideArr(rects, Vec2.sub(Vec2.copy(sel.data.endPos), selPos))
+    const entrance = Rect.closestSideArr(
+        rects,
+        Vec2.sub(Vec2.subC(Vec2.copy(sel.data.startPos), 0, sel.data.startPos.z), selPos)
+    )
+    const exit = Rect.closestSideArr(
+        rects,
+        Vec2.sub(Vec2.subC(Vec2.copy(sel.data.endPos), 0, sel.data.endPos.z), selPos)
+    )
 
     const pasteOffset = sel.data.type == blitzkrieg.PuzzleRoomType.AddWalls ? 3 : 0
 
@@ -91,14 +103,13 @@ function createPuzzleData(map: string, sel: PuzzleSelection, mapData: sc.MapMode
         sel,
         rects,
         map,
+        index,
         entrance,
         exit,
         exitTpr,
         completionCondition,
         pasteOffset,
     }
-
-    if (res.entrance.dir == res.exit.dir) return
 
     assert(res.exit.distance < 16 * 16)
     assert(res.entrance.distance < 16 * 16)

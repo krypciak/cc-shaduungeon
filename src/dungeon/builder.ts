@@ -3,7 +3,7 @@ import { BuildQueue } from '../build-queue/build-queue'
 import { drawMapArrangeQueue } from '../map-arrange/drawer'
 import { MapArrange, MapArrangeData } from '../map-arrange/map-arrange'
 import { MapPicker, mapPickerConfigurable } from '../map-arrange/map-picker/configurable'
-import { AreaInfo, constructMapsFromMapsArrange } from '../map-construct/map-construct'
+import { AreaInfo, constructMapsFromMapsArrange, getTprName } from '../map-construct/map-construct'
 import { initAllPuzzles } from '../maps/puzzle-data'
 import { Dir } from '../util/geometry'
 import { Item } from '../util/items'
@@ -23,8 +23,8 @@ export class DungeonBuilder {
 
         function tunnel(count: number, followedBy?: MapPicker.ConfigNode): MapPicker.ConfigNode {
             return {
-                type: 'SimpleTunnel',
-                roomSize: roomSizeReg,
+                type: 'DngPuzzleTunnel',
+                // roomSize: roomSizeReg,
                 tunnelSize: tunnelSizeReg,
                 count,
                 randomizeDirTryOrder,
@@ -58,24 +58,37 @@ export class DungeonBuilder {
         }
 
         const mapPicker: MapPicker = mapPickerConfigurable({
-            startDir: Dir.WEST,
+            startDir: Dir.SOUTH,
+            // root: {
+            //     type: 'DngPuzzleTunnel',
+            //     tunnelSize: tunnelSizeReg,
+            //     count: 1,
+            //     randomizeDirTryOrder,
+            //     forcePuzzle: 'rhombus-dng/room-3-2@0',
+            // },
             root: {
-                type: 'DngPuzzleTunnel',
-                tunnelSize: tunnelSizeReg,
-                // size: roomSizeReg,
-                count: 5,
-                randomizeDirTryOrder,
-                // forcePuzzleMap: 'rhombus-dng/room-1',
-
+                type: 'Simple',
+                size: roomSizeReg,
+                count: 1,
                 followedBy: {
-                    type: 'Simple',
-                    size: roomSizeReg,
-                    count: 1,
+                    type: 'DngPuzzleTunnelRoom',
+                    roomSize: roomSizeReg,
+                    entranceTunnelSize: tunnelSizeReg,
+                    tunnelSize: tunnelSizeReg,
+                    count: 11,
+                    randomizeDirTryOrder,
+                    // forcePuzzle: 'rhombus-dng/room-3-2@0',
+
+                    followedBy: {
+                        type: 'Simple',
+                        size: roomSizeReg,
+                        count: 1,
+                    },
                 },
                 // followedBy: branch(
                 //     1,
-                //     () => 1,
-                //     () => 1,
+                //     () => 2,
+                //     () => 2,
                 //     () => 2
                 // ),
             },
@@ -114,7 +127,12 @@ export class DungeonBuilder {
 
         ig.game.teleport(
             mapsConstruct[0].constructed.name,
-            ig.TeleportPosition.createFromJson({ marker: 'entrance_0', level: 0, baseZPos: 0, size: { x: 0, y: 0 } })
+            ig.TeleportPosition.createFromJson({
+                marker: getTprName(true, 0),
+                level: 0,
+                baseZPos: 0,
+                size: { x: 0, y: 0 },
+            })
         )
     }
 }

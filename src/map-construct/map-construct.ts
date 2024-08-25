@@ -4,7 +4,7 @@ import { Id } from '../build-queue/build-queue'
 import { assert } from '../util/util'
 import { Item } from '../util/items'
 import { Dir, Rect } from '../util/geometry'
-import { MapConstructionLayers } from './layer'
+import { constructionLayersFromMapLayers, MapConstructionLayers } from './layer'
 import { getEmptyLayers } from './layer'
 import { MapTheme } from './theme'
 
@@ -100,6 +100,13 @@ export function baseMapConstruct(
         ...getEmptyLayers(mapSize, 3, theme.config),
     }
     return mic
+}
+
+export function mapInConstructionFromMap(map: sc.MapModel.Map) {
+    return {
+        ...map,
+        layers: constructionLayersFromMapLayers(map.layer),
+    }
 }
 
 export function getTprName(isEntrance: boolean, index: number): string {

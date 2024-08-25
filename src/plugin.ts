@@ -3,7 +3,7 @@ import './setup'
 import { Mod1 } from 'cc-blitzkrieg/src/types'
 import ccmod from '../ccmod.json'
 import { RuntimeResources } from './util/runtime-assets'
-import { injectGameStarting } from './util/game-start'
+import { injectGameStarting, startDnggenGame } from './util/game-start'
 import * as _ from 'ultimate-crosscode-typedefs'
 import { DungeonPaths } from './dungeon/paths'
 import type * as __ from 'cc-hotreload/src/plugin'
@@ -35,5 +35,6 @@ export default class DngGen {
         import('./util/map-style-fix')
 
         RuntimeResources.reload()
+        startDnggenGame()
     }
 }

@@ -17,6 +17,7 @@ import {
     convertRoomsArrangeToRoomsConstruct,
     getTprName,
     MapConstructFunc,
+    MapInConstruction,
     registerMapConstructor,
 } from '../map-construct/map-construct'
 import { MapTheme } from '../map-construct/theme'
@@ -136,6 +137,47 @@ export function simpleMapArrange({
     }
 }
 
+export function pushTprEntity(
+    mic: MapInConstruction,
+    fallbackRect: Rect,
+    pathResolver: (id: Id) => string,
+    tpr: TprArrange3d,
+    isEntrance: boolean,
+    index: number
+) {
+    if (tpr.dontPlace) return
+    const name = getTprName(isEntrance, index)
+    const dir = DirU.flip(tpr.dir as Dir)
+    if (tpr.destId == -1) {
+        const middle = Vec2.subC(Rect.middle(fallbackRect), 16, 16)
+        return mic.entities.push({
+            type: 'Marker',
+            ...middle,
+            level: 0,
+            settings: { name, dir: DirU.toString(dir) },
+        })
+    }
+
+    let x = tpr.x
+    let y = tpr.y
+
+    if (tpr.dir != Dir.SOUTH) y -= 16
+    if (tpr.dir != Dir.EAST) x -= 16
+
+    mic.entities.push({
+        type: 'Door',
+        x,
+        y,
+        level: tpr.level ?? 0,
+        settings: {
+            name,
+            map: pathResolver(tpr.destId),
+            marker: getTprName(!isEntrance, tpr.destIndex ?? 0),
+            dir: DirU.toString(dir),
+        },
+    })
+}
+
 export const simpleMapConstructor = ((
     map,
     areaInfo,
@@ -148,42 +190,9 @@ export const simpleMapConstructor = ((
     const arrangeCopy = copyMapArrange(map)
     const mic = baseMapConstruct(map, pathResolver(map.id), areaInfo.id, theme, extension)
 
-    function pushTprEntity(tpr: TprArrange3d, isEntrance: boolean, index: number) {
-        if (tpr.dontPlace) return
-        const name = getTprName(isEntrance, index)
-        const dir = DirU.flip(tpr.dir as Dir)
-        if (tpr.destId == -1) {
-            const middle = Vec2.subC(Rect.middle(map.rects[0]), 16, 16)
-            return mic.entities.push({
-                type: 'Marker',
-                ...middle,
-                level: 0,
-                settings: { name, dir: DirU.toString(dir) },
-            })
-        }
-
-        let x = tpr.x
-        let y = tpr.y
-
-        if (tpr.dir != Dir.SOUTH) y -= 16
-        if (tpr.dir != Dir.EAST) x -= 16
-
-        mic.entities.push({
-            type: 'Door',
-            x,
-            y,
-            level: tpr.level ?? 0,
-            settings: {
-                name,
-                map: pathResolver(tpr.destId),
-                marker: getTprName(!isEntrance, tpr.destIndex ?? 0),
-                dir: DirU.toString(dir),
-            },
-        })
-    }
-
-    map.entranceTprs.forEach((tpr, i) => pushTprEntity(tpr, true, i))
-    map.restTprs.forEach((tpr, i) => pushTprEntity(tpr, false, i))
+    const fallbackRect = map.rects[0]
+    map.entranceTprs.forEach((tpr, i) => pushTprEntity(mic, fallbackRect, pathResolver, tpr, true, i))
+    map.restTprs.forEach((tpr, i) => pushTprEntity(mic, fallbackRect, pathResolver, tpr, false, i))
 
     const rects = convertRoomsArrangeToRoomsConstruct(map.rects)
     for (const room of rects) {
@@ -198,7 +207,7 @@ export const simpleMapConstructor = ((
         rects,
         constructed,
         arrangeCopy,
-        title: `map ${constructed.name}`,
+        title: `Simple ${map.id}`,
     }
 }) satisfies MapConstructFunc
 

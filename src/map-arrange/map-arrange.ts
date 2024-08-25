@@ -1,6 +1,7 @@
 import { BuildQueueAccesor, Id, NextQueueEntryGenerator } from '../build-queue/build-queue'
 import { PuzzleData } from '../maps/puzzle-data'
 import { Dir, Dir3d, Rect } from '../util/geometry'
+import { random } from '../util/util'
 import { Vec2 } from '../util/vec2'
 import { MapPicker } from './map-picker/configurable'
 

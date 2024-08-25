@@ -32,13 +32,17 @@ export type MapThemeConfig = {
           edgeShadowBottomRight: number[][]
           edgeShadowBottomLeft: number[][]
       }
-) & ({
-    addLight?: false
-} | {
-    addLight: true
-    lightTile: number
-    lightStep: number
-})
+) &
+    (
+        | {
+              addLight?: false
+          }
+        | {
+              addLight: true
+              lightTile: number
+              lightStep: number
+          }
+    )
 
 export class MapTheme {
     constructor(public config: MapThemeConfig) {}

@@ -9,26 +9,26 @@ export interface Vec2 {
 }
 
 export namespace Vec2 {
-    export function assign(v1: Vec2, v2: Vec2) {
+    export function assign(v1: Vec2, v2: Vec2): Vec2 {
         v1.x = v2.x || 0
         v1.y = v2.y || 0
         return v1
     }
 
-    export function assignC(v: Vec2, x?: number, y?: number) {
+    export function assignC(v: Vec2, x?: number, y?: number): Vec2 {
         v.x = x || 0
         v.y = y || 0
         return v
     }
 
-    export function add(v1: Vec2, v2: Vec2, copy?: boolean) {
+    export function add(v1: Vec2, v2: Vec2, copy?: boolean): Vec2 {
         const res: any = copy || false ? {} : v1
         res.x = (v1.x || 0) + (v2.x || 0)
         res.y = (v1.y || 0) + (v2.y || 0)
         return res
     }
 
-    export function addC(v1: Vec2, x?: number, y?: number, copy?: boolean) {
+    export function addC(v1: Vec2, x?: number, y?: number, copy?: boolean): Vec2 {
         const res: any = copy || false ? {} : v1
         y = y === undefined || y === null ? x : y
         res.x = (v1.x || 0) + (x || 0)
@@ -36,14 +36,14 @@ export namespace Vec2 {
         return res
     }
 
-    export function sub(v1: Vec2, v2: Vec2, copy?: boolean) {
+    export function sub(v1: Vec2, v2: Vec2, copy?: boolean): Vec2 {
         const res: any = copy || false ? {} : v1
         res.x = (v1.x || 0) - (v2.x || 0)
         res.y = (v1.y || 0) - (v2.y || 0)
         return res
     }
 
-    export function subC(v1: Vec2, x: number, y?: number, copy?: boolean) {
+    export function subC(v1: Vec2, x: number, y?: number, copy?: boolean): Vec2 {
         const res: any = copy ? {} : v1
         y = y === undefined || y === null ? x : y
         res.x = (v1.x || 0) - (x || 0)
@@ -51,14 +51,14 @@ export namespace Vec2 {
         return res
     }
 
-    export function mul(v1: Vec2, v2: Vec2, copy?: boolean) {
+    export function mul(v1: Vec2, v2: Vec2, copy?: boolean): Vec2 {
         const res: any = copy || false ? {} : v1
         res.x = (v1.x || 0) * (v2.x || 0)
         res.y = (v1.y || 0) * (v2.y || 0)
         return res
     }
 
-    export function mulC(v1: Vec2, x?: number, y?: number, copy?: boolean) {
+    export function mulC(v1: Vec2, x?: number, y?: number, copy?: boolean): Vec2 {
         const res: any = copy || false ? {} : v1
         y = y === undefined || y === null ? x : y
         res.x = (v1.x || 0) * (x || 0)
@@ -66,21 +66,21 @@ export namespace Vec2 {
         return res
     }
 
-    export function mulF(v1: Vec2, f: number, copy?: boolean) {
+    export function mulF(v1: Vec2, f: number, copy?: boolean): Vec2 {
         const res: any = copy || false ? {} : v1
         res.x = (v1.x || 0) * (f || 0)
         res.y = (v1.y || 0) * (f || 0)
         return res
     }
 
-    export function div(v1: Vec2, v2: Vec2, copy?: boolean) {
+    export function div(v1: Vec2, v2: Vec2, copy?: boolean): Vec2 {
         const res: any = copy || false ? {} : v1
         res.x = (v1.x || 0) / (v2.x || 0)
         res.y = (v1.y || 0) / (v2.y || 0)
         return res
     }
 
-    export function divC(v1: Vec2, x?: number, y?: number, copy?: boolean) {
+    export function divC(v1: Vec2, x?: number, y?: number, copy?: boolean): Vec2 {
         const res: any = copy || false ? {} : v1
         y = y === undefined || y === null ? x : y
         res.x = (v1.x || 0) / (x || 0)
@@ -88,50 +88,50 @@ export namespace Vec2 {
         return res
     }
 
-    export function dot(v1: Vec2, v2: Vec2) {
+    export function dot(v1: Vec2, v2: Vec2): number {
         return (v1.x || 0) * (v2.x || 0) + (v1.y || 0) * (v2.y || 0)
     }
 
-    export function dotR(v1: Vec2, v2: Vec2) {
+    export function dotR(v1: Vec2, v2: Vec2): number {
         return -(v1.y || 0) * (v2.x || 0) + (v1.x || 0) * (v2.y || 0)
     }
 
-    export function vlength(v: Vec2, newLength?: number, copy?: boolean) {
-        const oldLength = Math.sqrt((v.x || 0) * (v.x || 0) + (v.y || 0) * (v.y || 0))
-        if (newLength) {
-            return Vec2.mulC(v, oldLength ? newLength / oldLength : 1, undefined, copy)
-        } else {
-            return oldLength
-        }
-    }
+    // export function vlength(v: Vec2, newLength?: number, copy?: boolean): number | Vec2 {
+    //     const oldLength = Math.sqrt((v.x || 0) * (v.x || 0) + (v.y || 0) * (v.y || 0))
+    //     if (newLength) {
+    //         return Vec2.mulC(v, oldLength ? newLength / oldLength : 1, undefined, copy)
+    //     } else {
+    //         return oldLength
+    //     }
+    // }
 
-    export function limit(v: Vec2, min: number, max: number, copy?: boolean) {
-        const length = Vec2.vlength(v)
-        if (length > max) {
-            return Vec2.mulC(v, max / length, undefined, copy)
-        } else if (length < min) {
-            return Vec2.mulC(v, min / length, undefined, copy)
-        } else {
-            return copy || false ? Vec2.copy(v) : v
-        }
-    }
+    // export function limit(v: Vec2, min: number, max: number, copy?: boolean) {
+    //     const length = Vec2.vlength(v)
+    //     if (length > max) {
+    //         return Vec2.mulC(v, max / length, undefined, copy)
+    //     } else if (length < min) {
+    //         return Vec2.mulC(v, min / length, undefined, copy)
+    //     } else {
+    //         return copy || false ? Vec2.copy(v) : v
+    //     }
+    // }
 
-    export function normalize(v: Vec2, copy?: boolean) {
-        return Vec2.vlength(v, 1, copy)
-    }
-
-    export function clockangle(v: Vec2) {
-        let result = Math.acos(-(v.y || 0) / Vec2.vlength(v))
-        if (v.x < 0) {
-            result = 2 * Math.PI - result
-        }
-        return result || 0
-    }
-
-    export function angle(v1: Vec2, v2: Vec2) {
-        const result = Math.acos(Vec2.dot(v1, v2) / (Vec2.vlength(v1) * Vec2.vlength(v2)))
-        return result || 0
-    }
+    // export function normalize(v: Vec2, copy?: boolean) {
+    //     return Vec2.vlength(v, 1, copy)
+    // }
+    //
+    // export function clockangle(v: Vec2) {
+    //     let result = Math.acos(-(v.y || 0) / Vec2.vlength(v))
+    //     if (v.x < 0) {
+    //         result = 2 * Math.PI - result
+    //     }
+    //     return result || 0
+    // }
+    //
+    // export function angle(v1: Vec2, v2: Vec2) {
+    //     const result = Math.acos(Vec2.dot(v1, v2) / (Vec2.vlength(v1) * Vec2.vlength(v2)))
+    //     return result || 0
+    // }
 
     export function rotate(v: Vec2, angle: number, copy?: boolean) {
         const res: any = copy || false ? {} : v
